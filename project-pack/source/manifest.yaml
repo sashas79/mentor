@@ -1,0 +1,10 @@
+schema_version: 1
+sources:
+  - id: Mentorship_App_BRS
+    path: "Mentorship_App_BRS_v0.3.md"
+    role: authoritative
+    media_type: text/markdown
+  - id: ConceptualDiagram
+    path: "Unknown.svg"
+    role: supporting
+    media_type: image/svg+xml

@@ -1,0 +1,14 @@
+schema_version: 1
+project:
+  id: mentor-app
+  name: "Mentorship App"
+technology:
+  language: dotnet
+  database: postgresql
+  frontend: react
+authorities:
+  product_domain: "lebo"
+  architecture: "sasha"
+  security_platform: "wayne"
+  engineering: "sasha"
+  release: "petre"

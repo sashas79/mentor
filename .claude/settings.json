@@ -1,0 +1,15 @@
+{
+  "env": {
+    "ENGINEERING_HARNESS_CORE": "../harness-core"
+  },
+  "permissions": {
+    "allow": ["Bash(../harness-core:*)"],
+    "deny": [
+      "Bash(../harness-core approve_pending:*)",
+      "Bash(../harness-core reject_pending:*)",
+      "Bash(../harness-core record_specification_decision:*)",
+      "Bash(../harness-core record_architecture_decision:*)",
+      "Bash(../harness-core record_work_decision:*)"
+    ]
+  }
+}
