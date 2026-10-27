@@ -1,0 +1,24 @@
+# Human decision evidence. Append-only; final for this candidate.
+schema_version: 1
+approval:
+  id: APR-SPEC-0001
+  gate: gate://specification-baseline
+  decision: approved
+  candidate:
+    type: specification
+    manifest: evidence/candidates/CAND-SPEC-0001.yaml
+    digest: sha256:0b42f3d939f49b7e319d6317f33efb1b7d892db427906631767e309c0cceb003
+  approver:
+    identity: lebo
+    authority: product_domain
+  identity_assurance:
+    mechanism: declared-project-identity
+    level: declared
+  captured_at: 2026-10-27T14:39:55Z
+  captured_via:
+    interface: cli
+    adapter: null
+  binding:
+    algorithm: sha256
+    canonicalisation: harness-v1
+    digest: sha256:2a591a98755496e00d177f5ab3c90d7e07aa5fbc6f4826db555e265a885e915b
