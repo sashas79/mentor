@@ -1,0 +1,22 @@
+# Approval candidate. Append-only; exactly one human decision may reference it.
+schema_version: 1
+candidate:
+  type: specification
+  harness:
+    version: v0.3.0
+  engineering:
+    resolution_digest: sha256:d17c01e47a3508fcd22cfafae3eaafd81c35d3a4283529915a33ee5ccaec0927
+  upstream: []
+  artifacts:
+    - path: spec/specification.yaml
+      digest: sha256:a495177db59f4144877e77a46f1260ede9c24df492d2c2d4bb71b7198a3d14d3
+  validation:
+    subject_digest: sha256:1e1092d8b351f1e0c51c7f85dee9b63a0354fb1fbeef9a096b1b3a2ba7120cd4
+    evidence: evidence/validation/VAL-SPEC-0001.yaml
+    evidence_digest: sha256:61d35a3e9df7fd9d4bdcd2f12ac130e22324a1f248f1e075a212f287408ddded
+  binding:
+    algorithm: sha256
+    canonicalisation: harness-v1
+    digest: sha256:0b42f3d939f49b7e319d6317f33efb1b7d892db427906631767e309c0cceb003
+  project_pack:
+    fingerprint: sha256:77ad79854b242644491e6538c9c058ad9aace5ef4fb0f7ece0c3c48185f77411

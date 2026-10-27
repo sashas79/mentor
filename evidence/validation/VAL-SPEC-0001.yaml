@@ -1,0 +1,19 @@
+# Authoritative validation evidence. Append-only; never edit.
+schema_version: 1
+validation:
+  id: VAL-SPEC-0001
+  subject_digest: sha256:1e1092d8b351f1e0c51c7f85dee9b63a0354fb1fbeef9a096b1b3a2ba7120cd4
+  harness:
+    version: v0.3.0
+  engineering:
+    resolution_digest: sha256:d17c01e47a3508fcd22cfafae3eaafd81c35d3a4283529915a33ee5ccaec0927
+  controls:
+    - control: control://validation/specification
+      result: PASS
+      issues: []
+  result: PASS
+  captured_at: 2026-10-27T14:39:20Z
+  binding:
+    algorithm: sha256
+    canonicalisation: harness-v1
+    digest: sha256:61d35a3e9df7fd9d4bdcd2f12ac130e22324a1f248f1e075a212f287408ddded
