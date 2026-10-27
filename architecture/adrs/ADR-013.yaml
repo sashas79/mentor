@@ -1,0 +1,34 @@
+# Architecture decision record derived under Engineering Harness control.
+schema_version: 1
+adr:
+  id: ADR-013
+  title: Persistence through EF Core migrations with database-enforced integrity and privilege separation
+  status: proposed
+  decision: |-
+    Persistence uses Entity Framework Core with the Npgsql provider against PostgreSQL 16 or later.
+    Migrations live in src/Mentor.Infrastructure and are the only way the schema changes. Keys are UUIDs;
+    all timestamps are timestamptz in UTC. Every reference between employees, profiles, requests,
+    selections, revisions, acceptances, approvals, relationships, goals, progress entries, decisions,
+    meetings, events and audit entries is a foreign key; enumerations are check constraints; candidates
+    and relationships carry a concurrency token (xmin or a version column). Two database roles exist:
+    mentor_app, used by the API, with insert and select on evidence tables (revisions, acceptances,
+    permitted changes, formation approvals, goal approvals, audit entries, notification events) and
+    update confined to the mutable tables (profiles, requests, selections, relationship attributes, goal
+    status, meetings, event read markers); and mentor_legacy_entry (ADR-008). Nothing in the schema holds
+    private discussion content. Connections require TLS. Encryption at rest, backup schedule, recovery
+    objectives and operator access are platform decisions documented in infra/ before production
+    acceptance; the prototype runs PostgreSQL in a container with a local volume.
+  rationale: |-
+    NFR-003 requires every stored reference to resolve; NFR-005 requires accepted snapshots and formed
+    agreements to be unchangeable; FR-064 requires separately identifiable records; NFR-007 and NFR-009
+    require protection in storage and transit with a recoverability decision before production.
+    Enforcing these in the database rather than only in code means a defect in the application cannot
+    silently violate them, and role privilege separation makes immutability a property of the store.
+  requirement_refs:
+    - REQ-FR-054
+    - REQ-FR-061
+    - REQ-FR-064
+    - REQ-NFR-003
+    - REQ-NFR-005
+    - REQ-NFR-007
+    - REQ-NFR-009

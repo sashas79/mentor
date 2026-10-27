@@ -1,0 +1,25 @@
+# Contract reference derived under Engineering Harness control.
+schema_version: 1
+contract:
+  id: CONTRACT-AGREEMENT-CONTENT
+  name: Agreement content document (canonical JSON schema of fixed policy text and entered terms, with content_hash and substantive_hash identity rules)
+  type: data
+  requirement_refs:
+    - REQ-FR-022
+    - REQ-FR-023
+    - REQ-FR-024
+    - REQ-FR-025
+    - REQ-FR-026
+    - REQ-FR-027
+    - REQ-FR-028
+    - REQ-FR-029
+    - REQ-FR-055
+    - REQ-FR-067
+    - REQ-FR-068
+    - REQ-BR-010
+    - REQ-BR-011
+    - REQ-BR-017
+    - REQ-BR-018
+    - REQ-DR-006
+    - REQ-DR-015
+    - REQ-NFR-005

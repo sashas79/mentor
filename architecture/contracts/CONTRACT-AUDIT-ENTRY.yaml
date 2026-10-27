@@ -1,0 +1,11 @@
+# Contract reference derived under Engineering Harness control.
+schema_version: 1
+contract:
+  id: CONTRACT-AUDIT-ENTRY
+  name: Audit entry record (actor and identity scheme, server UTC time, action, affected record, prior and new values, decision context, provenance, source reference)
+  type: data
+  requirement_refs:
+    - REQ-FR-051
+    - REQ-FR-065
+    - REQ-DR-014
+    - REQ-NFR-004

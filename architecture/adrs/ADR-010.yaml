@@ -1,0 +1,28 @@
+# Architecture decision record derived under Engineering Harness control.
+schema_version: 1
+adr:
+  id: ADR-010
+  title: Meeting schedule representation without calendar integration and without discussion content
+  status: proposed
+  decision: |-
+    A meeting row belongs either to a candidate (kind INTRODUCTORY) or to a formed relationship (kind
+    RECURRING_SESSION) and holds a nullable proposed or scheduled time, an arranged-outside-application
+    flag, and the agreed frequency in weeks and approximate duration in minutes copied from the
+    agreement content. The schema, the API and the frontend have no field for meeting notes, summaries,
+    attachments or free text about the conversation, and the logging redaction policy excludes any
+    request body of the meeting endpoints from logs. No calendar API, availability search or rescheduling
+    workflow is integrated; production calendar synchronisation remains an external dependency outside
+    the MVP.
+  rationale: |-
+    FR-056 and DR-013 require representing proposed introductory meetings and planned recurring sessions;
+    FR-058 excludes calendar dependencies; FR-059, BR-018 and NFR-002 require that recording a meeting
+    never requires or captures private discussion content in records, APIs, exports or logs. Omitting
+    the field entirely is the only design that makes that guarantee structural.
+  requirement_refs:
+    - REQ-FR-018
+    - REQ-FR-056
+    - REQ-FR-058
+    - REQ-FR-059
+    - REQ-DR-013
+    - REQ-BR-018
+    - REQ-NFR-002

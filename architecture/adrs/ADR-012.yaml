@@ -1,0 +1,28 @@
+# Architecture decision record derived under Engineering Harness control.
+schema_version: 1
+adr:
+  id: ADR-012
+  title: React single-page application generated with Vercel v0, typed API client from OpenAPI, no client-side business rules
+  status: proposed
+  decision: |-
+    The frontend is a React and TypeScript single-page application built with Vite, kept in src/web and
+    deployable separately from the API as static assets. Screens are created with Vercel v0 and committed
+    as ordinary source. Authentication uses MSAL for Entra, or the simulated-identity selector when the
+    API's capabilities endpoint reports simulated mode, in which case a persistent banner labels every
+    screen as simulated. API access goes through a client generated from the API's OpenAPI document at
+    build time, so the frontend cannot drift from CONTRACT-MENTORSHIP-API. Every resource the API returns
+    carries the list of actions the caller is permitted to perform; the frontend renders affordances from
+    that list and treats server rejections as the outcome. No workflow state, prerequisite check, value
+    enumeration or permission is computed in the browser. Role-appropriate navigation offers the
+    protégé, mentor and administrator areas according to the roles the API reports.
+  rationale: |-
+    NFR-006 and BRS section 2.4 require a separately delivered React frontend created with Vercel v0 that
+    owns interaction while the backend owns every rule; AC-FR-004-02 requires authorisation to hold
+    regardless of interface. Generating the client from the contract and rendering server-reported
+    permissions keeps the frontend thin and prevents it from becoming a second, divergent rule engine.
+  requirement_refs:
+    - REQ-FR-004
+    - REQ-FR-012
+    - REQ-FR-022
+    - REQ-NFR-006
+    - REQ-NFR-010

@@ -1,0 +1,33 @@
+# Architecture decision record derived under Engineering Harness control.
+schema_version: 1
+adr:
+  id: ADR-007
+  title: Append-only audit trail written transactionally with business actions
+  status: proposed
+  decision: |-
+    A single audit_entry table (CONTRACT-AUDIT-ENTRY) is the AdministrationAudit. Every command that
+    changes business state appends its entries inside the same database transaction as the change, so an
+    action and its evidence commit or roll back together. An entry records: server-assigned UTC time
+    (never taken from the client), actor employee identity and identity scheme (entra or simulated),
+    action code, affected record type and identifier, prior and new values as JSON for the changed
+    fields, decision context (candidate, revision, content_hash and substantive_hash where applicable),
+    outcome (for example RESET_TO_STEP_1, SUPERSEDED, APPROVED, REJECTED), provenance (application or
+    legacy_source) and, for manual legacy entry, the source file and row reference. The application
+    database role holds insert and select privileges only on this table. Administrators query the trail
+    through read-only endpoints filtered by record. Values written to the trail are the structured fields
+    of the affected record; no free-text discussion content exists to be captured.
+  rationale: |-
+    FR-028, FR-033, FR-051, FR-065, FR-069 and NFR-004 require true actor, timestamp, values and outcome
+    for acceptances, approvals, goal decisions, administration changes, supersessions and manual legacy
+    entry, with superseded decisions kept as historical evidence that is distinguishable from current
+    approvals and legacy claims distinguishable from actual application events. Writing in the same
+    transaction guarantees completeness; withholding update and delete privileges guarantees the trail is
+    append-only without relying on application discipline.
+  requirement_refs:
+    - REQ-FR-028
+    - REQ-FR-033
+    - REQ-FR-051
+    - REQ-FR-065
+    - REQ-FR-069
+    - REQ-DR-014
+    - REQ-NFR-004

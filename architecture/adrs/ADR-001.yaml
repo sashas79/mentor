@@ -1,0 +1,35 @@
+# Architecture decision record derived under Engineering Harness control.
+schema_version: 1
+adr:
+  id: ADR-001
+  title: Modular monolith on ASP.NET Core with a PostgreSQL authoritative store and a separately deployable React frontend
+  status: proposed
+  decision: |-
+    The backend is one ASP.NET Core Web API process on the current long-term-support release of .NET,
+    organised as explicit modules that mirror the architecture components (identity and access, employee
+    profile, mentor registry, mentorship request, agreement drafting, formation, relationship
+    administration, goals and progress, meetings and notifications, register and reporting, legacy
+    records, audit trail). All modules share one PostgreSQL database, which is the only authoritative
+    store. The React frontend is a separately deployable single-page application that talks to the API
+    only over HTTPS and holds no business rule.
+
+    Repository layout: src/Mentor.Api (host, endpoints, OpenAPI), src/Mentor.Core (domain model and
+    module commands/queries, no infrastructure dependencies), src/Mentor.Infrastructure (EF Core
+    persistence, Entra and simulated-identity authentication, CSV export), src/web (React SPA),
+    tests/Mentor.Tests.Unit, tests/Mentor.Tests.Integration (API plus PostgreSQL in a container),
+    tests/web (frontend tests), infra/ (containers, environment configuration, legacy-entry templates).
+    Cross-module calls go through module interfaces inside the process; there is no message broker and no
+    distributed transaction.
+  rationale: |-
+    The BRS (section 2.4) allocates data integrity, business rules, identity association, permission
+    checks, workflow states and audits to the .NET backend and PostgreSQL store and user interaction to a
+    separately delivered React frontend; the Project Pack fixes dotnet, postgresql and react. The first
+    deliverable is an end-to-end demonstrator for one organisation, so a single process with one
+    transactional database gives the strongest guarantees for the formation, reset and audit rules at the
+    lowest operational cost, while explicit modules keep each component separately implementable and
+    testable as a Work Item.
+  requirement_refs:
+    - REQ-FR-004
+    - REQ-FR-061
+    - REQ-NFR-006
+    - REQ-NFR-010

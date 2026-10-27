@@ -1,0 +1,69 @@
+# Approval candidate. Append-only; exactly one human decision may reference it.
+schema_version: 1
+candidate:
+  type: architecture
+  harness:
+    version: v0.3.0
+  engineering:
+    resolution_digest: sha256:d17c01e47a3508fcd22cfafae3eaafd81c35d3a4283529915a33ee5ccaec0927
+  upstream:
+    - type: specification
+      baseline_id: SPEC-0001
+      digest: sha256:082039d8eb7a4244d76502105865467135003968372852b9fbe1cf3a4e5c9de2
+  artifacts:
+    - path: architecture/adrs/ADR-001.yaml
+      digest: sha256:f7d114c3005c28a907d8905bf1bcabcadf288c6c872cfb200e21fa167ef3c34e
+    - path: architecture/adrs/ADR-002.yaml
+      digest: sha256:01c485cfa963a70fdfdfff4b5d69c94ecc499d62370be2b89931e43e4a7131fd
+    - path: architecture/adrs/ADR-003.yaml
+      digest: sha256:53121e45467b5c9d1cf8a2f6d2ab8c13877ca00e910d6eb77ebb99f3944c6cd2
+    - path: architecture/adrs/ADR-004.yaml
+      digest: sha256:f0c870a7c744c83494c43e12c869e0100cc811ef54057b12afae04e3c61aafc1
+    - path: architecture/adrs/ADR-005.yaml
+      digest: sha256:96494cfd9bcb3a8a1143f59fb371a1d835a87fd022a398b972e95218b14a7b3a
+    - path: architecture/adrs/ADR-006.yaml
+      digest: sha256:209dbedd6cc4892bf744b8605b15d4556f8f42ced09235b54a59965c9823e3cb
+    - path: architecture/adrs/ADR-007.yaml
+      digest: sha256:84f8e039f9f0ad2dc9d5671fecd8439519c4fa834d364aed7a64043cdae96c2e
+    - path: architecture/adrs/ADR-008.yaml
+      digest: sha256:cfd7f2bbff01fd481ae815a918c322d221e4adf1dc212606f2452d608d9df285
+    - path: architecture/adrs/ADR-009.yaml
+      digest: sha256:8b65d0b56a68e9279340668ead81739b6ce92f87b4f901f98d07e086e9a7abab
+    - path: architecture/adrs/ADR-010.yaml
+      digest: sha256:88143f22f744f494af57ceed5fe6b6c2606b0cea48eaf32f3c23f2d950d5b006
+    - path: architecture/adrs/ADR-011.yaml
+      digest: sha256:1a9fa5aa3afa0a7dc2f744627eb080f9a1e2c6f0e07091341b4150a3e4638468
+    - path: architecture/adrs/ADR-012.yaml
+      digest: sha256:c413f4b1083a258ba2a8969cb11a2cb29216e0a781645f1884b2a03fb2d02fe9
+    - path: architecture/adrs/ADR-013.yaml
+      digest: sha256:9610566b80075ad0da36ba7661246f62ec89db0bf92b77555417b28aa48d27d7
+    - path: architecture/adrs/ADR-014.yaml
+      digest: sha256:93f42e2bd11505d142871712e12e6ed33bd1aa083983100a1e51d9a43e708608
+    - path: architecture/architecture.yaml
+      digest: sha256:4db9ff30ddc75f41c07f74812203aad416850c1a2a755ab6f87f0734e53ac1f0
+    - path: architecture/contracts/CONTRACT-AGREEMENT-CONTENT.yaml
+      digest: sha256:2114e80c28cac081dc4eb93c5be32efe013fe3e4e778a8280364d3f3d888c2b7
+    - path: architecture/contracts/CONTRACT-AUDIT-ENTRY.yaml
+      digest: sha256:c1e111f277d71171a80c8e1940767fe38ca2dba797ee817a13aaaf62d9e77ff9
+    - path: architecture/contracts/CONTRACT-AUTHORISATION-MATRIX.yaml
+      digest: sha256:2d0bfca4714f6bce60b2c28b3fa60a6d16e880de8020a61dcc0ae399dc3a4ecd
+    - path: architecture/contracts/CONTRACT-DATABASE-SCHEMA.yaml
+      digest: sha256:340b60095cec69b43b3909b18967709f6fdb724d97660669ec70875fc89f69d6
+    - path: architecture/contracts/CONTRACT-ENTRA-IDENTITY.yaml
+      digest: sha256:f7a0f138e1c6c828c1bfbd2848a5d421e5997238630b174973dd0918495d28e6
+    - path: architecture/contracts/CONTRACT-LEGACY-ENTRY.yaml
+      digest: sha256:7c306cc1afcf065bd0805669e6da226e2b9fac6a976831f39766b2b87ba348ff
+    - path: architecture/contracts/CONTRACT-MENTORSHIP-API.yaml
+      digest: sha256:57b12793b40a73449b5ce1d47d4b4afca1dc8da1bcc96a0a364a2c757a86d7f1
+    - path: architecture/contracts/CONTRACT-NOTIFICATION-EVENTS.yaml
+      digest: sha256:a7fddd0001172519b61b62b7ce7d28567b0f137f8ae7bcfbdc43a54afd1aa023
+    - path: architecture/contracts/CONTRACT-REGISTER-EXPORT.yaml
+      digest: sha256:e548e8a8d9c0d4bf9e5f163b7c50bff7a3b8cb8cb5e297a346d3159538d369de
+  validation:
+    subject_digest: sha256:4b9578976d4455fc3dcd0b265ad4d86cdd2fa3bc4d959630bb5192458dc887e9
+    evidence: evidence/validation/VAL-ARCH-0001.yaml
+    evidence_digest: sha256:19b12e5cceef90b84636d3dac1e269dcd1c5c8aa47784b2a279be19a453bc214
+  binding:
+    algorithm: sha256
+    canonicalisation: harness-v1
+    digest: sha256:13100154e782357999048322b6194836ffb42681e9354afd4e711fae4b3fd341

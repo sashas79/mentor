@@ -1,0 +1,26 @@
+# Contract reference derived under Engineering Harness control.
+schema_version: 1
+contract:
+  id: CONTRACT-DATABASE-SCHEMA
+  name: PostgreSQL authoritative schema (EF Core migrations, constraints, roles and privileges)
+  type: data
+  requirement_refs:
+    - REQ-FR-061
+    - REQ-FR-064
+    - REQ-DR-001
+    - REQ-DR-002
+    - REQ-DR-003
+    - REQ-DR-004
+    - REQ-DR-005
+    - REQ-DR-006
+    - REQ-DR-007
+    - REQ-DR-008
+    - REQ-DR-009
+    - REQ-DR-010
+    - REQ-DR-011
+    - REQ-DR-013
+    - REQ-DR-014
+    - REQ-DR-015
+    - REQ-DR-016
+    - REQ-NFR-003
+    - REQ-NFR-005

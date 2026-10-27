@@ -1,0 +1,13 @@
+# Contract reference derived under Engineering Harness control.
+schema_version: 1
+contract:
+  id: CONTRACT-LEGACY-ENTRY
+  name: Legacy manual entry contract (SQL entry script template, provenance columns, review-exception record and mentor_legacy_entry role)
+  type: data
+  requirement_refs:
+    - REQ-FR-062
+    - REQ-FR-063
+    - REQ-BR-016
+    - REQ-BR-022
+    - REQ-DR-016
+    - REQ-NFR-004

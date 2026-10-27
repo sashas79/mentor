@@ -1,0 +1,561 @@
+# Architecture derived under Engineering Harness control. Human-approved only once baselined.
+schema_version: 1
+architecture:
+  id: ARCH-MENTOR-APP
+  title: Mentorship App — architecture for SPEC-MENTOR-APP (Specification Baseline SPEC-0001)
+  components:
+    - id: COMP-API-HOST
+      name: ASP.NET Core API host and composition root
+      responsibility: |-
+        Hosts the single .NET backend process as a modular monolith (ADR-001). Owns the HTTP pipeline that
+        every module shares: authentication schemes (ADR-002), authorisation policy enforcement with default
+        deny (ADR-003), request validation, RFC 9457 problem-details error responses, structured logging with
+        a redaction policy that never writes personally attributable development content or any free text
+        that could carry meeting discussion content, the OpenAPI document (CONTRACT-MENTORSHIP-API), health
+        endpoints and the configuration that switches prototype facilities (labelled simulated identity,
+        simulated notification delivery) on or off. Production configuration disables every simulated
+        facility; the API reports its identity mode so the frontend can label it.
+      requirement_refs:
+        - REQ-FR-004
+        - REQ-NFR-001
+        - REQ-NFR-002
+        - REQ-NFR-006
+        - REQ-NFR-009
+        - REQ-NFR-010
+    - id: COMP-IDENTITY-ACCESS
+      name: Identity and authorisation
+      responsibility: |-
+        Authenticates every protected call. In production it validates Microsoft Entra ID bearer tokens
+        (CONTRACT-ENTRA-IDENTITY) and uses the Entra object identifier as the immutable employee key; for
+        prototype runs it offers an explicitly labelled simulated-identity scheme that is enabled only by
+        configuration and is never treated as production authentication (ADR-002). Resolves the functional
+        roles employee, mentor applicant, approved mentor and Talent Management administrator from the
+        Entra app-role assignment (or the simulated identity's declared role) and application state, and
+        enforces the server-side actor/resource/action matrix (CONTRACT-AUTHORISATION-MATRIX, ADR-003)
+        through authorisation policies and resource handlers that every module must use. Unlisted
+        permissions are denied; IT/system operators hold no application role. Profile editing can never
+        alter the linked identity key.
+      requirement_refs:
+        - REQ-FR-001
+        - REQ-FR-002
+        - REQ-FR-003
+        - REQ-FR-004
+        - REQ-FR-006
+        - REQ-BR-022
+        - REQ-DR-001
+        - REQ-NFR-001
+        - REQ-NFR-009
+        - REQ-NFR-010
+    - id: COMP-EMPLOYEE-PROFILE
+      name: Employee identity records and self-service profile
+      responsibility: |-
+        Maintains the Employee record keyed by the Entra object identifier with display name, optional
+        level/title and, for historic rows, identity-resolution evidence. Creates the record on first
+        authenticated access and lets each employee create and maintain their own application profile with
+        no dependency on Profile Creator, the corporate Data Lake or any other employee-profile integration
+        (ADR-014). Profile edits change display attributes only; the identity key and every record that
+        references the employee are unaffected. Never creates an employee or an Entra identity for a
+        historic person who cannot be resolved against the directory; such people remain review exceptions
+        owned by COMP-LEGACY-RECORDS.
+      requirement_refs:
+        - REQ-FR-002
+        - REQ-FR-005
+        - REQ-FR-006
+        - REQ-BR-015
+        - REQ-DR-001
+        - REQ-DR-016
+        - REQ-NFR-010
+    - id: COMP-MENTOR-REGISTRY
+      name: Mentor application, approval and discovery
+      responsibility: |-
+        Owns the MentorProfile (employee, biography, role/title, industry experience, mentoring experience,
+        approval status and approval decision evidence). Any authenticated employee may apply once and
+        maintain their biography and attributes; a Talent Management administrator approves or declines the
+        application. Discovery returns every approved mentor with their profile and nothing else: no pending
+        profiles, no capacity cap, no availability flag, no relationship-count suppression and no inferred
+        suitability score or AI ranking. Discovery distinguishes job title, industry experience and
+        mentoring experience.
+      requirement_refs:
+        - REQ-FR-007
+        - REQ-FR-008
+        - REQ-FR-009
+        - REQ-FR-010
+        - REQ-FR-011
+        - REQ-FR-012
+        - REQ-FR-013
+        - REQ-BR-001
+        - REQ-BR-002
+        - REQ-DR-002
+    - id: COMP-MENTORSHIP-REQUEST
+      name: Mentorship request and candidate pairing
+      responsibility: |-
+        Owns the MentorshipRequest (protégé, motivation, technical/career development goals, nontechnical
+        expectations stored separately, submission date, disposition) as a record that stays identifiable
+        before and after any agreement, and the MentorSelection that pairs a request with one discoverable
+        mentor: invitation, the mentor's recorded accept/decline response with dates, an introductory
+        conversation marker that can be set as arranged outside the application, and the independent
+        willingness-to-proceed decision of each party. Only a selection with both current willingness
+        decisions becomes a mutually accepted candidate eligible for agreement drafting. Declined and
+        withdrawn selections keep their disposition and never become relationships; substituting a party
+        invalidates that candidate's pairing decisions and the agreement acceptances that depended on them.
+      requirement_refs:
+        - REQ-FR-014
+        - REQ-FR-015
+        - REQ-FR-016
+        - REQ-FR-017
+        - REQ-FR-018
+        - REQ-FR-019
+        - REQ-FR-020
+        - REQ-FR-021
+        - REQ-BR-021
+        - REQ-DR-003
+        - REQ-DR-004
+    - id: COMP-AGREEMENT-DRAFTING
+      name: Agreement draft lifecycle, content snapshots and acceptances
+      responsibility: |-
+        Owns workflow Steps 1 and 2 for a mutually accepted candidate. An agreement draft is an immutable
+        content snapshot (CONTRACT-AGREEMENT-CONTENT) that reproduces the substantive commitments of the
+        existing mentorship agreement: fixed policy text (voluntary partnership, confidentiality, honest and
+        constructive feedback, openness to feedback, amicable conclusion, review every three to six months,
+        avoid cancelling, agree the next meeting at each meeting) together with the entered values (duration
+        category 6/12/12+ months, optional start and end dates, meeting interval in weeks, approximate
+        minutes per meeting, between-meeting contact limits, missed-meeting arrangements, review date,
+        individual SMART development goals, barriers, contingency plans and the responsibilities of each
+        party). Each revision carries a stable content identity (ADR-004). Each participant independently
+        accepts the exact current content; acceptances are retained with actor, UTC timestamp, content
+        identity and current applicability. A substantive change after any acceptance creates a replacement
+        revision, marks every draft-specific acceptance and decision of the earlier revision inapplicable
+        and returns the candidate to Step 1; superseded content, acceptances and decisions are preserved as
+        evidence. Only a Talent Management administrator may record an explicitly permitted non-substantive
+        change, which is stored separately from, and never overwrites, the accepted snapshot. After
+        formation no draft operation can touch the formed agreement.
+      requirement_refs:
+        - REQ-FR-022
+        - REQ-FR-023
+        - REQ-FR-024
+        - REQ-FR-025
+        - REQ-FR-026
+        - REQ-FR-027
+        - REQ-FR-028
+        - REQ-FR-029
+        - REQ-FR-055
+        - REQ-FR-067
+        - REQ-FR-068
+        - REQ-FR-069
+        - REQ-BR-004
+        - REQ-BR-010
+        - REQ-BR-011
+        - REQ-BR-012
+        - REQ-BR-017
+        - REQ-BR-018
+        - REQ-BR-019
+        - REQ-BR-020
+        - REQ-BR-023
+        - REQ-DR-006
+        - REQ-DR-007
+        - REQ-DR-015
+        - REQ-NFR-005
+    - id: COMP-FORMATION
+      name: Formation approval and relationship formation
+      responsibility: |-
+        Owns workflow Steps 3 and 4. A Talent Management administrator's formation approval is bound to one
+        candidate and the content identity of its current draft. Approval and formation run as a single
+        transactional command (ADR-005) that re-validates at that moment that the same candidate, the same
+        identified parties and the same current content have current mutual pairing acceptance and two
+        applicable participant acceptances, rejects any attempt that relies on superseded content or
+        decisions (including a concurrent revision), records the FormationApproval with actor, UTC time,
+        candidate and content identity, creates the MentorshipRelationship with State In Progress, blank
+        Status and IsActive N, freezes the formed agreement snapshot and instantiates its individual goals.
+        Formation evidence is stored independently of the relationship's administrative fields. After
+        formation, different terms, goals or a different mentor require a new request, candidate, agreement,
+        acceptances and approval; nothing transfers.
+      requirement_refs:
+        - REQ-FR-030
+        - REQ-FR-031
+        - REQ-FR-032
+        - REQ-FR-033
+        - REQ-FR-070
+        - REQ-FR-071
+        - REQ-BR-003
+        - REQ-BR-021
+        - REQ-DR-005
+        - REQ-DR-008
+    - id: COMP-RELATIONSHIP-ADMIN
+      name: Formed relationship administration
+      responsibility: |-
+        Owns the operational attributes of a formed MentorshipRelationship: State (In Progress, On hold,
+        Complete), Status (Needs reassigning or blank) and IsActive (Y or N) are three independent,
+        database-constrained attributes (ADR-006). Talent Management administrators change each one
+        independently, in any direction and in any combination, through the API; no rule derives,
+        recalculates or rejects a combination, no edit triggers reassignment, and no edit can form or
+        activate an unformed candidate. The formation-time default IsActive N never overwrites a later
+        explicit administrator choice. Every change is written to the audit trail with prior value, new
+        value, acting administrator and UTC timestamp. Supports any number of relationships involving the
+        same person over time and carries the digital-versus-legacy provenance indicator.
+      requirement_refs:
+        - REQ-FR-043
+        - REQ-FR-044
+        - REQ-FR-045
+        - REQ-FR-046
+        - REQ-FR-047
+        - REQ-FR-048
+        - REQ-FR-049
+        - REQ-FR-050
+        - REQ-FR-051
+        - REQ-FR-054
+        - REQ-FR-071
+        - REQ-BR-006
+        - REQ-BR-007
+        - REQ-BR-008
+        - REQ-BR-009
+        - REQ-DR-005
+    - id: COMP-GOALS-PROGRESS
+      name: Development goals, progress and completion decisions
+      responsibility: |-
+        Owns the DevelopmentGoal records instantiated from the formed agreement, each with its fixed agreed
+        wording, a reference to the relationship and agreement, and a completion status that changes without
+        touching agreement content. The protégé submits dated GoalProgress entries without approval and may
+        request formal completion; the request is visibly pending until the identified mentor alone approves
+        or rejects it (GoalApproval with mentor, decision and UTC timestamp). A rejection leaves the goal
+        incomplete; there is no rejection-reason field, resubmission loop, escalation or administrator
+        approval step. Talent Management administrators read structured goals and progress only. No field
+        for private meeting discussion content exists.
+      requirement_refs:
+        - REQ-FR-034
+        - REQ-FR-035
+        - REQ-FR-036
+        - REQ-FR-037
+        - REQ-FR-039
+        - REQ-FR-040
+        - REQ-FR-066
+        - REQ-BR-005
+        - REQ-BR-013
+        - REQ-DR-009
+        - REQ-DR-010
+        - REQ-DR-011
+    - id: COMP-MEETINGS-NOTIFICATIONS
+      name: Meeting schedule and workflow notification events
+      responsibility: |-
+        Owns the MeetingSchedule representation (ADR-010): proposed introductory meetings for a candidate
+        and planned recurring sessions for a relationship, with a proposed or scheduled time where known
+        and the agreed frequency and duration taken from the agreement, with no notes field and no calendar
+        integration. Owns the NotificationEvent records (ADR-009, CONTRACT-NOTIFICATION-EVENTS) written in
+        the same transaction as every material workflow action (invitation, mentor response, willingness to
+        proceed, draft acceptance, draft supersession, formation approval, mentor application decision,
+        goal-completion request and decision), each identifying the action, the intended recipient and
+        role, and the required next action. Events are retrievable only by their intended recipient and are
+        delivered in the prototype as an in-app notice with an explicitly simulated delivery log; no
+        transport, queue, reminder schedule or production notification service is required.
+      requirement_refs:
+        - REQ-FR-055
+        - REQ-FR-056
+        - REQ-FR-057
+        - REQ-FR-058
+        - REQ-FR-059
+        - REQ-DR-013
+        - REQ-NFR-002
+        - REQ-NFR-010
+    - id: COMP-REGISTER-REPORTING
+      name: Relationship register and export
+      responsibility: |-
+        Provides the Talent Management register of all relationships (mentor, protégé, levels, State,
+        Status, IsActive, start and end dates, duration, provenance, source reference and review-exception
+        marker where available) and its spreadsheet-compatible export (ADR-011, CONTRACT-REGISTER-EXPORT),
+        both reconstructed on demand from the authoritative store. Unknown or absent values are exported as
+        empty cells beside the retained source text, never as invented values, and legacy rows are
+        distinguishable from digitally formed ones. Also serves the administrator's structured view of goals
+        and progress. Reports never contain private meeting discussion content and are available only to
+        Talent Management administrators through the user interface and the API alike.
+      requirement_refs:
+        - REQ-FR-040
+        - REQ-FR-060
+        - REQ-FR-061
+        - REQ-FR-062
+        - REQ-FR-066
+        - REQ-BR-013
+        - REQ-NFR-002
+        - REQ-NFR-009
+    - id: COMP-LEGACY-RECORDS
+      name: Legacy historical record entry and provenance
+      responsibility: |-
+        Realises controlled manual entry of the historical tracker rows without an importer, entry screen or
+        migration subsystem (ADR-008, CONTRACT-LEGACY-ENTRY): reviewed SQL entry scripts executed under a
+        database role restricted to Talent Management administrators insert relationships with provenance
+        legacy, the source file and row reference, the original source text for Active, Duration, Start and
+        End, the entering administrator's employee identity and the actual entry time. Dates are stored only
+        when the source value is an unambiguous day/month/year date; otherwise the date stays unknown and
+        the text is retained. Participants are resolved to Entra-backed employees; a row whose person cannot
+        be resolved, whose State/Status/IsActive interpretation is unsupported or which has no mentor is
+        retained as a review exception rather than given guessed values or an invented identity. Legacy
+        relationships never receive digital acceptance, approval or formation evidence, and the API offers
+        no legacy-entry operation.
+      requirement_refs:
+        - REQ-FR-062
+        - REQ-FR-063
+        - REQ-FR-064
+        - REQ-BR-016
+        - REQ-BR-022
+        - REQ-DR-001
+        - REQ-DR-014
+        - REQ-DR-016
+        - REQ-NFR-003
+        - REQ-NFR-004
+    - id: COMP-AUDIT-TRAIL
+      name: Append-only audit trail
+      responsibility: |-
+        Owns the AdministrationAudit log (ADR-007, CONTRACT-AUDIT-ENTRY): an insert-only table written in
+        the same database transaction as every business-critical action (mentor approval, invitation and
+        response, willingness decisions, draft creation, acceptance, supersession and permitted change,
+        formation approval, State/Status/IsActive edits, goal-completion decisions and legacy entry) with
+        the true actor and identity scheme, the server-assigned UTC timestamp, action, affected record,
+        prior and new values, the applicable decision context (candidate, revision and content identity) and
+        the manual-entry source reference. Entries distinguish actual application events from legacy-source
+        claims and never contain private discussion content. Administrators can query the trail to verify
+        current and superseded acceptances and decisions.
+      requirement_refs:
+        - REQ-FR-028
+        - REQ-FR-033
+        - REQ-FR-051
+        - REQ-FR-065
+        - REQ-FR-069
+        - REQ-DR-014
+        - REQ-NFR-002
+        - REQ-NFR-004
+    - id: COMP-DATA-STORE
+      name: Authoritative PostgreSQL persistence
+      responsibility: |-
+        Owns the PostgreSQL schema (CONTRACT-DATABASE-SCHEMA) and its EF Core mapping and migrations
+        (ADR-013). Realises every conceptual entity as separately identifiable records: employees, mentor
+        profiles, requests, selections and willingness decisions, draft revisions, acceptances, permitted
+        changes, formation approvals, relationships, goals, progress entries, goal approvals, meetings,
+        notification events, audit entries, legacy provenance and review exceptions. Enforces referential
+        integrity with foreign keys, the State/Status/IsActive enumerations with check constraints,
+        immutability of snapshot and evidence tables by withholding update and delete privileges from the
+        application role, optimistic concurrency tokens on candidates, and UTC timestamps. Contains no
+        column for private meeting discussion content. Requires TLS for connections; at-rest encryption,
+        backup and recovery are platform decisions recorded before production.
+      requirement_refs:
+        - REQ-FR-017
+        - REQ-FR-054
+        - REQ-FR-061
+        - REQ-FR-064
+        - REQ-DR-001
+        - REQ-DR-002
+        - REQ-DR-003
+        - REQ-DR-004
+        - REQ-DR-005
+        - REQ-DR-006
+        - REQ-DR-007
+        - REQ-DR-008
+        - REQ-DR-009
+        - REQ-DR-010
+        - REQ-DR-011
+        - REQ-DR-013
+        - REQ-DR-014
+        - REQ-DR-015
+        - REQ-DR-016
+        - REQ-NFR-002
+        - REQ-NFR-003
+        - REQ-NFR-005
+        - REQ-NFR-007
+        - REQ-NFR-009
+    - id: COMP-WEB-FRONTEND
+      name: React web frontend
+      responsibility: |-
+        The separately deployable React single-page application (ADR-012), created with Vercel v0 and kept
+        under src/web, that provides role-appropriate screens for protégés, mentors and Talent Management
+        administrators: sign-in through Entra or the labelled simulated identity, own profile, mentor
+        application and profile maintenance, mentor discovery, mentorship request and invitation, mentor
+        response and willingness decisions, agreement draft preparation, full-content review and acceptance,
+        goals, progress and completion requests and decisions, administrator approvals, relationship
+        State/Status/IsActive administration, register and export, notification inbox and meeting
+        schedule. It calls CONTRACT-MENTORSHIP-API through a generated typed client, renders the permitted
+        actions the server reports and never enforces a business rule itself; a persistent banner marks
+        simulated-identity mode.
+      requirement_refs:
+        - REQ-FR-001
+        - REQ-FR-003
+        - REQ-FR-005
+        - REQ-FR-007
+        - REQ-FR-010
+        - REQ-FR-012
+        - REQ-FR-014
+        - REQ-FR-015
+        - REQ-FR-016
+        - REQ-FR-018
+        - REQ-FR-019
+        - REQ-FR-020
+        - REQ-FR-022
+        - REQ-FR-027
+        - REQ-FR-035
+        - REQ-FR-036
+        - REQ-FR-037
+        - REQ-FR-040
+        - REQ-FR-047
+        - REQ-FR-048
+        - REQ-FR-049
+        - REQ-FR-055
+        - REQ-FR-056
+        - REQ-FR-057
+        - REQ-FR-060
+        - REQ-NFR-006
+        - REQ-NFR-010
+    - id: COMP-PLATFORM-OPERATIONS
+      name: Infrastructure, configuration and operations
+      responsibility: |-
+        Owns everything under infra/: the local and demonstrator environment (container definitions for the
+        API, the SPA and PostgreSQL), container builds, environment configuration (Entra tenant, client and
+        audience settings, connection strings with TLS, the switches for simulated identity and simulated
+        notification delivery, which default off outside prototype configuration) and the legacy-entry
+        script templates and database roles. Records the production-readiness decisions that the BRS defers
+        to before production acceptance: hosting, backup and recovery procedure and metrics for the
+        authoritative store, production ownership, controlled operator and data access, retention and
+        protection controls. The prototype runs with no calendar, Data Lake, AI inference or notification
+        transport, and operator access confers no business-record permission.
+      requirement_refs:
+        - REQ-FR-013
+        - REQ-FR-058
+        - REQ-NFR-001
+        - REQ-NFR-007
+        - REQ-NFR-008
+        - REQ-NFR-009
+        - REQ-NFR-010
+  requirement_refs:
+    - REQ-FR-001
+    - REQ-FR-002
+    - REQ-FR-003
+    - REQ-FR-004
+    - REQ-FR-005
+    - REQ-FR-006
+    - REQ-FR-007
+    - REQ-FR-008
+    - REQ-FR-009
+    - REQ-FR-010
+    - REQ-FR-011
+    - REQ-FR-012
+    - REQ-FR-013
+    - REQ-FR-014
+    - REQ-FR-015
+    - REQ-FR-016
+    - REQ-FR-017
+    - REQ-FR-018
+    - REQ-FR-019
+    - REQ-FR-020
+    - REQ-FR-021
+    - REQ-FR-022
+    - REQ-FR-023
+    - REQ-FR-024
+    - REQ-FR-025
+    - REQ-FR-026
+    - REQ-FR-027
+    - REQ-FR-028
+    - REQ-FR-029
+    - REQ-FR-030
+    - REQ-FR-031
+    - REQ-FR-032
+    - REQ-FR-033
+    - REQ-FR-034
+    - REQ-FR-035
+    - REQ-FR-036
+    - REQ-FR-037
+    - REQ-FR-039
+    - REQ-FR-040
+    - REQ-FR-043
+    - REQ-FR-044
+    - REQ-FR-045
+    - REQ-FR-046
+    - REQ-FR-047
+    - REQ-FR-048
+    - REQ-FR-049
+    - REQ-FR-050
+    - REQ-FR-051
+    - REQ-FR-054
+    - REQ-FR-055
+    - REQ-FR-056
+    - REQ-FR-057
+    - REQ-FR-058
+    - REQ-FR-059
+    - REQ-FR-060
+    - REQ-FR-061
+    - REQ-FR-062
+    - REQ-FR-063
+    - REQ-FR-064
+    - REQ-FR-065
+    - REQ-FR-066
+    - REQ-FR-067
+    - REQ-FR-068
+    - REQ-FR-069
+    - REQ-FR-070
+    - REQ-FR-071
+    - REQ-BR-001
+    - REQ-BR-002
+    - REQ-BR-003
+    - REQ-BR-004
+    - REQ-BR-005
+    - REQ-BR-006
+    - REQ-BR-007
+    - REQ-BR-008
+    - REQ-BR-009
+    - REQ-BR-010
+    - REQ-BR-011
+    - REQ-BR-012
+    - REQ-BR-013
+    - REQ-BR-015
+    - REQ-BR-016
+    - REQ-BR-017
+    - REQ-BR-018
+    - REQ-BR-019
+    - REQ-BR-020
+    - REQ-BR-021
+    - REQ-BR-022
+    - REQ-BR-023
+    - REQ-DR-001
+    - REQ-DR-002
+    - REQ-DR-003
+    - REQ-DR-004
+    - REQ-DR-005
+    - REQ-DR-006
+    - REQ-DR-007
+    - REQ-DR-008
+    - REQ-DR-009
+    - REQ-DR-010
+    - REQ-DR-011
+    - REQ-DR-013
+    - REQ-DR-014
+    - REQ-DR-015
+    - REQ-DR-016
+    - REQ-NFR-001
+    - REQ-NFR-002
+    - REQ-NFR-003
+    - REQ-NFR-004
+    - REQ-NFR-005
+    - REQ-NFR-006
+    - REQ-NFR-007
+    - REQ-NFR-008
+    - REQ-NFR-009
+    - REQ-NFR-010
+  adr_refs:
+    - ADR-001
+    - ADR-002
+    - ADR-003
+    - ADR-004
+    - ADR-005
+    - ADR-006
+    - ADR-007
+    - ADR-008
+    - ADR-009
+    - ADR-010
+    - ADR-011
+    - ADR-012
+    - ADR-013
+    - ADR-014
+  contract_refs:
+    - CONTRACT-MENTORSHIP-API
+    - CONTRACT-ENTRA-IDENTITY
+    - CONTRACT-DATABASE-SCHEMA
+    - CONTRACT-AGREEMENT-CONTENT
+    - CONTRACT-NOTIFICATION-EVENTS
+    - CONTRACT-REGISTER-EXPORT
+    - CONTRACT-LEGACY-ENTRY
+    - CONTRACT-AUTHORISATION-MATRIX
+    - CONTRACT-AUDIT-ENTRY

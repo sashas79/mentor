@@ -1,0 +1,25 @@
+# Architecture decision record derived under Engineering Harness control.
+schema_version: 1
+adr:
+  id: ADR-014
+  title: No external business integrations in the MVP
+  status: proposed
+  decision: |-
+    The MVP integrates with exactly one external system, Microsoft Entra ID, and only for authentication.
+    There is no integration with Profile Creator, the corporate Data Lake or any employee-profile source
+    (profiles are maintained in the application), no calendar API, no AI inference or ranking service, and
+    no notification transport. The code base contains no adapter, client library or configuration for
+    those systems; the points where production integrations could later attach are the employee profile
+    module, the meeting module and the notification event table. Mentor discovery is a plain filtered
+    query over approved profiles.
+  rationale: |-
+    FR-005, FR-013, FR-058, BR-015 and NFR-010 require the prototype core flows to function without those
+    systems and exclude AI ranking, capacity suppression and live calendar dependencies from the MVP.
+    Leaving the integrations out entirely, rather than stubbing them, keeps the demonstrator portable
+    and avoids implying scope the BRS excludes.
+  requirement_refs:
+    - REQ-FR-005
+    - REQ-FR-013
+    - REQ-FR-058
+    - REQ-BR-015
+    - REQ-NFR-010

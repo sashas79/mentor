@@ -1,0 +1,25 @@
+# Architecture decision record derived under Engineering Harness control.
+schema_version: 1
+adr:
+  id: ADR-009
+  title: Persisted in-app notification events instead of a delivery channel
+  status: proposed
+  decision: |-
+    Material workflow actions produce notification_event rows (CONTRACT-NOTIFICATION-EVENTS) written in
+    the same transaction as the action: mentor application decided, invitation sent, mentor responded,
+    willingness to proceed recorded, draft ready for acceptance, draft accepted by the other party, draft
+    superseded (reset to Step 1), formation approved, goal completion requested, goal completion decided.
+    Each event records type, subject record, intended recipient employee identity and role, required next
+    action, created time and read time. The API exposes the caller's own events only. The prototype
+    frontend renders them as an in-app inbox, and the API appends each event to a simulated-delivery log
+    that is visibly labelled as simulated. No e-mail, Teams, push, queue, scheduler or reminder exists;
+    a production transport, if ever required, would subscribe to the same table.
+  rationale: |-
+    FR-057 requires demonstrable notification events that identify the material action, recipient and
+    next action, restricted to the intended recipient, with no delivery channel or production service
+    implied; FR-058 and NFR-010 require the prototype to run without live transports. A transactional
+    table satisfies the evidence and visibility criteria with no external dependency.
+  requirement_refs:
+    - REQ-FR-057
+    - REQ-FR-058
+    - REQ-NFR-010

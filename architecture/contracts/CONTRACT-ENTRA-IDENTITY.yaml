@@ -1,0 +1,11 @@
+# Contract reference derived under Engineering Harness control.
+schema_version: 1
+contract:
+  id: CONTRACT-ENTRA-IDENTITY
+  name: Microsoft Entra ID OpenID Connect and bearer-token contract (issuer, audience, oid, name and app-role claims)
+  type: integration
+  requirement_refs:
+    - REQ-FR-001
+    - REQ-FR-002
+    - REQ-DR-001
+    - REQ-NFR-001

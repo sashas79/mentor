@@ -1,0 +1,46 @@
+# Architecture decision record derived under Engineering Harness control.
+schema_version: 1
+adr:
+  id: ADR-008
+  title: Legacy historical records entered through reviewed SQL scripts under a Talent Management database role, with explicit provenance and review exceptions
+  status: proposed
+  decision: |-
+    There is no importer, no entry screen and no legacy-entry API operation. Historical tracker rows are
+    entered by versioned SQL entry scripts generated from the template in infra/legacy-entry/ and executed
+    against the authoritative database under the PostgreSQL role mentor_legacy_entry. Membership of that
+    role is granted only to database accounts of Talent Management administrators listed in the
+    legacy_entry_authorisation table (employee identity plus database account); the database operator
+    grants membership but holds none. An insert trigger on the legacy tables rejects any row whose
+    session role is not a member of mentor_legacy_entry or whose entered_by employee is not the employee
+    mapped to that session account, so every entry is attributed to the administrator who performed it.
+
+    A legacy relationship row carries provenance = legacy, source_file, source_row, the verbatim source
+    text for Active, Duration, Start and End, the resolved mentor and protégé employee identities, the
+    nullable typed dates and State/Status/IsActive values, entered_by and entered_at (actual entry time).
+    A typed date is populated only when the source text is an unambiguous day/month/year date; "ongoing"
+    and similar text stays in the source column with the typed date null. State, Status and IsActive are
+    populated only from the mapping decisions recorded in the specification; any row whose person cannot
+    be resolved to an Entra-backed employee, whose interpretation is unsupported or which has no mentor
+    is inserted into legacy_review_exception with its source reference and reason instead of into the
+    relationship table, and no employee or Entra identity is created for an unresolved person. Legacy
+    rows have no acceptance, approval, formation or goal evidence; a database constraint forbids
+    formation evidence on legacy provenance and requires it on digital provenance. The audit trail
+    records the entry with provenance legacy_source.
+  rationale: |-
+    FR-063, BR-016 and BR-022 require manual, controlled entry by a Talent Management administrator only,
+    with identity resolution, provenance and accountability and without an importer or new interface;
+    FR-062, DR-016 and AC-E2E-07 forbid fabricated dates, identities or lifecycle events. A database role
+    with a membership check binds the entry to the administrator without building an application
+    feature, keeps IT operators unable to enter records themselves, and the explicit source columns and
+    review-exception table keep every unresolved value visible rather than guessed.
+  requirement_refs:
+    - REQ-FR-033
+    - REQ-FR-062
+    - REQ-FR-063
+    - REQ-FR-064
+    - REQ-BR-016
+    - REQ-BR-022
+    - REQ-DR-001
+    - REQ-DR-016
+    - REQ-NFR-003
+    - REQ-NFR-004

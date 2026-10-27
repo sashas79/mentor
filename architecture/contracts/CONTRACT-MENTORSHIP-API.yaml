@@ -1,0 +1,30 @@
+# Contract reference derived under Engineering Harness control.
+schema_version: 1
+contract:
+  id: CONTRACT-MENTORSHIP-API
+  name: Mentorship REST API (OpenAPI 3.1 document served by the API host and used to generate the frontend client)
+  type: api
+  requirement_refs:
+    - REQ-FR-004
+    - REQ-FR-005
+    - REQ-FR-007
+    - REQ-FR-008
+    - REQ-FR-012
+    - REQ-FR-014
+    - REQ-FR-018
+    - REQ-FR-019
+    - REQ-FR-020
+    - REQ-FR-022
+    - REQ-FR-027
+    - REQ-FR-030
+    - REQ-FR-035
+    - REQ-FR-036
+    - REQ-FR-037
+    - REQ-FR-047
+    - REQ-FR-048
+    - REQ-FR-049
+    - REQ-FR-057
+    - REQ-FR-060
+    - REQ-FR-068
+    - REQ-NFR-001
+    - REQ-NFR-006

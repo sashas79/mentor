@@ -1,0 +1,19 @@
+# Authoritative validation evidence. Append-only; never edit.
+schema_version: 1
+validation:
+  id: VAL-ARCH-0001
+  subject_digest: sha256:4b9578976d4455fc3dcd0b265ad4d86cdd2fa3bc4d959630bb5192458dc887e9
+  harness:
+    version: v0.3.0
+  engineering:
+    resolution_digest: sha256:d17c01e47a3508fcd22cfafae3eaafd81c35d3a4283529915a33ee5ccaec0927
+  controls:
+    - control: control://validation/architecture
+      result: PASS
+      issues: []
+  result: PASS
+  captured_at: 2026-10-27T14:59:27Z
+  binding:
+    algorithm: sha256
+    canonicalisation: harness-v1
+    digest: sha256:19b12e5cceef90b84636d3dac1e269dcd1c5c8aa47784b2a279be19a453bc214

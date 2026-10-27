@@ -1,0 +1,68 @@
+# Architecture decision record derived under Engineering Harness control.
+schema_version: 1
+adr:
+  id: ADR-003
+  title: Server-side default-deny authorisation with an explicit actor/resource/action matrix
+  status: proposed
+  decision: |-
+    Every endpoint except sign-in support and the capabilities/health endpoints requires an authorisation
+    policy. Policies combine a role requirement with resource-based handlers that load the target record
+    and check the caller's relationship to it. Any actor/resource/action combination absent from the
+    matrix is denied. The matrix is the contract CONTRACT-AUTHORISATION-MATRIX, maintained as a versioned
+    document in src/Mentor.Api and covered by integration tests that exercise every denied row.
+
+    Actors: EMPLOYEE (any authenticated employee), APPLICANT (employee with a mentor application),
+    MENTOR (approved mentor), TM (Talent Management administrator), OPERATOR (IT/system operator: no
+    application role, no business permission).
+
+    Matrix:
+    - Employee profile: EMPLOYEE reads and updates own display attributes; TM reads any; nobody changes
+      the identity key.
+    - Mentor application and profile: EMPLOYEE creates own (once); APPLICANT and MENTOR read and update own
+      biography and attributes; TM lists pending applications and approves or declines.
+    - Mentor discovery: EMPLOYEE lists approved mentors and reads their profiles; pending profiles are
+      visible only to their owner and TM.
+    - Mentorship request: EMPLOYEE creates own; owner reads own; MENTOR reads a request only while named
+      as its candidate; TM reads all.
+    - Mentor selection: request owner selects a discoverable mentor and may withdraw; candidate MENTOR
+      reads and records accept or decline; each party records only their own willingness-to-proceed
+      decision; TM reads.
+    - Agreement draft: the two parties of a mutually accepted candidate prepare and substantively revise
+      the current draft and read every revision of their candidate; each party records only their own
+      acceptance of the current content; TM reads all drafts and alone records a permitted non-substantive
+      change; nobody updates an accepted snapshot.
+    - Formation approval: TM only; the parties read the outcome.
+    - Relationship: parties read their own; TM reads all and updates State, Status and IsActive.
+    - Goals and progress: parties read their relationship's goals and progress; the protégé submits
+      progress and completion requests; the mentor approves or rejects completion; TM reads structured
+      goals and progress. No actor has access to private discussion content because none is stored.
+    - Meetings: parties read and record meetings of their own candidate or relationship; TM reads.
+    - Notification events: the intended recipient alone reads and marks their events; no other actor,
+      TM included, retrieves another recipient's pending-action details.
+    - Register, export and audit trail: TM only.
+    - Legacy entry: no API operation exists; database entry is governed by ADR-008.
+    - OPERATOR: no row; technical access to the environment grants no application permission.
+  rationale: |-
+    FR-004 and NFR-001 require every protected action to be authorised at the server regardless of
+    interface, and BRS section 3 obliges the architecture to produce a server-side actor/resource/action
+    matrix in which unspecified permissions do not default to broad access. Resource-based handlers are
+    the ASP.NET Core mechanism that can express participation (own profile, own candidate, intended
+    recipient) rather than role alone, which the acceptance criteria for candidate visibility,
+    notification visibility, goal approval and register access demand.
+  requirement_refs:
+    - REQ-FR-003
+    - REQ-FR-004
+    - REQ-FR-008
+    - REQ-FR-030
+    - REQ-FR-037
+    - REQ-FR-039
+    - REQ-FR-040
+    - REQ-FR-047
+    - REQ-FR-057
+    - REQ-FR-060
+    - REQ-FR-066
+    - REQ-BR-013
+    - REQ-BR-022
+    - REQ-BR-023
+    - REQ-NFR-001
+    - REQ-NFR-009

@@ -1,0 +1,16 @@
+# Contract reference derived under Engineering Harness control.
+schema_version: 1
+contract:
+  id: CONTRACT-AUTHORISATION-MATRIX
+  name: Server-side actor/resource/action permission matrix (default deny; the rows are stated in ADR-003)
+  type: other
+  requirement_refs:
+    - REQ-FR-003
+    - REQ-FR-004
+    - REQ-FR-039
+    - REQ-FR-057
+    - REQ-FR-060
+    - REQ-BR-013
+    - REQ-BR-022
+    - REQ-BR-023
+    - REQ-NFR-009

@@ -1,0 +1,9 @@
+# Contract reference derived under Engineering Harness control.
+schema_version: 1
+contract:
+  id: CONTRACT-NOTIFICATION-EVENTS
+  name: Workflow notification event record (event type, subject, intended recipient and role, required next action, simulated delivery log)
+  type: event
+  requirement_refs:
+    - REQ-FR-057
+    - REQ-NFR-010

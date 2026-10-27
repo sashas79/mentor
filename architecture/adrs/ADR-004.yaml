@@ -1,0 +1,67 @@
+# Architecture decision record derived under Engineering Harness control.
+schema_version: 1
+adr:
+  id: ADR-004
+  title: Immutable content-addressed agreement draft revisions with applicability-tracked acceptances and reset by replacement
+  status: proposed
+  decision: |-
+    An agreement draft is a sequence of immutable revisions belonging to one candidate. Each revision row
+    stores the complete content document (CONTRACT-AGREEMENT-CONTENT) as canonical JSON, the revision
+    number, the parent revision, the creating actor and UTC time, and two identities computed by the
+    server: content_hash, the SHA-256 of the canonical JSON, and substantive_hash, the SHA-256 of the
+    canonical JSON restricted to the substantive fields (parties, duration category, dates, meeting and
+    contact terms, missed-meeting arrangements, review date, goals, barriers, contingencies,
+    responsibilities and the fixed policy text) after whitespace normalisation. Revision rows are never
+    updated or deleted; the application role has no update or delete privilege on the table.
+
+    An acceptance row records the participant, the revision, both hashes, the server UTC time and an
+    applicability state (applicable or superseded) with the superseding revision reference. A formation
+    approval decision references a revision and its hashes in the same way.
+
+    Any change to the current content is submitted as a new candidate document. The server classifies it:
+    - substantive when substantive_hash changes, or when the submitter is not a Talent Management
+      administrator, or when no permission-basis code is given. The server inserts a new revision, marks
+      every acceptance and draft-specific approval decision of the previous revision superseded in the
+      same transaction, sets the candidate's workflow step to 1 and writes an audit entry with the reset
+      outcome. Both parties must accept the new revision before approval.
+    - permitted non-substantive only when substantive_hash is unchanged, the submitter is a Talent
+      Management administrator and a permission-basis code from the application's enumerated set
+      (TYPOGRAPHICAL_CORRECTION, FORMATTING, ADMINISTRATIVE_REFERENCE) is supplied. The server inserts a
+      new revision that carries the same substantive_hash, records a permitted-change row with actor,
+      time, permission basis and the field-level difference, keeps the candidate's step and leaves the
+      existing acceptances applicable because they are bound to the unchanged substantive_hash; the
+      accepted snapshot is untouched.
+    - rejected in every other case; nothing is silently treated as non-substantive.
+
+    Substituting a party ends the candidate's agreement drafting: all acceptances of the candidate are
+    superseded and the candidate returns to pairing. Changing the identified parties after acceptance
+    is substantive by definition. On formation the approved revision's content and hashes are copied into
+    the formed agreement, which the application never updates.
+  rationale: |-
+    FR-027 to FR-029 and FR-067 to FR-070 require acceptances bound to exact content, replacement rather
+    than edit after any acceptance, preservation of superseded evidence and a strictly limited no-reset
+    exception that is explicitly permitted and recorded by the application. Hashing the canonical
+    content gives a stable content identity that acceptances and approvals can reference; the separate
+    substantive hash turns the non-substantive exception into a mechanical check the server can enforce
+    instead of a judgement, and restricting it to Talent Management administrators implements BR-023.
+    NFR-005 leaves the version/hash mechanism to architecture; SHA-256 over canonical JSON is
+    deterministic, cheap and testable.
+  requirement_refs:
+    - REQ-FR-022
+    - REQ-FR-027
+    - REQ-FR-028
+    - REQ-FR-029
+    - REQ-FR-032
+    - REQ-FR-033
+    - REQ-FR-067
+    - REQ-FR-068
+    - REQ-FR-069
+    - REQ-FR-070
+    - REQ-BR-004
+    - REQ-BR-019
+    - REQ-BR-020
+    - REQ-BR-023
+    - REQ-DR-006
+    - REQ-DR-007
+    - REQ-DR-015
+    - REQ-NFR-005

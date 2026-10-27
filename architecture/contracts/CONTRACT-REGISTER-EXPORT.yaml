@@ -1,0 +1,11 @@
+# Contract reference derived under Engineering Harness control.
+schema_version: 1
+contract:
+  id: CONTRACT-REGISTER-EXPORT
+  name: Relationship register export layout (JSON read model and spreadsheet-compatible CSV columns)
+  type: data
+  requirement_refs:
+    - REQ-FR-060
+    - REQ-FR-061
+    - REQ-FR-062
+    - REQ-NFR-002

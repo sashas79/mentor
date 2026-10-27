@@ -1,0 +1,42 @@
+# Architecture decision record derived under Engineering Harness control.
+schema_version: 1
+adr:
+  id: ADR-006
+  title: Independent enumerated relationship attributes State, Status and IsActive with audited administrator edits
+  status: proposed
+  decision: |-
+    The relationship table stores state, status and is_active as three separate columns with check
+    constraints: state in (IN_PROGRESS, ON_HOLD, COMPLETE) or null only for legacy rows under review;
+    status in (NEEDS_REASSIGNING) or null meaning blank; is_active in ('Y', 'N') or null only for legacy
+    rows under review. Digitally formed rows are inserted with IN_PROGRESS, null and 'N' and the database
+    requires all three to be non-null when provenance is digital. One administrator command updates any
+    subset of the three columns; the server validates only membership in the enumerations and the
+    existence of the formed relationship. There is no trigger, derived column or rule that changes one
+    attribute because another changed, no transition table, and no rejection of any combination. Each
+    executed change writes one audit entry per attribute with prior value, new value, administrator and
+    UTC time. Unresolved legacy values are represented by null plus a review-exception record, never by
+    an extra enumeration value.
+  rationale: |-
+    FR-043 to FR-051, FR-071 and BR-006 to BR-009 define three independent attributes with closed value
+    sets, free movement between State values, independent Status and IsActive edits, tolerance of unusual
+    combinations, a default of N at formation that never overrides a later explicit choice and a full
+    change history. Database check constraints make the value sets deterministic, nullable columns
+    confined to legacy rows keep "unknown" out of the business value sets as AC-FR-044-01 requires, and
+    per-attribute audit entries satisfy AC-FR-051-01 directly.
+  requirement_refs:
+    - REQ-FR-043
+    - REQ-FR-044
+    - REQ-FR-045
+    - REQ-FR-046
+    - REQ-FR-047
+    - REQ-FR-048
+    - REQ-FR-049
+    - REQ-FR-050
+    - REQ-FR-051
+    - REQ-FR-054
+    - REQ-FR-071
+    - REQ-BR-006
+    - REQ-BR-007
+    - REQ-BR-008
+    - REQ-BR-009
+    - REQ-DR-005

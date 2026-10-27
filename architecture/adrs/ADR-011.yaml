@@ -1,0 +1,28 @@
+# Architecture decision record derived under Engineering Harness control.
+schema_version: 1
+adr:
+  id: ADR-011
+  title: Relationship register export generated on demand as CSV from the authoritative store
+  status: proposed
+  decision: |-
+    The register is a read model computed by a query over the relationship, employee, agreement and
+    legacy tables; it is not stored. Two Talent Management endpoints return it as JSON and as a UTF-8 CSV
+    file with a byte-order mark (CONTRACT-REGISTER-EXPORT) whose columns are Mentor, Mentor level,
+    Protégé, Protégé level, State, Status, IsActive, Start date, End date, Duration, Provenance, Source
+    reference, Source Active text, Source Duration text, Source date text and Review exception. Unknown
+    values are empty cells next to the retained source text; dates are written as ISO 8601. There is no
+    import or synchronisation from the spreadsheet; the tracker file remains provenance only. Export
+    requests are audited. The export contains no goal progress text and no meeting content.
+  rationale: |-
+    FR-060 and FR-061 require an authorised register with spreadsheet-compatible fields reconstructed
+    from the authoritative store without a second authoritative source; FR-062, FR-064 and AC-FR-060-01
+    require unknowns to stay unknown and legacy provenance to be distinguishable; BR-013 and NFR-002 keep
+    private content out of reports. CSV is universally spreadsheet-compatible and needs no additional
+    library or template.
+  requirement_refs:
+    - REQ-FR-060
+    - REQ-FR-061
+    - REQ-FR-062
+    - REQ-FR-064
+    - REQ-BR-013
+    - REQ-NFR-002

@@ -1,0 +1,19 @@
+# Specification Baseline. Append-only; corrections create a new superseding record.
+schema_version: 1
+baseline:
+  id: SPEC-0001
+  type: specification
+  candidate:
+    path: evidence/candidates/CAND-SPEC-0001.yaml
+    digest: sha256:0b42f3d939f49b7e319d6317f33efb1b7d892db427906631767e309c0cceb003
+  approval:
+    path: evidence/approvals/APR-SPEC-0001.yaml
+    digest: sha256:2a591a98755496e00d177f5ab3c90d7e07aa5fbc6f4826db555e265a885e915b
+  established_at: 2026-10-27T14:46:09Z
+  repository:
+    git_commit: 5faa9e013672b74217f9dc055f2bf0e5db1b963b
+  supersedes: null
+  binding:
+    algorithm: sha256
+    canonicalisation: harness-v1
+    digest: sha256:082039d8eb7a4244d76502105865467135003968372852b9fbe1cf3a4e5c9de2

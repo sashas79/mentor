@@ -1,0 +1,36 @@
+# Architecture decision record derived under Engineering Harness control.
+schema_version: 1
+adr:
+  id: ADR-002
+  title: Microsoft Entra ID bearer authentication with an explicitly labelled simulated identity for prototype runs
+  status: proposed
+  decision: |-
+    Production authentication uses Microsoft Entra ID through OpenID Connect: the SPA signs the employee in
+    with MSAL (authorisation code flow with PKCE) and sends the resulting access token as a bearer token;
+    the API validates issuer, audience, signature and lifetime with Microsoft.Identity.Web. The token's
+    Entra object identifier claim (oid) is the immutable employee key; display name and job title claims
+    seed the profile but never replace the key. The Talent Management administrator role is an Entra app
+    role assigned in the tenant and read from the roles claim; every other functional role (mentor
+    applicant, approved mentor, protégé) is derived from application records.
+
+    For prototype runs where the Entra configuration is not available, a second authentication scheme
+    named Simulated is enabled only by explicit configuration (Identity:Mode=Simulated). It accepts a
+    simulated-identity header carrying a simulated object identifier, display name and declared role from
+    a fixed demonstration roster, marks the principal with an identity-scheme claim of simulated, and the
+    API reports the mode on its public capabilities endpoint so the frontend shows a persistent banner.
+    Audit entries record the identity scheme. The scheme is absent from production configuration, and a
+    run under it is never recorded as production authentication acceptance. Both schemes produce the same
+    principal shape, so authorisation (ADR-003) is identical under either.
+  rationale: |-
+    FR-001, FR-002 and NFR-001 require Entra as the production identity authority and the Entra identity
+    as the stable employee reference; NFR-010 and AC-FR-001-03 require prototype core flows to run with
+    expressly identified simulated identities while server authorisation still applies. Separating the
+    schemes keeps the production path free of demonstration code paths, and labelling the simulated
+    scheme in principal, API and audit makes it impossible to mistake a simulated run for an Entra test.
+  requirement_refs:
+    - REQ-FR-001
+    - REQ-FR-002
+    - REQ-FR-006
+    - REQ-DR-001
+    - REQ-NFR-001
+    - REQ-NFR-010
