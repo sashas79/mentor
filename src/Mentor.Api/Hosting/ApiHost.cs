@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Mentor.Api.Authorisation;
+using Mentor.Api.Employees;
 using Mentor.Api.Identity;
 using Mentor.Api.Meetings;
 using Mentor.Api.Notifications;
@@ -31,8 +32,9 @@ public static class ApiHost
         builder.AddMentorIdentity();
         services.AddDefaultDenyAuthorization();
         services.AddAuthorisationMatrix();
-        // Modules (COMP-MEETINGS-NOTIFICATIONS).
-        services.AddNotificationEvents();
+        // Modules.
+        services.AddEmployeeProfiles(); // COMP-EMPLOYEE-PROFILE
+        services.AddNotificationEvents(); // COMP-MEETINGS-NOTIFICATIONS
         services.AddProblemDetails();
         services.AddExceptionHandler<RedactingExceptionHandler>();
         // A malformed parameter or body is answered with 400 in every environment instead of an exception.
@@ -67,8 +69,9 @@ public static class ApiHost
             .AllowAnonymous();
         app.MapCapabilities();
         app.MapMentorIdentity();
-        // Modules (COMP-MEETINGS-NOTIFICATIONS).
-        app.MapMeetings();
+        // Modules.
+        app.MapEmployeeProfiles(); // COMP-EMPLOYEE-PROFILE
+        app.MapMeetings(); // COMP-MEETINGS-NOTIFICATIONS
         app.MapNotifications();
         if (app.Configuration.GetValue<bool>(OpenApiSwitch))
         {

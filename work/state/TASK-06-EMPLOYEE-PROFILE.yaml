@@ -1,0 +1,117 @@
+schema_version: 1
+task_state:
+  task: TASK-06-EMPLOYEE-PROFILE
+  status: done
+  work_baseline: baselines/work/WORK-0001.yaml
+  started: 2026-10-28T12:40:43Z
+  updated: 2026-10-28T13:26:44Z
+  verification:
+    - control: control://verification/build
+      result: PASS
+      command: dotnet build src/Mentor.slnx --no-incremental
+      note: >-
+        Run on execute/orchestrated after the squash merge onto 6bd522c (TASK-05 done). The one conflict, the module
+        registrations in src/Mentor.Api/Hosting/ApiHost.cs, was resolved by keeping both modules' Add/Map lines:
+        5 projects with TreatWarningsAsErrors and NuGet audit; 0 warnings, 0 errors. No package was added and no
+        migration was needed (TASK-02's employee table already holds the profile).
+    - control: control://verification/unit-test
+      result: PASS
+      command: dotnet test src/Mentor.slnx
+      note: >-
+        Full suite on the merged tree: Mentor.Tests.Unit 92/92 (78 after TASK-05, 14 with this task: 11 plus 3 from
+        the review fix); Mentor.Tests.Integration 269/269 (249 after TASK-05, 20 with this task: 18 plus 2 from the
+        review fix) against PostgreSQL 17 via Testcontainers, including every TASK-01, TASK-02, TASK-03 and TASK-05
+        test, the new ones through the API as Program composes it, under both identity schemes with roles and
+        ownership resolved from the database. The implementer's mutation run, in the task worktree, that admitted
+        every caller on the record check, dropped the strict body handling of the edit, and seeded a new record with
+        an invented name instead of the identity's failed, respectively, the by-id read test, the identity tests (unit
+        and integration), and the first-access, namesake, no-integration and application-record tests; nothing else
+        failed. After the review fix, a mutation that let the seed accept any identity name failed the three seeding
+        unit cases and both first-access-without-a-usable-name integration cases (no name claim; name beyond 200
+        characters); nothing else failed.
+  acceptance:
+    # Several criteria are shared with other tasks; the notes give this task's share and the test that shows it.
+    - criterion: AC-FR-002-01
+      note: Two callers named Sam Pillay get their own records, keyed by object identifier; a level saved on one leaves the other's untouched (EmployeeProfileTests).
+    - criterion: AC-FR-002-02
+      note: After a mentor renames themselves through PUT /api/employees/me, their approved mentor profile and their mentorship request still reference the same employee id, the session resolves to it, and Talent Management reads the new name on that same record (EmployeeProfileTests).
+    - criterion: AC-FR-005-01
+      note: An authenticated employee saves display name and level/title with PUT /api/employees/me and reads them back; a newcomer's first save creates the record (EmployeeProfileTests).
+    - criterion: AC-FR-005-02
+      note: The profile is created and maintained with a database and a labelled simulated identity alone, every AzureAd setting blank and no profile-source section or client library in the host (EmployeeProfileTests).
+    - criterion: AC-FR-006-01
+      note: >-
+        An edit changes display name and level/title only; the record id and Entra object identifier are unchanged and
+        the session still resolves to the same employee. A body that names entraObjectId or id is refused with 400 and
+        changes nothing (EmployeeProfileTests, EmployeeProfileEditTests); the application's database account cannot
+        update the key anyway (TASK-03 CallerResolutionTests).
+    - criterion: AC-BR-015-01
+      note: Creation (first access) and maintenance (PUT) complete with no Data Lake or employee-profile integration configured; the code base contains no adapter or configuration for one (EmployeeProfileTests, ADR-014).
+    - criterion: AC-DR-001-01
+      note: >-
+        The record created on first access carries the caller's Entra object identifier, the display name their identity
+        carries and no level/title until the employee sets one. The seed is validated as an edit is, so a record always
+        carries a display name: an identity whose token has no usable one (no name claim, or one beyond 200 characters)
+        creates no record on GET and has nothing invented for it; GET answers 404 "No profile yet" until the employee's
+        own PUT creates the record (EmployeeProfileTests). The only creation path is the authenticated caller's own
+        first access: no route creates a record from a name or an identifier, for an administrator included
+        (EmployeeProfileTests). The schema side is TASK-02.
+    - criterion: AC-NFR-010-01
+      note: The profile flow runs under Identity:Mode=Simulated with no Entra configuration and the session labelled Simulated (EmployeeProfileTests). The other prototype facilities are TASK-01, TASK-03 and TASK-05.
+    - criterion: AC-DR-016-01
+      note: The module leaves an unresolved historic person to the review-exception tables of TASK-02 and TASK-13; it offers nothing that could turn such a row into an employee (EmployeeProfileTests, no-operation test).
+    - criterion: AC-DR-016-02
+      note: A record exists only for an authenticated object identifier; POST /api/employees and PUT /api/employees/{id} do not exist and leave the table unchanged (EmployeeProfileTests). The database refusal for the legacy role is TASK-02 PrivilegeTests.
+  notes:
+    - >-
+      Module layout, following TASK-03's Identity module: endpoints and the commands/queries that use MentorDbContext
+      live in src/Mentor.Api/<Module>/ with an Add<Module>/Map<Module> pair registered on their own lines in
+      ApiHost.cs; pure rules (ProfileDetails validation) live in Mentor.Core and are unit-tested.
+    - >-
+      GET /api/employees/me creates the employee record on the caller's first access, seeded with the display name the
+      token or roster carries; PUT /api/employees/me creates it when absent and otherwise updates display attributes.
+      GET /api/session still creates nothing, so Caller.EmployeeId stays null for an employee who has never opened
+      their profile. A module that acts on the caller's own records (mentor application, request) should refuse such a
+      caller (the frontend opens the profile right after sign-in) rather than create the record itself: CallerResolver
+      caches the Caller per request, so a record created mid-request would still be seen as owning nothing by any
+      later record check in that request.
+    - >-
+      The seed a first access takes from the identity goes through ProfileDetails.TrySeed, which is TryCreate with no
+      level: the same required/200-character rule as a PUT, so no employee row can hold a display name a save would
+      refuse (the column is NOT NULL with no CHECK constraint, so the module is the guard). An Entra token with
+      neither a name nor a preferred_username claim (requested without the profile scope, or by a client other than
+      the SPA) resolves to an empty Caller.DisplayName; GET /api/employees/me then creates nothing and invents nothing,
+      and answers 404 with a problem titled "No profile yet" whose detail never repeats the identity's name, until
+      PUT /api/employees/me, validated as every save is, creates the record. ReadOwnAsync reports this as
+      OwnProfileLookup.AwaitingDetails, distinct from Forbidden. The simulated roster always carries a name, so only
+      the Entra scheme reaches this path; GET /api/session is unchanged and reports the identity's name as the token
+      carried it (TASK-03).
+    - >-
+      Record checks are made before anything is read: for an employee record the matrix needs only its id (its owner),
+      so the module checks new ProtectedRecord { Owner = id } from the route or the caller and only then loads the row.
+      A caller the matrix refuses gets 403 whether or not the id names anybody; only Talent Management can get a 404.
+    - >-
+      Edit bodies are strict: EmployeeProfileEdit carries JsonUnmappedMemberHandling.Disallow, so a body naming any
+      other member (the identity key, the record id) is answered 400 rather than silently stripped. Validation errors
+      come back as a ValidationProblem keyed by camelCase property name and never repeat the submitted value.
+    - >-
+      Under default deny, a method a known route does not answer gets 403 (401 anonymous), not 405: the 405 endpoint
+      carries no permission, so UndeclaredPermissionRequirement refuses it.
+    - >-
+      Profile edits are not audited (ADR-007 names no such action and AuditAction has none) and the employee row has
+      no version column, so there is no ETag/If-Match on these routes (ADR-005 scopes them to candidates and
+      relationships).
+    - >-
+      Two concurrent first accesses by one caller both end with the one record: the unique index on entra_object_id
+      refuses the second insert and the loser adopts the winner's row.
+  changed_paths:
+    - src/Mentor.Core/Employees/ProfileDetails.cs
+    - src/Mentor.Api/Employees/EmployeeProfile.cs
+    - src/Mentor.Api/Employees/EmployeeProfiles.cs
+    - src/Mentor.Api/Employees/EmployeeProfileEndpoints.cs
+    - src/Mentor.Api/Hosting/ApiHost.cs
+    - tests/Mentor.Tests.Unit/Employees/ProfileDetailsTests.cs
+    - tests/Mentor.Tests.Unit/Employees/EmployeeProfileEditTests.cs
+    - tests/Mentor.Tests.Integration/Employees/EmployeeProfileApi.cs
+    - tests/Mentor.Tests.Integration/Employees/EmployeeProfileTests.cs
+    - tests/Mentor.Tests.Integration/Support/TestEntra.cs

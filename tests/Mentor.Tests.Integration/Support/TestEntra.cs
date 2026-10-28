@@ -45,10 +45,13 @@ internal static class TestEntra
             options.ConfigurationManager = new StaticConfigurationManager<OpenIdConnectConfiguration>(configuration);
         });
 
-    /// <summary>An access token as the tenant issues it to the SPA for a signed-in employee.</summary>
+    /// <summary>
+    /// An access token as the tenant issues it to the SPA for a signed-in employee. A null name leaves the name claim
+    /// out, as the tenant does for a token requested without the profile scope.
+    /// </summary>
     public static string Token(
         Guid objectId,
-        string name = "Test Employee",
+        string? name = "Test Employee",
         string[]? roles = null,
         string? scope = Scope,
         string? audience = null,
@@ -61,9 +64,13 @@ internal static class TestEntra
         var claims = new Dictionary<string, object>
         {
             ["tid"] = (tenant ?? TenantId).ToString(),
-            ["name"] = name,
             ["ver"] = "2.0",
         };
+        if (name is not null)
+        {
+            claims["name"] = name;
+        }
+
         if (includeObjectId)
         {
             claims["oid"] = objectId.ToString();
