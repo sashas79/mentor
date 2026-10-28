@@ -1,0 +1,24 @@
+# Human decision evidence. Append-only; final for this candidate.
+schema_version: 1
+approval:
+  id: APR-WORK-0001
+  gate: gate://work-baseline
+  decision: approved
+  candidate:
+    type: work
+    manifest: evidence/candidates/CAND-WORK-0001.yaml
+    digest: sha256:c2e7bcafe473bad611662c29e9e9af3257532951bec63dd6715bc947efab6029
+  approver:
+    identity: sasha
+    authority: engineering
+  identity_assurance:
+    mechanism: declared-project-identity
+    level: declared
+  captured_at: 2026-10-28T05:14:14Z
+  captured_via:
+    interface: cli
+    adapter: null
+  binding:
+    algorithm: sha256
+    canonicalisation: harness-v1
+    digest: sha256:2bfef52b8b737ee1d890bcb5bc74c4b2dccc0fb363b9d9ef4ceb630b37ed991c

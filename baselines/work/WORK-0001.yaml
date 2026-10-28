@@ -1,0 +1,19 @@
+# Work Baseline. Append-only; corrections create a new superseding record.
+schema_version: 1
+baseline:
+  id: WORK-0001
+  type: work
+  candidate:
+    path: evidence/candidates/CAND-WORK-0001.yaml
+    digest: sha256:c2e7bcafe473bad611662c29e9e9af3257532951bec63dd6715bc947efab6029
+  approval:
+    path: evidence/approvals/APR-WORK-0001.yaml
+    digest: sha256:2bfef52b8b737ee1d890bcb5bc74c4b2dccc0fb363b9d9ef4ceb630b37ed991c
+  established_at: 2026-10-28T05:16:18Z
+  repository:
+    git_commit: null
+  supersedes: null
+  binding:
+    algorithm: sha256
+    canonicalisation: harness-v1
+    digest: sha256:d80a9beb6ff204fdb05cbae11d065ece8479ef50712d078821bfb5811dba52e3
