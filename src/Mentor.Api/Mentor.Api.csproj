@@ -4,6 +4,9 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.14" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.14" PrivateAssets="all" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.14" />
+    <PackageReference Include="Microsoft.Identity.Web" Version="4.16.1" />
+    <!-- Lifts the version Microsoft.Identity.Web brings in (10.0.10) past CVE-2026-84008 and CVE-2026-70162. -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.14" />
   </ItemGroup>
 
   <ItemGroup>

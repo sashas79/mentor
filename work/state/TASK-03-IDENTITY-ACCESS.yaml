@@ -1,0 +1,128 @@
+schema_version: 1
+task_state:
+  task: TASK-03-IDENTITY-ACCESS
+  status: done
+  work_baseline: baselines/work/WORK-0001.yaml
+  started: 2026-10-28T12:02:55Z
+  updated: 2026-10-28T12:28:30Z
+  verification:
+    - control: control://verification/build
+      result: PASS
+      command: dotnet build src/Mentor.slnx --no-incremental
+      note: >-
+        5 projects with TreatWarningsAsErrors and NuGet audit; 0 warnings, 0 errors. Microsoft.Identity.Web 4.16.1 brought in
+        System.Security.Cryptography.Pkcs and .Xml 10.0.10 (CVE-2026-84008, -70162, -96958, -96959, -96960); both are
+        pinned to the patched 10.0.14.
+    - control: control://verification/unit-test
+      result: PASS
+      command: dotnet test src/Mentor.slnx
+      note: >-
+        Mentor.Tests.Unit 55/55; Mentor.Tests.Integration 228/228 (PostgreSQL 17 via Testcontainers), including every
+        TASK-01 and TASK-02 test. The matrix tests compare the code with an independent restatement of ADR-003 for every
+        permission x caller profile x standing, in process and over HTTP under both identity schemes with roles resolved
+        from the database. A mutation run that removed issuer pinning, removed the delegated-scope check, loosened
+        candidate.respond, accepted raw entities as resources, ignored record ownership or ignored the app-role value
+        failed the tests that guard each rule. Removing the Microsoft.Identity* log filters failed nothing because those
+        categories emitted no entry at all; the filters are defence in depth, and the log test asserts that no token or
+        claim reaches the logs.
+  acceptance:
+    # Several criteria are shared with other tasks; the notes give this task's share and the test that shows it.
+    - criterion: AC-FR-001-01
+      note: An Entra access token validated by Microsoft.Identity.Web is the only credential; the application has no password and refuses a Basic credential (EntraBearerTests).
+    - criterion: AC-FR-001-02
+      note: Every protected endpoint answers 401 without credentials, under both schemes, for all 35 permissions (MatrixEnforcementTests, EntraBearerTests).
+    - criterion: AC-FR-001-03
+      note: >-
+        Simulated is a separate scheme registered only under Identity:Mode=Simulated (refused in Production) and never
+        alongside Entra; every simulated principal carries identity scheme Simulated, reported by /api/session and held on
+        Caller for the audit trail (TASK-04). Entra validation is proven against a stand-in tenant with signed test tokens;
+        acceptance against the real company tenant needs its configuration (TASK-16).
+    - criterion: AC-FR-002-01
+      note: Two employees named alike resolve to their own records by object identifier (CallerResolutionTests).
+    - criterion: AC-FR-002-02
+      note: After a display-name change in the store or in Entra, the same object identifier resolves to the same employee (CallerResolutionTests). The profile-edit endpoint is TASK-06.
+    - criterion: AC-FR-003-01
+      note: Roles follow from the app role and the caller's mentor application, and /api/session lists the actions each role reaches; they differ by role (CallerResolutionTests, AuthorisationMatrixTests).
+    - criterion: AC-FR-003-02
+      note: Every caller keeps Employee; an approved mentor reaches every employee action, including requesting mentorship and submitting progress (CallerResolutionTests, FunctionalRolesTests).
+    - criterion: AC-FR-004-01
+      note: >-
+        Only an administrator reaches mentor-application.decide and relationship.update-attributes, and a relationship's
+        own parties are refused on the record check (MatrixEnforcementTests). The endpoints are TASK-07 and TASK-11; the
+        guard test now fails any endpoint that does not require a matrix permission.
+    - criterion: AC-FR-004-02
+      note: The same 35-row matrix is enforced over HTTP identically under Entra and Simulated (MatrixEnforcementTests).
+    - criterion: AC-FR-006-01
+      note: Callers are found by object identifier only, no matrix action changes the identity key, and the API's database account cannot update entra_object_id (CallerResolutionTests, AuthorisationMatrixTests).
+    - criterion: AC-DR-001-01
+      note: The principal carries the object identifier and display name; a name alone resolves to nobody and creates nothing (CallerResolutionTests). Creating the employee record on first access is TASK-06.
+    - criterion: AC-NFR-001-01
+      note: >-
+        Production refuses Simulated, and Entra mode refuses to start without tenant, client and scope configuration;
+        tokens must come from the company tenant, for this API, with a delegated scope and an object identifier (app-only
+        tokens are refused). Server authorisation applies under both schemes.
+    - criterion: AC-NFR-009-01
+      note: >-
+        The matrix limits goals, progress and relationships to their parties and Talent Management, and notifications to
+        their recipient; no token or claim reaches the logs (EntraBearerTests). Protection in storage and transit is TASK-02
+        and TASK-16.
+    - criterion: AC-NFR-010-01
+      note: With every AzureAd setting empty, a Simulated run serves the roster and signs in labelled simulated identities (SimulatedIdentityTests).
+    - criterion: AC-BR-022-01
+      note: >-
+        The administrator role comes only from the Entra app role or the roster's declared role. Legacy entry itself runs
+        under mentor_legacy_entry with attribution enforced by TASK-02's trigger; the entry scripts are TASK-13.
+    - criterion: AC-BR-022-02
+      note: >-
+        No permission and no endpoint enters or validates a historical relationship, so no caller, an operator included,
+        can do it through the application (AuthorisationMatrixTests, HostEndpointsTests); the API's database account cannot
+        write the legacy tables (TASK-02 PrivilegeTests).
+  notes:
+    - >-
+      session.read (GET /api/session) is sign-in support: the caller's own identity, roles and reachable actions. ADR-003
+      exempts sign-in support from a policy, but it is given one (any authenticated employee) rather than left public.
+    - >-
+      Entra tokens must carry a delegated scope named in AzureAd:Scopes, so that app-only tokens from other tenant apps are
+      refused. The app registration and its scope belong to TASK-16's environment configuration.
+    - >-
+      Entra mode now refuses to start without AzureAd:TenantId, ClientId and Scopes in every environment (previously the
+      host started and authenticated nobody). A local run needs those settings or Identity:Mode=Simulated.
+    - >-
+      Modules use RequirePermission on endpoints and IAuthorizationService.IsPermittedAsync with a ProtectedRecord for
+      record checks; a request's ProtectedRecord takes the mentors its live candidates name (TASK-08 decides which are live).
+  changed_paths:
+    - src/Mentor.Api/Mentor.Api.csproj
+    - src/Mentor.Api/appsettings.json
+    - src/Mentor.Api/Hosting/ApiHost.cs
+    - src/Mentor.Api/Hosting/DefaultDeny.cs
+    - src/Mentor.Api/Hosting/LogRedaction.cs
+    - src/Mentor.Api/Hosting/NoIdentityHandler.cs
+    - src/Mentor.Api/Identity/Caller.cs
+    - src/Mentor.Api/Identity/EntraIdentity.cs
+    - src/Mentor.Api/Identity/IdentityRegistration.cs
+    - src/Mentor.Api/Identity/MentorPrincipal.cs
+    - src/Mentor.Api/Identity/SessionEndpoint.cs
+    - src/Mentor.Api/Identity/SimulatedIdentityHandler.cs
+    - src/Mentor.Api/Identity/SimulatedRoster.cs
+    - src/Mentor.Api/Authorisation/AuthorisationMatrix.cs
+    - src/Mentor.Api/Authorisation/FunctionalRole.cs
+    - src/Mentor.Api/Authorisation/MatrixAuthorisation.cs
+    - src/Mentor.Api/Authorisation/Permission.cs
+    - src/Mentor.Api/Authorisation/ProtectedRecord.cs
+    - tests/Mentor.Tests.Unit/Identity/EntraIdentityOptionsValidatorTests.cs
+    - tests/Mentor.Tests.Unit/Identity/FunctionalRolesTests.cs
+    - tests/Mentor.Tests.Unit/Identity/MentorPrincipalTests.cs
+    - tests/Mentor.Tests.Unit/Identity/SimulatedRosterTests.cs
+    - tests/Mentor.Tests.Integration/Mentor.Tests.Integration.csproj
+    - tests/Mentor.Tests.Integration/Support/ApiFactory.cs
+    - tests/Mentor.Tests.Integration/Support/ProbeHost.cs
+    - tests/Mentor.Tests.Integration/Support/TestCallers.cs
+    - tests/Mentor.Tests.Integration/Support/TestEntra.cs
+    - tests/Mentor.Tests.Integration/Hosting/HostEndpointsTests.cs
+    - tests/Mentor.Tests.Integration/Authorisation/AuthorisationMatrixTests.cs
+    - tests/Mentor.Tests.Integration/Authorisation/ExpectedMatrix.cs
+    - tests/Mentor.Tests.Integration/Authorisation/MatrixEnforcementTests.cs
+    - tests/Mentor.Tests.Integration/Identity/CallerResolutionTests.cs
+    - tests/Mentor.Tests.Integration/Identity/EntraBearerTests.cs
+    - tests/Mentor.Tests.Integration/Identity/IdentityApi.cs
+    - tests/Mentor.Tests.Integration/Identity/SimulatedIdentityTests.cs

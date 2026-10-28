@@ -26,6 +26,9 @@ internal static class LogRedaction
         logging.AddFilter("Microsoft.AspNetCore.Hosting.Diagnostics", LogLevel.None);
         // The exception middlewares log exception messages; RedactingExceptionHandler logs the redacted form instead.
         logging.AddFilter("Microsoft.AspNetCore.Diagnostics", LogLevel.None);
+        // Token validation diagnostics can describe a token's claims, which name the employee.
+        logging.AddFilter("Microsoft.Identity", LogLevel.Warning);
+        logging.AddFilter("Microsoft.IdentityModel", LogLevel.Warning);
         return logging;
     }
 }

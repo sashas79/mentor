@@ -1,7 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Mentor.Api.Authorisation;
 using Mentor.Api.Hosting;
+using Mentor.Api.Identity;
 using Mentor.Tests.Integration.Support;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Routing;
@@ -12,9 +14,10 @@ namespace Mentor.Tests.Integration.Hosting;
 
 public sealed class HostEndpointsTests
 {
-    // The endpoints ADR-003 lets anyone call: health, capabilities, and the API contract while it is served.
+    // The endpoints ADR-003 lets anyone call: health, capabilities, the API contract while it is served, and sign-in
+    // support (the simulated roster, which exists only while identity is simulated).
     private static readonly HashSet<string> PublicRoutes =
-        [HealthEndpoints.Live, HealthEndpoints.Ready, CapabilitiesEndpoint.Route, "/openapi/{documentName}.json"];
+        [HealthEndpoints.Live, HealthEndpoints.Ready, CapabilitiesEndpoint.Route, "/openapi/{documentName}.json", SimulatedRoster.Route];
 
     // Readiness depends on the database; DatabaseConnectionTests covers it.
     [Fact]
@@ -59,25 +62,46 @@ public sealed class HostEndpointsTests
         await ProblemAssert.IsProblem(HttpStatusCode.Unauthorized, await api.GetAsync("/api/relationships"));
     }
 
-    // Guards every module added later: an endpoint must name the permission it enforces, or be a listed public one.
-    [Fact]
-    public async Task Every_endpoint_names_its_permission_or_is_a_listed_public_endpoint()
+    // Guards every module added later: an endpoint must require permissions of the authorisation matrix and nothing else
+    // (no bare roles, no ad hoc policy), or be a listed public one.
+    [Theory]
+    [InlineData("Entra")]
+    [InlineData("Simulated")]
+    public async Task Every_endpoint_requires_a_matrix_permission_or_is_a_listed_public_endpoint(string identityMode)
     {
-        await using var api = new ApiFactory(Environments.Development);
+        await using var api = new ApiFactory(Environments.Development, new Dictionary<string, string> { ["Identity:Mode"] = identityMode });
 
-        var endpoints = api.Services.GetRequiredService<EndpointDataSource>().Endpoints.OfType<RouteEndpoint>().ToList();
+        var endpoints = RouteEndpoints(api);
 
         Assert.NotEmpty(endpoints);
         var violations = endpoints
             .Where(endpoint => endpoint.Metadata.GetMetadata<IAllowAnonymous>() is not null
                 ? !PublicRoutes.Contains(endpoint.RoutePattern.RawText!)
-                : !NamesPermission(endpoint))
+                : !RequiresMatrixPermission(endpoint))
             .Select(endpoint => endpoint.RoutePattern.RawText);
         Assert.Empty(violations);
     }
 
-    private static bool NamesPermission(RouteEndpoint endpoint) =>
-        endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>().Any(data => !string.IsNullOrWhiteSpace(data.Policy) || !string.IsNullOrWhiteSpace(data.Roles))
-        || endpoint.Metadata.GetMetadata<AuthorizationPolicy>() is not null
-        || endpoint.Metadata.GetMetadata<IAuthorizationRequirementData>() is not null;
+    // AC-BR-022-02: historical relationships are entered through the database role of ADR-008, never through the API.
+    [Theory]
+    [InlineData("Entra")]
+    [InlineData("Simulated")]
+    public async Task No_endpoint_enters_a_historical_relationship(string identityMode)
+    {
+        await using var api = new ApiFactory(Environments.Development, new Dictionary<string, string> { ["Identity:Mode"] = identityMode });
+
+        Assert.DoesNotContain(RouteEndpoints(api), endpoint => endpoint.RoutePattern.RawText!.Contains("legacy", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static List<RouteEndpoint> RouteEndpoints(ApiFactory api) =>
+        [.. api.Services.GetRequiredService<EndpointDataSource>().Endpoints.OfType<RouteEndpoint>()];
+
+    private static bool RequiresMatrixPermission(RouteEndpoint endpoint)
+    {
+        var authorize = endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>();
+        return authorize.Count > 0
+            && authorize.All(data => AuthorisationMatrix.Find(data.Policy) is not null && string.IsNullOrEmpty(data.Roles))
+            && endpoint.Metadata.GetMetadata<AuthorizationPolicy>() is null
+            && endpoint.Metadata.GetMetadata<IAuthorizationRequirementData>() is null;
+    }
 }

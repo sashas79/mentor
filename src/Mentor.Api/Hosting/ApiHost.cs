@@ -1,4 +1,6 @@
 using System.Text.Json.Serialization;
+using Mentor.Api.Authorisation;
+using Mentor.Api.Identity;
 using Mentor.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -24,7 +26,9 @@ public static class ApiHost
         var services = builder.Services;
         services.AddPrototypeSwitches();
         services.AddMentorPersistence();
+        builder.AddMentorIdentity();
         services.AddDefaultDenyAuthorization();
+        services.AddAuthorisationMatrix();
         services.AddProblemDetails();
         services.AddExceptionHandler<RedactingExceptionHandler>();
         // A malformed parameter or body is answered with 400 in every environment instead of an exception.
@@ -58,6 +62,7 @@ public static class ApiHost
         app.MapHealthChecks(HealthEndpoints.Ready, new HealthCheckOptions { Predicate = check => check.Tags.Contains(HealthEndpoints.ReadyTag) })
             .AllowAnonymous();
         app.MapCapabilities();
+        app.MapMentorIdentity();
         if (app.Configuration.GetValue<bool>(OpenApiSwitch))
         {
             app.MapOpenApi().AllowAnonymous();

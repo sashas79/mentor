@@ -13,7 +13,9 @@ namespace Mentor.Tests.Integration.Support;
 
 /// <summary>
 /// The real host composition (AddMentorApiHost and UseMentorApiHost) on a test server, with probe endpoints standing
-/// in for module endpoints and <see cref="TestIdentityHandler"/> standing in for the identity schemes.
+/// in for module endpoints. <see cref="TestIdentityHandler"/> stands in for the identity schemes unless
+/// <c>testIdentity</c> is false, when the scheme Identity:Mode selects authenticates callers, Entra trusting
+/// <see cref="TestEntra"/> tokens.
 /// </summary>
 internal sealed class ProbeHost : IAsyncDisposable
 {
@@ -37,7 +39,11 @@ internal sealed class ProbeHost : IAsyncDisposable
 
     public HttpClient Client { get; }
 
-    public static async Task<ProbeHost> StartAsync(IdentityMode identityMode = IdentityMode.Entra, IReadOnlyDictionary<string, string?>? settings = null)
+    public static async Task<ProbeHost> StartAsync(
+        IdentityMode identityMode = IdentityMode.Entra,
+        IReadOnlyDictionary<string, string?>? settings = null,
+        bool testIdentity = true,
+        Action<WebApplication>? mapProbes = null)
     {
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions { EnvironmentName = Environments.Development });
         builder.WebHost.UseTestServer();
@@ -46,18 +52,25 @@ internal sealed class ProbeHost : IAsyncDisposable
             ["Identity:Mode"] = identityMode.ToString(),
             ["ConnectionStrings:Mentor"] = ApiFactory.UnreachableDatabase,
         });
+        builder.Configuration.AddInMemoryCollection(TestEntra.Settings.Select(setting => KeyValuePair.Create(setting.Key, (string?)setting.Value)));
         builder.Configuration.AddInMemoryCollection(settings ?? new Dictionary<string, string?>());
         builder.AddMentorApiHost();
 
         var logs = new CapturedLogs();
         builder.Logging.ClearProviders().AddProvider(logs);
-        builder.Services.AddAuthentication(TestIdentityHandler.SchemeName)
-            .AddScheme<AuthenticationSchemeOptions, TestIdentityHandler>(TestIdentityHandler.SchemeName, configureOptions: null);
+        TestEntra.TrustSigningKey(builder.Services);
+        if (testIdentity)
+        {
+            builder.Services.AddAuthentication(TestIdentityHandler.SchemeName)
+                .AddScheme<AuthenticationSchemeOptions, TestIdentityHandler>(TestIdentityHandler.SchemeName, configureOptions: null);
+        }
+
         builder.Services.AddAuthorizationBuilder().AddPolicy(Permission, policy => policy.RequireRole(PermittedRole));
 
         var app = builder.Build();
         app.UseMentorApiHost();
         MapProbes(app);
+        mapProbes?.Invoke(app);
         await app.StartAsync(TestContext.Current.CancellationToken);
         return new ProbeHost(app, logs);
     }
