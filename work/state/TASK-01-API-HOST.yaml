@@ -1,0 +1,89 @@
+schema_version: 1
+task_state:
+  task: TASK-01-API-HOST
+  status: done
+  work_baseline: baselines/work/WORK-0001.yaml
+  started: 2026-10-28T05:18:40Z
+  updated: 2026-10-28T05:45:51Z
+  verification:
+    - control: control://verification/build
+      result: PASS
+      command: dotnet build src/Mentor.slnx --no-incremental
+      note: 3 projects built (Mentor.Api, Mentor.Tests.Unit, Mentor.Tests.Integration) with TreatWarningsAsErrors; 0 warnings, 0 errors.
+    - control: control://verification/unit-test
+      result: PASS
+      command: dotnet test src/Mentor.slnx
+      note: >-
+        Mentor.Tests.Unit 13/13 passed; Mentor.Tests.Integration 24/24 passed (in-process test server, no external
+        dependency). A mutation run with the log filters removed made the redaction tests fail, so they detect leaks.
+  acceptance:
+    # Each criterion is shared with later tasks; the notes state the API host's share and the test that shows it.
+    - criterion: AC-FR-004-01
+      note: >-
+        Server-side default deny: an endpoint that names no permission, or carries a bare [Authorize], is refused
+        (401/403); a named permission admits only its holders; a guard test fails any endpoint that names no
+        permission. The mentor-approval and relationship endpoints and the matrix rows are TASK-03, TASK-07 and TASK-11.
+    - criterion: AC-FR-004-02
+      note: Authorisation results are identical under Identity:Mode Entra and Simulated (DefaultDenyTests, HostEndpointsTests).
+    - criterion: AC-NFR-001-01
+      note: >-
+        The Production environment refuses to start with Identity:Mode=Simulated; the mode is published on
+        /api/capabilities for labelling; server authorisation applies under either mode. Entra validation and the
+        audit identity scheme are TASK-03 and TASK-04.
+    - criterion: AC-NFR-002-01
+      note: >-
+        Logs never carry request bodies, query strings, raw paths, headers or exception messages, even at Trace;
+        error responses carry no exception detail (RedactionTests). Storage, audit and report shares belong to TASK-02,
+        TASK-04, TASK-05 and TASK-14.
+    - criterion: AC-NFR-006-01
+      note: >-
+        The host serves the OpenAPI 3.1 contract for the generated client, publishes capabilities, answers every error
+        as RFC 9457 problem details and allows the configured frontend origin (CORS, ETag exposed). The screens are
+        TASK-15.
+    - criterion: AC-NFR-009-01
+      note: >-
+        Default deny limits access to declared permissions, and the redaction policy keeps request content out of logs.
+        Protection in storage and transit is TASK-02 and TASK-16.
+    - criterion: AC-NFR-010-01
+      note: >-
+        The host runs with no Entra configuration, calendar, Data Lake, AI or notification transport; the
+        Identity:Mode and Notifications:Delivery switches are reported on /api/capabilities so simulation is
+        expressly identified. The simulated scheme and inbox are TASK-03 and TASK-05.
+  changed_paths:
+    - src/.gitignore
+    - src/Directory.Build.props
+    - src/Mentor.slnx
+    - src/Mentor.Api/Mentor.Api.csproj
+    - src/Mentor.Api/Program.cs
+    - src/Mentor.Api/appsettings.json
+    - src/Mentor.Api/appsettings.Development.json
+    - src/Mentor.Api/Properties/launchSettings.json
+    - src/Mentor.Api/Hosting/ApiHost.cs
+    - src/Mentor.Api/Hosting/Capabilities.cs
+    - src/Mentor.Api/Hosting/CapabilitiesEndpoint.cs
+    - src/Mentor.Api/Hosting/DefaultDeny.cs
+    - src/Mentor.Api/Hosting/ExceptionRedaction.cs
+    - src/Mentor.Api/Hosting/HealthEndpoints.cs
+    - src/Mentor.Api/Hosting/LogRedaction.cs
+    - src/Mentor.Api/Hosting/NoIdentityHandler.cs
+    - src/Mentor.Api/Hosting/PrototypeSwitches.cs
+    - src/Mentor.Api/Hosting/RedactingExceptionHandler.cs
+    - src/Mentor.Api/Hosting/RequestLoggingMiddleware.cs
+    - src/Mentor.Api/Hosting/UndeclaredPermissionRequirement.cs
+    - tests/.gitignore
+    - tests/Directory.Build.props
+    - tests/Mentor.Tests.Unit/Mentor.Tests.Unit.csproj
+    - tests/Mentor.Tests.Unit/Hosting/ExceptionRedactionTests.cs
+    - tests/Mentor.Tests.Unit/Hosting/ProductionDisablesSimulationTests.cs
+    - tests/Mentor.Tests.Unit/Hosting/UndeclaredPermissionRequirementTests.cs
+    - tests/Mentor.Tests.Integration/Mentor.Tests.Integration.csproj
+    - tests/Mentor.Tests.Integration/Hosting/CorsTests.cs
+    - tests/Mentor.Tests.Integration/Hosting/DefaultDenyTests.cs
+    - tests/Mentor.Tests.Integration/Hosting/HostEndpointsTests.cs
+    - tests/Mentor.Tests.Integration/Hosting/PrototypeSwitchTests.cs
+    - tests/Mentor.Tests.Integration/Hosting/RedactionTests.cs
+    - tests/Mentor.Tests.Integration/Support/ApiFactory.cs
+    - tests/Mentor.Tests.Integration/Support/CapturedLogs.cs
+    - tests/Mentor.Tests.Integration/Support/ProbeHost.cs
+    - tests/Mentor.Tests.Integration/Support/ProblemAssert.cs
+    - tests/Mentor.Tests.Integration/Support/TestIdentityHandler.cs
