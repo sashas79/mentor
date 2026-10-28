@@ -1,0 +1,56 @@
+# Engineering Work Item generated under Engineering Harness control. Human-approved only once baselined.
+schema_version: 1
+work_item:
+  id: TASK-06-EMPLOYEE-PROFILE
+  title: Employee identity records keyed by the Entra object identifier and self-service application profile
+  requirement_refs:
+    - REQ-FR-002
+    - REQ-FR-005
+    - REQ-FR-006
+    - REQ-BR-015
+    - REQ-DR-001
+    - REQ-DR-016
+    - REQ-NFR-010
+  acceptance_refs:
+    - AC-FR-002-01
+    - AC-FR-002-02
+    - AC-FR-005-01
+    - AC-FR-005-02
+    - AC-FR-006-01
+    - AC-BR-015-01
+    - AC-DR-001-01
+    - AC-NFR-010-01
+    - AC-DR-016-01
+    - AC-DR-016-02
+  architecture_refs:
+    - COMP-EMPLOYEE-PROFILE
+    - ADR-002
+    - ADR-014
+  contract_refs:
+    - CONTRACT-MENTORSHIP-API
+    - CONTRACT-ENTRA-IDENTITY
+  dependencies:
+    - TASK-02-DATA-STORE
+    - TASK-03-IDENTITY-ACCESS
+  repository_scope:
+    allowed:
+      - src/**
+      - tests/**
+    forbidden:
+      - src/web/**
+      - tests/web/**
+      - infra/**
+      - project-pack/**
+      - spec/**
+      - architecture/**
+      - engineering/**
+      - ai/**
+      - work/**
+      - baselines/**
+      - evidence/**
+      - .claude/**
+      - CLAUDE.md
+  verification_controls:
+    - control://verification/build
+    - control://verification/unit-test
+  human_gates: []

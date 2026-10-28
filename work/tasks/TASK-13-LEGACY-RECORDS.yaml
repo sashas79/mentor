@@ -1,0 +1,67 @@
+# Engineering Work Item generated under Engineering Harness control. Human-approved only once baselined.
+schema_version: 1
+work_item:
+  id: TASK-13-LEGACY-RECORDS
+  title: Legacy historical record entry through reviewed SQL scripts under the Talent Management database role, with provenance and review exceptions
+  requirement_refs:
+    - REQ-FR-062
+    - REQ-FR-063
+    - REQ-FR-064
+    - REQ-BR-016
+    - REQ-BR-022
+    - REQ-DR-001
+    - REQ-DR-014
+    - REQ-DR-016
+    - REQ-NFR-003
+    - REQ-NFR-004
+  acceptance_refs:
+    - AC-FR-062-01
+    - AC-FR-062-02
+    - AC-FR-063-01
+    - AC-FR-063-02
+    - AC-FR-063-03
+    - AC-FR-063-04
+    - AC-FR-064-01
+    - AC-E2E-07
+    - AC-DR-001-01
+    - AC-DR-014-01
+    - AC-NFR-003-01
+    - AC-NFR-004-01
+    - AC-BR-022-01
+    - AC-BR-022-02
+    - AC-DR-016-01
+    - AC-DR-016-02
+  architecture_refs:
+    - COMP-LEGACY-RECORDS
+    - ADR-006
+    - ADR-008
+    - ADR-013
+  contract_refs:
+    - CONTRACT-LEGACY-ENTRY
+    - CONTRACT-DATABASE-SCHEMA
+    - CONTRACT-AUDIT-ENTRY
+  dependencies:
+    - TASK-04-AUDIT-TRAIL
+    - TASK-06-EMPLOYEE-PROFILE
+  repository_scope:
+    allowed:
+      - src/**
+      - tests/**
+      - infra/legacy-entry/**
+    forbidden:
+      - src/web/**
+      - tests/web/**
+      - project-pack/**
+      - spec/**
+      - architecture/**
+      - engineering/**
+      - ai/**
+      - work/**
+      - baselines/**
+      - evidence/**
+      - .claude/**
+      - CLAUDE.md
+  verification_controls:
+    - control://verification/build
+    - control://verification/unit-test
+  human_gates: []

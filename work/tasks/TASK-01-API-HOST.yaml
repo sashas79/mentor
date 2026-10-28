@@ -1,0 +1,50 @@
+# Engineering Work Item generated under Engineering Harness control. Human-approved only once baselined.
+schema_version: 1
+work_item:
+  id: TASK-01-API-HOST
+  title: "API host and composition root: ASP.NET Core pipeline, OpenAPI, health and capabilities endpoints, logging redaction, prototype switches"
+  requirement_refs:
+    - REQ-FR-004
+    - REQ-NFR-001
+    - REQ-NFR-002
+    - REQ-NFR-006
+    - REQ-NFR-009
+    - REQ-NFR-010
+  acceptance_refs:
+    - AC-FR-004-01
+    - AC-FR-004-02
+    - AC-NFR-001-01
+    - AC-NFR-002-01
+    - AC-NFR-006-01
+    - AC-NFR-009-01
+    - AC-NFR-010-01
+  architecture_refs:
+    - COMP-API-HOST
+    - ADR-001
+    - ADR-002
+    - ADR-003
+  contract_refs:
+    - CONTRACT-MENTORSHIP-API
+  dependencies: []
+  repository_scope:
+    allowed:
+      - src/**
+      - tests/**
+    forbidden:
+      - src/web/**
+      - tests/web/**
+      - infra/**
+      - project-pack/**
+      - spec/**
+      - architecture/**
+      - engineering/**
+      - ai/**
+      - work/**
+      - baselines/**
+      - evidence/**
+      - .claude/**
+      - CLAUDE.md
+  verification_controls:
+    - control://verification/build
+    - control://verification/unit-test
+  human_gates: []

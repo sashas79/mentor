@@ -1,0 +1,58 @@
+# Engineering Work Item generated under Engineering Harness control. Human-approved only once baselined.
+schema_version: 1
+work_item:
+  id: TASK-05-MEETINGS-NOTIFICATIONS
+  title: Meeting schedule representation and workflow notification events with a simulated-delivery in-app inbox
+  requirement_refs:
+    - REQ-FR-055
+    - REQ-FR-056
+    - REQ-FR-057
+    - REQ-FR-058
+    - REQ-FR-059
+    - REQ-DR-013
+    - REQ-NFR-002
+    - REQ-NFR-010
+  acceptance_refs:
+    - AC-FR-055-01
+    - AC-FR-056-01
+    - AC-FR-057-01
+    - AC-FR-057-02
+    - AC-FR-057-03
+    - AC-FR-058-01
+    - AC-FR-059-01
+    - AC-DR-013-01
+    - AC-NFR-002-01
+    - AC-NFR-010-01
+  architecture_refs:
+    - COMP-MEETINGS-NOTIFICATIONS
+    - ADR-003
+    - ADR-009
+    - ADR-010
+  contract_refs:
+    - CONTRACT-NOTIFICATION-EVENTS
+    - CONTRACT-MENTORSHIP-API
+  dependencies:
+    - TASK-02-DATA-STORE
+    - TASK-03-IDENTITY-ACCESS
+  repository_scope:
+    allowed:
+      - src/**
+      - tests/**
+    forbidden:
+      - src/web/**
+      - tests/web/**
+      - infra/**
+      - project-pack/**
+      - spec/**
+      - architecture/**
+      - engineering/**
+      - ai/**
+      - work/**
+      - baselines/**
+      - evidence/**
+      - .claude/**
+      - CLAUDE.md
+  verification_controls:
+    - control://verification/build
+    - control://verification/unit-test
+  human_gates: []

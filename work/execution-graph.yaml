@@ -1,0 +1,71 @@
+# Execution graph generated under Engineering Harness control. Human-approved only once baselined.
+schema_version: 1
+execution_graph:
+  tasks:
+    - id: TASK-01-API-HOST
+      depends_on: []
+    - id: TASK-02-DATA-STORE
+      depends_on:
+        - TASK-01-API-HOST
+    - id: TASK-03-IDENTITY-ACCESS
+      depends_on:
+        - TASK-01-API-HOST
+        - TASK-02-DATA-STORE
+    - id: TASK-04-AUDIT-TRAIL
+      depends_on:
+        - TASK-02-DATA-STORE
+        - TASK-03-IDENTITY-ACCESS
+    - id: TASK-05-MEETINGS-NOTIFICATIONS
+      depends_on:
+        - TASK-02-DATA-STORE
+        - TASK-03-IDENTITY-ACCESS
+    - id: TASK-06-EMPLOYEE-PROFILE
+      depends_on:
+        - TASK-02-DATA-STORE
+        - TASK-03-IDENTITY-ACCESS
+    - id: TASK-07-MENTOR-REGISTRY
+      depends_on:
+        - TASK-04-AUDIT-TRAIL
+        - TASK-05-MEETINGS-NOTIFICATIONS
+        - TASK-06-EMPLOYEE-PROFILE
+    - id: TASK-08-MENTORSHIP-REQUEST
+      depends_on:
+        - TASK-07-MENTOR-REGISTRY
+    - id: TASK-09-AGREEMENT-DRAFTING
+      depends_on:
+        - TASK-08-MENTORSHIP-REQUEST
+    - id: TASK-10-FORMATION
+      depends_on:
+        - TASK-09-AGREEMENT-DRAFTING
+    - id: TASK-11-RELATIONSHIP-ADMIN
+      depends_on:
+        - TASK-10-FORMATION
+    - id: TASK-12-GOALS-PROGRESS
+      depends_on:
+        - TASK-10-FORMATION
+    - id: TASK-13-LEGACY-RECORDS
+      depends_on:
+        - TASK-04-AUDIT-TRAIL
+        - TASK-06-EMPLOYEE-PROFILE
+    - id: TASK-14-REGISTER-REPORTING
+      depends_on:
+        - TASK-11-RELATIONSHIP-ADMIN
+        - TASK-12-GOALS-PROGRESS
+        - TASK-13-LEGACY-RECORDS
+    - id: TASK-15-WEB-FRONTEND
+      depends_on:
+        - TASK-05-MEETINGS-NOTIFICATIONS
+        - TASK-06-EMPLOYEE-PROFILE
+        - TASK-07-MENTOR-REGISTRY
+        - TASK-08-MENTORSHIP-REQUEST
+        - TASK-09-AGREEMENT-DRAFTING
+        - TASK-10-FORMATION
+        - TASK-11-RELATIONSHIP-ADMIN
+        - TASK-12-GOALS-PROGRESS
+        - TASK-14-REGISTER-REPORTING
+    - id: TASK-16-PLATFORM-OPERATIONS
+      depends_on:
+        - TASK-01-API-HOST
+        - TASK-02-DATA-STORE
+        - TASK-13-LEGACY-RECORDS
+        - TASK-15-WEB-FRONTEND

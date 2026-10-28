@@ -1,0 +1,56 @@
+# Engineering Work Item generated under Engineering Harness control. Human-approved only once baselined.
+schema_version: 1
+work_item:
+  id: TASK-16-PLATFORM-OPERATIONS
+  title: Infrastructure, container definitions, environment configuration, legacy-entry roles and production-readiness decision records
+  requirement_refs:
+    - REQ-FR-013
+    - REQ-FR-058
+    - REQ-NFR-001
+    - REQ-NFR-007
+    - REQ-NFR-008
+    - REQ-NFR-009
+    - REQ-NFR-010
+  acceptance_refs:
+    - AC-FR-013-01
+    - AC-FR-058-01
+    - AC-NFR-001-01
+    - AC-NFR-007-01
+    - AC-NFR-008-01
+    - AC-NFR-009-01
+    - AC-NFR-010-01
+  architecture_refs:
+    - COMP-PLATFORM-OPERATIONS
+    - ADR-001
+    - ADR-002
+    - ADR-008
+    - ADR-013
+    - ADR-014
+  contract_refs:
+    - CONTRACT-ENTRA-IDENTITY
+    - CONTRACT-LEGACY-ENTRY
+  dependencies:
+    - TASK-01-API-HOST
+    - TASK-02-DATA-STORE
+    - TASK-13-LEGACY-RECORDS
+    - TASK-15-WEB-FRONTEND
+  repository_scope:
+    allowed:
+      - infra/**
+    forbidden:
+      - src/**
+      - tests/**
+      - project-pack/**
+      - spec/**
+      - architecture/**
+      - engineering/**
+      - ai/**
+      - work/**
+      - baselines/**
+      - evidence/**
+      - .claude/**
+      - CLAUDE.md
+  verification_controls:
+    - control://verification/build
+    - control://verification/unit-test
+  human_gates: []

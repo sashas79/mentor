@@ -1,0 +1,95 @@
+# Engineering Work Item generated under Engineering Harness control. Human-approved only once baselined.
+schema_version: 1
+work_item:
+  id: TASK-02-DATA-STORE
+  title: "Authoritative PostgreSQL persistence: EF Core schema and migrations, evidence and operational table classes, constraints, roles and privileges"
+  requirement_refs:
+    - REQ-FR-017
+    - REQ-FR-054
+    - REQ-FR-061
+    - REQ-FR-064
+    - REQ-DR-001
+    - REQ-DR-002
+    - REQ-DR-003
+    - REQ-DR-004
+    - REQ-DR-005
+    - REQ-DR-006
+    - REQ-DR-007
+    - REQ-DR-008
+    - REQ-DR-009
+    - REQ-DR-010
+    - REQ-DR-011
+    - REQ-DR-013
+    - REQ-DR-014
+    - REQ-DR-015
+    - REQ-DR-016
+    - REQ-NFR-002
+    - REQ-NFR-003
+    - REQ-NFR-005
+    - REQ-NFR-007
+    - REQ-NFR-009
+  acceptance_refs:
+    - AC-FR-017-01
+    - AC-FR-054-01
+    - AC-FR-061-01
+    - AC-FR-064-01
+    - AC-DR-001-01
+    - AC-DR-002-01
+    - AC-DR-003-01
+    - AC-DR-004-01
+    - AC-DR-005-01
+    - AC-DR-006-01
+    - AC-DR-007-01
+    - AC-DR-008-01
+    - AC-DR-009-01
+    - AC-DR-010-01
+    - AC-DR-011-01
+    - AC-DR-013-01
+    - AC-DR-014-01
+    - AC-DR-015-01
+    - AC-NFR-002-01
+    - AC-NFR-003-01
+    - AC-NFR-005-01
+    - AC-NFR-007-01
+    - AC-NFR-009-01
+    - AC-DR-016-01
+    - AC-DR-016-02
+  architecture_refs:
+    - COMP-DATA-STORE
+    - ADR-001
+    - ADR-004
+    - ADR-005
+    - ADR-006
+    - ADR-008
+    - ADR-013
+    - ADR-015
+  contract_refs:
+    - CONTRACT-DATABASE-SCHEMA
+    - CONTRACT-AGREEMENT-CONTENT
+    - CONTRACT-AUDIT-ENTRY
+    - CONTRACT-NOTIFICATION-EVENTS
+    - CONTRACT-LEGACY-ENTRY
+  dependencies:
+    - TASK-01-API-HOST
+  repository_scope:
+    allowed:
+      - src/**
+      - tests/**
+    forbidden:
+      - src/web/**
+      - tests/web/**
+      - infra/**
+      - project-pack/**
+      - spec/**
+      - architecture/**
+      - engineering/**
+      - ai/**
+      - work/**
+      - baselines/**
+      - evidence/**
+      - .claude/**
+      - CLAUDE.md
+  verification_controls:
+    - control://verification/build
+    - control://verification/unit-test
+  human_gates: []

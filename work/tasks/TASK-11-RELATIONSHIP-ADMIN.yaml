@@ -1,0 +1,75 @@
+# Engineering Work Item generated under Engineering Harness control. Human-approved only once baselined.
+schema_version: 1
+work_item:
+  id: TASK-11-RELATIONSHIP-ADMIN
+  title: "Formed relationship administration: independent State, Status and IsActive edits with version control and audit"
+  requirement_refs:
+    - REQ-FR-043
+    - REQ-FR-044
+    - REQ-FR-045
+    - REQ-FR-046
+    - REQ-FR-047
+    - REQ-FR-048
+    - REQ-FR-049
+    - REQ-FR-050
+    - REQ-FR-051
+    - REQ-FR-054
+    - REQ-FR-071
+    - REQ-BR-006
+    - REQ-BR-007
+    - REQ-BR-008
+    - REQ-BR-009
+    - REQ-DR-005
+  acceptance_refs:
+    - AC-FR-043-01
+    - AC-FR-044-01
+    - AC-FR-045-01
+    - AC-FR-046-01
+    - AC-FR-047-01
+    - AC-FR-047-02
+    - AC-FR-048-01
+    - AC-FR-049-01
+    - AC-FR-049-02
+    - AC-FR-050-01
+    - AC-FR-051-01
+    - AC-FR-054-01
+    - AC-BR-006-01
+    - AC-BR-007-01
+    - AC-BR-008-01
+    - AC-E2E-03
+    - AC-DR-005-01
+    - AC-FR-071-01
+    - AC-FR-071-02
+    - AC-FR-071-03
+  architecture_refs:
+    - COMP-RELATIONSHIP-ADMIN
+    - ADR-005
+    - ADR-006
+    - ADR-007
+  contract_refs:
+    - CONTRACT-MENTORSHIP-API
+    - CONTRACT-AUDIT-ENTRY
+  dependencies:
+    - TASK-10-FORMATION
+  repository_scope:
+    allowed:
+      - src/**
+      - tests/**
+    forbidden:
+      - src/web/**
+      - tests/web/**
+      - infra/**
+      - project-pack/**
+      - spec/**
+      - architecture/**
+      - engineering/**
+      - ai/**
+      - work/**
+      - baselines/**
+      - evidence/**
+      - .claude/**
+      - CLAUDE.md
+  verification_controls:
+    - control://verification/build
+    - control://verification/unit-test
+  human_gates: []

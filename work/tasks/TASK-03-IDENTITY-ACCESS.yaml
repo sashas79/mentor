@@ -1,0 +1,66 @@
+# Engineering Work Item generated under Engineering Harness control. Human-approved only once baselined.
+schema_version: 1
+work_item:
+  id: TASK-03-IDENTITY-ACCESS
+  title: "Identity and authorisation: Entra bearer and labelled simulated identity schemes, role resolution, default-deny actor/resource/action matrix"
+  requirement_refs:
+    - REQ-FR-001
+    - REQ-FR-002
+    - REQ-FR-003
+    - REQ-FR-004
+    - REQ-FR-006
+    - REQ-BR-022
+    - REQ-DR-001
+    - REQ-NFR-001
+    - REQ-NFR-009
+    - REQ-NFR-010
+  acceptance_refs:
+    - AC-FR-001-01
+    - AC-FR-001-02
+    - AC-FR-001-03
+    - AC-FR-002-01
+    - AC-FR-002-02
+    - AC-FR-003-01
+    - AC-FR-003-02
+    - AC-FR-004-01
+    - AC-FR-004-02
+    - AC-FR-006-01
+    - AC-DR-001-01
+    - AC-NFR-001-01
+    - AC-NFR-009-01
+    - AC-NFR-010-01
+    - AC-BR-022-01
+    - AC-BR-022-02
+  architecture_refs:
+    - COMP-IDENTITY-ACCESS
+    - ADR-002
+    - ADR-003
+  contract_refs:
+    - CONTRACT-ENTRA-IDENTITY
+    - CONTRACT-AUTHORISATION-MATRIX
+    - CONTRACT-MENTORSHIP-API
+  dependencies:
+    - TASK-01-API-HOST
+    - TASK-02-DATA-STORE
+  repository_scope:
+    allowed:
+      - src/**
+      - tests/**
+    forbidden:
+      - src/web/**
+      - tests/web/**
+      - infra/**
+      - project-pack/**
+      - spec/**
+      - architecture/**
+      - engineering/**
+      - ai/**
+      - work/**
+      - baselines/**
+      - evidence/**
+      - .claude/**
+      - CLAUDE.md
+  verification_controls:
+    - control://verification/build
+    - control://verification/unit-test
+  human_gates: []

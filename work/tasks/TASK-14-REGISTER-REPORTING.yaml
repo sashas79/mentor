@@ -1,0 +1,58 @@
+# Engineering Work Item generated under Engineering Harness control. Human-approved only once baselined.
+schema_version: 1
+work_item:
+  id: TASK-14-REGISTER-REPORTING
+  title: Relationship register, on-demand CSV export and the administrator's structured goals and progress view
+  requirement_refs:
+    - REQ-FR-040
+    - REQ-FR-060
+    - REQ-FR-061
+    - REQ-FR-062
+    - REQ-FR-066
+    - REQ-BR-013
+    - REQ-NFR-002
+    - REQ-NFR-009
+  acceptance_refs:
+    - AC-FR-040-01
+    - AC-FR-060-01
+    - AC-FR-060-02
+    - AC-FR-061-01
+    - AC-FR-062-01
+    - AC-FR-062-02
+    - AC-FR-066-01
+    - AC-E2E-08
+    - AC-NFR-002-01
+    - AC-NFR-009-01
+  architecture_refs:
+    - COMP-REGISTER-REPORTING
+    - ADR-003
+    - ADR-011
+  contract_refs:
+    - CONTRACT-REGISTER-EXPORT
+    - CONTRACT-MENTORSHIP-API
+  dependencies:
+    - TASK-11-RELATIONSHIP-ADMIN
+    - TASK-12-GOALS-PROGRESS
+    - TASK-13-LEGACY-RECORDS
+  repository_scope:
+    allowed:
+      - src/**
+      - tests/**
+    forbidden:
+      - src/web/**
+      - tests/web/**
+      - infra/**
+      - project-pack/**
+      - spec/**
+      - architecture/**
+      - engineering/**
+      - ai/**
+      - work/**
+      - baselines/**
+      - evidence/**
+      - .claude/**
+      - CLAUDE.md
+  verification_controls:
+    - control://verification/build
+    - control://verification/unit-test
+  human_gates: []

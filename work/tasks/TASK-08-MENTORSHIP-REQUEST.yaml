@@ -1,0 +1,68 @@
+# Engineering Work Item generated under Engineering Harness control. Human-approved only once baselined.
+schema_version: 1
+work_item:
+  id: TASK-08-MENTORSHIP-REQUEST
+  title: "Mentorship request and candidate pairing lifecycle: invitation, mentor response, affirmative willingness, withdrawal"
+  requirement_refs:
+    - REQ-FR-014
+    - REQ-FR-015
+    - REQ-FR-016
+    - REQ-FR-017
+    - REQ-FR-018
+    - REQ-FR-019
+    - REQ-FR-020
+    - REQ-FR-021
+    - REQ-BR-021
+    - REQ-DR-003
+    - REQ-DR-004
+  acceptance_refs:
+    - AC-FR-014-01
+    - AC-FR-015-01
+    - AC-FR-016-01
+    - AC-FR-017-01
+    - AC-FR-018-01
+    - AC-FR-018-02
+    - AC-FR-019-01
+    - AC-FR-019-02
+    - AC-FR-020-01
+    - AC-FR-020-02
+    - AC-FR-021-01
+    - AC-FR-021-02
+    - AC-BR-021-01
+    - AC-DR-003-01
+    - AC-DR-004-01
+    - AC-E2E-11
+  architecture_refs:
+    - COMP-MENTORSHIP-REQUEST
+    - ADR-004
+    - ADR-005
+    - ADR-015
+  contract_refs:
+    - CONTRACT-MENTORSHIP-API
+    - CONTRACT-AUTHORISATION-MATRIX
+    - CONTRACT-AUDIT-ENTRY
+    - CONTRACT-NOTIFICATION-EVENTS
+  dependencies:
+    - TASK-07-MENTOR-REGISTRY
+  repository_scope:
+    allowed:
+      - src/**
+      - tests/**
+    forbidden:
+      - src/web/**
+      - tests/web/**
+      - infra/**
+      - project-pack/**
+      - spec/**
+      - architecture/**
+      - engineering/**
+      - ai/**
+      - work/**
+      - baselines/**
+      - evidence/**
+      - .claude/**
+      - CLAUDE.md
+  verification_controls:
+    - control://verification/build
+    - control://verification/unit-test
+  human_gates: []

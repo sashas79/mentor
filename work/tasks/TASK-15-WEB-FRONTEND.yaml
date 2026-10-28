@@ -1,0 +1,122 @@
+# Engineering Work Item generated under Engineering Harness control. Human-approved only once baselined.
+schema_version: 1
+work_item:
+  id: TASK-15-WEB-FRONTEND
+  title: "React web frontend: Vite single-page application, generated typed API client, role-appropriate screens, simulated-identity banner"
+  requirement_refs:
+    - REQ-FR-001
+    - REQ-FR-003
+    - REQ-FR-005
+    - REQ-FR-007
+    - REQ-FR-010
+    - REQ-FR-012
+    - REQ-FR-014
+    - REQ-FR-015
+    - REQ-FR-016
+    - REQ-FR-018
+    - REQ-FR-019
+    - REQ-FR-020
+    - REQ-FR-022
+    - REQ-FR-027
+    - REQ-FR-035
+    - REQ-FR-036
+    - REQ-FR-037
+    - REQ-FR-040
+    - REQ-FR-047
+    - REQ-FR-048
+    - REQ-FR-049
+    - REQ-FR-055
+    - REQ-FR-056
+    - REQ-FR-057
+    - REQ-FR-060
+    - REQ-NFR-006
+    - REQ-NFR-010
+  acceptance_refs:
+    - AC-FR-001-01
+    - AC-FR-001-02
+    - AC-FR-001-03
+    - AC-FR-003-01
+    - AC-FR-003-02
+    - AC-FR-005-01
+    - AC-FR-005-02
+    - AC-FR-007-01
+    - AC-FR-010-01
+    - AC-FR-010-02
+    - AC-FR-012-01
+    - AC-FR-014-01
+    - AC-FR-015-01
+    - AC-FR-016-01
+    - AC-FR-018-01
+    - AC-FR-018-02
+    - AC-FR-019-01
+    - AC-FR-019-02
+    - AC-FR-020-01
+    - AC-FR-020-02
+    - AC-FR-022-01
+    - AC-FR-022-02
+    - AC-FR-027-01
+    - AC-FR-027-02
+    - AC-FR-027-03
+    - AC-FR-027-04
+    - AC-FR-035-01
+    - AC-FR-036-01
+    - AC-FR-037-01
+    - AC-FR-037-02
+    - AC-FR-040-01
+    - AC-FR-047-01
+    - AC-FR-047-02
+    - AC-FR-048-01
+    - AC-FR-049-01
+    - AC-FR-049-02
+    - AC-FR-055-01
+    - AC-FR-056-01
+    - AC-FR-057-01
+    - AC-FR-057-02
+    - AC-FR-057-03
+    - AC-FR-060-01
+    - AC-FR-060-02
+    - AC-NFR-006-01
+    - AC-NFR-010-01
+  architecture_refs:
+    - COMP-WEB-FRONTEND
+    - ADR-002
+    - ADR-005
+    - ADR-012
+  contract_refs:
+    - CONTRACT-MENTORSHIP-API
+    - CONTRACT-ENTRA-IDENTITY
+  dependencies:
+    - TASK-05-MEETINGS-NOTIFICATIONS
+    - TASK-06-EMPLOYEE-PROFILE
+    - TASK-07-MENTOR-REGISTRY
+    - TASK-08-MENTORSHIP-REQUEST
+    - TASK-09-AGREEMENT-DRAFTING
+    - TASK-10-FORMATION
+    - TASK-11-RELATIONSHIP-ADMIN
+    - TASK-12-GOALS-PROGRESS
+    - TASK-14-REGISTER-REPORTING
+  repository_scope:
+    allowed:
+      - src/web/**
+      - tests/web/**
+    forbidden:
+      - src/Mentor.Api/**
+      - src/Mentor.Core/**
+      - src/Mentor.Infrastructure/**
+      - tests/Mentor.Tests.Unit/**
+      - tests/Mentor.Tests.Integration/**
+      - infra/**
+      - project-pack/**
+      - spec/**
+      - architecture/**
+      - engineering/**
+      - ai/**
+      - work/**
+      - baselines/**
+      - evidence/**
+      - .claude/**
+      - CLAUDE.md
+  verification_controls:
+    - control://verification/build
+    - control://verification/unit-test
+  human_gates: []

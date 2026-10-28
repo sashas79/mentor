@@ -1,0 +1,66 @@
+# Engineering Work Item generated under Engineering Harness control. Human-approved only once baselined.
+schema_version: 1
+work_item:
+  id: TASK-07-MENTOR-REGISTRY
+  title: Mentor application, Talent Management approval and discovery of approved mentors
+  requirement_refs:
+    - REQ-FR-007
+    - REQ-FR-008
+    - REQ-FR-009
+    - REQ-FR-010
+    - REQ-FR-011
+    - REQ-FR-012
+    - REQ-FR-013
+    - REQ-BR-001
+    - REQ-BR-002
+    - REQ-DR-002
+  acceptance_refs:
+    - AC-FR-007-01
+    - AC-FR-008-01
+    - AC-FR-008-02
+    - AC-FR-009-01
+    - AC-FR-009-02
+    - AC-FR-009-03
+    - AC-FR-010-01
+    - AC-FR-010-02
+    - AC-FR-011-01
+    - AC-FR-012-01
+    - AC-FR-013-01
+    - AC-BR-001-01
+    - AC-BR-002-01
+    - AC-DR-002-01
+  architecture_refs:
+    - COMP-MENTOR-REGISTRY
+    - ADR-003
+    - ADR-014
+  contract_refs:
+    - CONTRACT-MENTORSHIP-API
+    - CONTRACT-AUTHORISATION-MATRIX
+    - CONTRACT-AUDIT-ENTRY
+    - CONTRACT-NOTIFICATION-EVENTS
+  dependencies:
+    - TASK-04-AUDIT-TRAIL
+    - TASK-05-MEETINGS-NOTIFICATIONS
+    - TASK-06-EMPLOYEE-PROFILE
+  repository_scope:
+    allowed:
+      - src/**
+      - tests/**
+    forbidden:
+      - src/web/**
+      - tests/web/**
+      - infra/**
+      - project-pack/**
+      - spec/**
+      - architecture/**
+      - engineering/**
+      - ai/**
+      - work/**
+      - baselines/**
+      - evidence/**
+      - .claude/**
+      - CLAUDE.md
+  verification_controls:
+    - control://verification/build
+    - control://verification/unit-test
+  human_gates: []

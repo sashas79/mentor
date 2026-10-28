@@ -1,0 +1,57 @@
+# Engineering Work Item generated under Engineering Harness control. Human-approved only once baselined.
+schema_version: 1
+work_item:
+  id: TASK-04-AUDIT-TRAIL
+  title: Append-only audit trail written in the same transaction as every business-critical action, with administrator query endpoints
+  requirement_refs:
+    - REQ-FR-028
+    - REQ-FR-033
+    - REQ-FR-051
+    - REQ-FR-065
+    - REQ-FR-069
+    - REQ-DR-014
+    - REQ-NFR-002
+    - REQ-NFR-004
+  acceptance_refs:
+    - AC-FR-028-01
+    - AC-FR-028-02
+    - AC-FR-033-01
+    - AC-FR-051-01
+    - AC-FR-065-01
+    - AC-FR-069-01
+    - AC-DR-014-01
+    - AC-NFR-002-01
+    - AC-NFR-004-01
+  architecture_refs:
+    - COMP-AUDIT-TRAIL
+    - ADR-007
+    - ADR-013
+  contract_refs:
+    - CONTRACT-AUDIT-ENTRY
+    - CONTRACT-DATABASE-SCHEMA
+    - CONTRACT-MENTORSHIP-API
+  dependencies:
+    - TASK-02-DATA-STORE
+    - TASK-03-IDENTITY-ACCESS
+  repository_scope:
+    allowed:
+      - src/**
+      - tests/**
+    forbidden:
+      - src/web/**
+      - tests/web/**
+      - infra/**
+      - project-pack/**
+      - spec/**
+      - architecture/**
+      - engineering/**
+      - ai/**
+      - work/**
+      - baselines/**
+      - evidence/**
+      - .claude/**
+      - CLAUDE.md
+  verification_controls:
+    - control://verification/build
+    - control://verification/unit-test
+  human_gates: []

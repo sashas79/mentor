@@ -1,0 +1,109 @@
+# Engineering Work Item generated under Engineering Harness control. Human-approved only once baselined.
+schema_version: 1
+work_item:
+  id: TASK-09-AGREEMENT-DRAFTING
+  title: "Agreement draft lifecycle: immutable content-addressed revisions, participant acceptances, reset to Step 1, administrative annex"
+  requirement_refs:
+    - REQ-FR-022
+    - REQ-FR-023
+    - REQ-FR-024
+    - REQ-FR-025
+    - REQ-FR-026
+    - REQ-FR-027
+    - REQ-FR-028
+    - REQ-FR-029
+    - REQ-FR-055
+    - REQ-FR-067
+    - REQ-FR-068
+    - REQ-FR-069
+    - REQ-BR-004
+    - REQ-BR-010
+    - REQ-BR-011
+    - REQ-BR-012
+    - REQ-BR-017
+    - REQ-BR-018
+    - REQ-BR-019
+    - REQ-BR-020
+    - REQ-BR-023
+    - REQ-DR-006
+    - REQ-DR-007
+    - REQ-DR-015
+    - REQ-NFR-005
+  acceptance_refs:
+    - AC-FR-022-01
+    - AC-FR-022-02
+    - AC-FR-023-01
+    - AC-FR-023-02
+    - AC-FR-024-01
+    - AC-FR-024-02
+    - AC-FR-025-01
+    - AC-FR-025-02
+    - AC-FR-026-01
+    - AC-FR-026-02
+    - AC-FR-027-01
+    - AC-FR-027-02
+    - AC-FR-027-03
+    - AC-FR-027-04
+    - AC-FR-028-01
+    - AC-FR-028-02
+    - AC-FR-029-01
+    - AC-FR-029-02
+    - AC-FR-029-03
+    - AC-FR-029-04
+    - AC-FR-055-01
+    - AC-FR-067-01
+    - AC-FR-067-02
+    - AC-FR-067-03
+    - AC-FR-068-01
+    - AC-FR-068-02
+    - AC-FR-068-03
+    - AC-FR-069-01
+    - AC-E2E-05
+    - AC-BR-010-01
+    - AC-BR-011-01
+    - AC-BR-012-01
+    - AC-BR-017-01
+    - AC-BR-018-01
+    - AC-BR-019-01
+    - AC-BR-020-01
+    - AC-DR-006-01
+    - AC-DR-007-01
+    - AC-DR-015-01
+    - AC-NFR-005-01
+    - AC-E2E-09
+    - AC-BR-023-01
+    - AC-BR-023-02
+  architecture_refs:
+    - COMP-AGREEMENT-DRAFTING
+    - ADR-004
+    - ADR-005
+    - ADR-015
+  contract_refs:
+    - CONTRACT-AGREEMENT-CONTENT
+    - CONTRACT-MENTORSHIP-API
+    - CONTRACT-AUDIT-ENTRY
+    - CONTRACT-NOTIFICATION-EVENTS
+  dependencies:
+    - TASK-08-MENTORSHIP-REQUEST
+  repository_scope:
+    allowed:
+      - src/**
+      - tests/**
+    forbidden:
+      - src/web/**
+      - tests/web/**
+      - infra/**
+      - project-pack/**
+      - spec/**
+      - architecture/**
+      - engineering/**
+      - ai/**
+      - work/**
+      - baselines/**
+      - evidence/**
+      - .claude/**
+      - CLAUDE.md
+  verification_controls:
+    - control://verification/build
+    - control://verification/unit-test
+  human_gates: []

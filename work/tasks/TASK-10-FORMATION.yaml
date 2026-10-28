@@ -1,0 +1,73 @@
+# Engineering Work Item generated under Engineering Harness control. Human-approved only once baselined.
+schema_version: 1
+work_item:
+  id: TASK-10-FORMATION
+  title: Formation approval and transactional relationship formation with formed-agreement evidence and goal instantiation
+  requirement_refs:
+    - REQ-FR-030
+    - REQ-FR-031
+    - REQ-FR-032
+    - REQ-FR-033
+    - REQ-FR-070
+    - REQ-FR-071
+    - REQ-BR-003
+    - REQ-BR-021
+    - REQ-DR-005
+    - REQ-DR-008
+  acceptance_refs:
+    - AC-FR-030-01
+    - AC-FR-030-02
+    - AC-FR-030-03
+    - AC-FR-031-01
+    - AC-FR-031-02
+    - AC-FR-032-01
+    - AC-FR-032-02
+    - AC-FR-032-03
+    - AC-FR-033-01
+    - AC-FR-070-01
+    - AC-FR-070-02
+    - AC-E2E-01
+    - AC-E2E-02
+    - AC-BR-021-01
+    - AC-DR-005-01
+    - AC-DR-008-01
+    - AC-E2E-10
+    - AC-E2E-11
+    - AC-FR-071-01
+    - AC-FR-071-02
+    - AC-FR-071-03
+  architecture_refs:
+    - COMP-FORMATION
+    - ADR-004
+    - ADR-005
+    - ADR-006
+    - ADR-015
+  contract_refs:
+    - CONTRACT-MENTORSHIP-API
+    - CONTRACT-AGREEMENT-CONTENT
+    - CONTRACT-AUDIT-ENTRY
+    - CONTRACT-NOTIFICATION-EVENTS
+  dependencies:
+    - TASK-09-AGREEMENT-DRAFTING
+  repository_scope:
+    allowed:
+      - src/**
+      - tests/**
+    forbidden:
+      - src/web/**
+      - tests/web/**
+      - infra/**
+      - project-pack/**
+      - spec/**
+      - architecture/**
+      - engineering/**
+      - ai/**
+      - work/**
+      - baselines/**
+      - evidence/**
+      - .claude/**
+      - CLAUDE.md
+  verification_controls:
+    - control://verification/build
+    - control://verification/unit-test
+  human_gates: []

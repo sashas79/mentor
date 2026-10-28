@@ -1,0 +1,58 @@
+# Approval candidate. Append-only; exactly one human decision may reference it.
+schema_version: 1
+candidate:
+  type: work
+  harness:
+    version: v0.3.0
+  engineering:
+    resolution_digest: sha256:d17c01e47a3508fcd22cfafae3eaafd81c35d3a4283529915a33ee5ccaec0927
+  upstream:
+    - type: architecture
+      baseline_id: ARCH-0001
+      digest: sha256:d8c46b708b1bc18fc64cca68f469d845d1ebac943fea6edb308a01958b447d23
+  artifacts:
+    - path: work/execution-graph.yaml
+      digest: sha256:564d3f0d48cf23f2d51d2e90e775cfd0780e72066b66667a324ccf1f08f017c4
+    - path: work/tasks/TASK-01-API-HOST.yaml
+      digest: sha256:fa3e2f3e65bc3f45926014afd60a6bb2ae6d3a3d61feb4eba7440e99d2054f4c
+    - path: work/tasks/TASK-02-DATA-STORE.yaml
+      digest: sha256:61e274d4e8055f06fb3a2b7ef1d1f102aae0258d111bb7543edf3a0c9aad2951
+    - path: work/tasks/TASK-03-IDENTITY-ACCESS.yaml
+      digest: sha256:72275a46ca6e43bd93e6e8511106eb147eeba5698ba1a712724171e09184ea29
+    - path: work/tasks/TASK-04-AUDIT-TRAIL.yaml
+      digest: sha256:43ddbabf6dcef85546d06ffe649d515e1149247ade49762c15a6dba3d524c989
+    - path: work/tasks/TASK-05-MEETINGS-NOTIFICATIONS.yaml
+      digest: sha256:ad7b54f8061d01e51801a01fc11c54c362ed41a2ade2c3a56dcb34b150827c54
+    - path: work/tasks/TASK-06-EMPLOYEE-PROFILE.yaml
+      digest: sha256:a4ef35b819295e715570c70df1b7877414b93f3e61ad99228e9e354e1ddb9751
+    - path: work/tasks/TASK-07-MENTOR-REGISTRY.yaml
+      digest: sha256:43a67f6970c46a36ed418297f5cc9b1048e372450c0d3b263023a00d47fa512f
+    - path: work/tasks/TASK-08-MENTORSHIP-REQUEST.yaml
+      digest: sha256:752e99884880d9a42fe6507e16612c6e815e769cca2fc28e5e6ebd002f3fac74
+    - path: work/tasks/TASK-09-AGREEMENT-DRAFTING.yaml
+      digest: sha256:b49f8d9db49c84d62cb9323f2c864ee135997eb1cb980555b6c72a2329e352f0
+    - path: work/tasks/TASK-10-FORMATION.yaml
+      digest: sha256:6f6a2adae961ebac6d7ba03fbdcd44debed428001eeca9ec3c484aaed33f77e3
+    - path: work/tasks/TASK-11-RELATIONSHIP-ADMIN.yaml
+      digest: sha256:5f7ac69f5240b187bfc2a2999a3b3423722bb5828dc60f3f9f727fa21451c499
+    - path: work/tasks/TASK-12-GOALS-PROGRESS.yaml
+      digest: sha256:12024836f855ce51b124d54219570b9aa7369ffc29e08ad5a3e701dff88e6c56
+    - path: work/tasks/TASK-13-LEGACY-RECORDS.yaml
+      digest: sha256:f04d76b759944a02b5fab7e2f418108973c7c6f455b98befc5e4f36c0be0274c
+    - path: work/tasks/TASK-14-REGISTER-REPORTING.yaml
+      digest: sha256:aa36f6e2950730dfd180450dccafd670498c7ca83260a97da5bc3747647b9bec
+    - path: work/tasks/TASK-15-WEB-FRONTEND.yaml
+      digest: sha256:0646638727741f6128324b07730e390a209acadd0b311c16ba404073cfc02839
+    - path: work/tasks/TASK-16-PLATFORM-OPERATIONS.yaml
+      digest: sha256:ad3525a25194c20d81e6bd643ad6583d3c69eab08f3fabc4c52a2b19b26c3ae1
+  validation:
+    subject_digest: sha256:86d187c250fc63fecd279243dc33de3245b84fffdf8fcff7e899fdf5bb08998c
+    evidence: evidence/validation/VAL-WORK-0001.yaml
+    evidence_digest: sha256:b6396e1542709969fe0146ff0b2a612a85c92d71e3a93a745b26bd905fdb1406
+  binding:
+    algorithm: sha256
+    canonicalisation: harness-v1
+    digest: sha256:c2e7bcafe473bad611662c29e9e9af3257532951bec63dd6715bc947efab6029
+  ai_policy:
+    path: ai/policy.yaml
+    digest: sha256:75cace793c57f0d48900f8254456fffb975657c6933f145116eb059154e3e28b

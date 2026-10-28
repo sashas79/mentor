@@ -1,0 +1,19 @@
+# Authoritative validation evidence. Append-only; never edit.
+schema_version: 1
+validation:
+  id: VAL-WORK-0001
+  subject_digest: sha256:86d187c250fc63fecd279243dc33de3245b84fffdf8fcff7e899fdf5bb08998c
+  harness:
+    version: v0.3.0
+  engineering:
+    resolution_digest: sha256:d17c01e47a3508fcd22cfafae3eaafd81c35d3a4283529915a33ee5ccaec0927
+  controls:
+    - control: control://validation/work-graph
+      result: PASS
+      issues: []
+  result: PASS
+  captured_at: 2026-10-28T05:01:38Z
+  binding:
+    algorithm: sha256
+    canonicalisation: harness-v1
+    digest: sha256:b6396e1542709969fe0146ff0b2a612a85c92d71e3a93a745b26bd905fdb1406

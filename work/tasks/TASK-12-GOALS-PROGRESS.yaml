@@ -1,0 +1,64 @@
+# Engineering Work Item generated under Engineering Harness control. Human-approved only once baselined.
+schema_version: 1
+work_item:
+  id: TASK-12-GOALS-PROGRESS
+  title: Development goals, protégé progress entries, completion requests and mentor completion decisions
+  requirement_refs:
+    - REQ-FR-034
+    - REQ-FR-035
+    - REQ-FR-036
+    - REQ-FR-037
+    - REQ-FR-039
+    - REQ-FR-040
+    - REQ-FR-066
+    - REQ-BR-005
+    - REQ-BR-013
+    - REQ-DR-009
+    - REQ-DR-010
+    - REQ-DR-011
+  acceptance_refs:
+    - AC-FR-034-01
+    - AC-FR-035-01
+    - AC-FR-036-01
+    - AC-FR-037-01
+    - AC-FR-037-02
+    - AC-FR-039-01
+    - AC-FR-040-01
+    - AC-FR-066-01
+    - AC-E2E-04
+    - AC-E2E-08
+    - AC-DR-009-01
+    - AC-DR-010-01
+    - AC-DR-011-01
+  architecture_refs:
+    - COMP-GOALS-PROGRESS
+    - ADR-003
+    - ADR-007
+  contract_refs:
+    - CONTRACT-MENTORSHIP-API
+    - CONTRACT-AUDIT-ENTRY
+    - CONTRACT-NOTIFICATION-EVENTS
+  dependencies:
+    - TASK-10-FORMATION
+  repository_scope:
+    allowed:
+      - src/**
+      - tests/**
+    forbidden:
+      - src/web/**
+      - tests/web/**
+      - infra/**
+      - project-pack/**
+      - spec/**
+      - architecture/**
+      - engineering/**
+      - ai/**
+      - work/**
+      - baselines/**
+      - evidence/**
+      - .claude/**
+      - CLAUDE.md
+  verification_controls:
+    - control://verification/build
+    - control://verification/unit-test
+  human_gates: []
