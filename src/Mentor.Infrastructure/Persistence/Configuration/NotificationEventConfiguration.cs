@@ -13,6 +13,7 @@ internal sealed class NotificationEventConfiguration : IEntityTypeConfiguration<
         {
             table.HasCheckConstraint("ck_notification_event_event_type", EnumColumn.Check<NotificationEventType>("event_type"));
             table.HasCheckConstraint("ck_notification_event_recipient_role", EnumColumn.Check<RecipientRole>("recipient_role"));
+            table.HasCheckConstraint("ck_notification_event_required_action", EnumColumn.Check<RequiredAction>("required_action"));
             table.HasCheckConstraint("ck_notification_event_delivery", EnumColumn.Check<NotificationDelivery>("delivery"));
             // A simulated delivery happens when the event is recorded; no other delivery is claimed (ADR-009).
             table.HasCheckConstraint("ck_notification_event_delivered_at", """
@@ -27,6 +28,7 @@ internal sealed class NotificationEventConfiguration : IEntityTypeConfiguration<
 
         builder.Property(notification => notification.EventType).StoredAsText();
         builder.Property(notification => notification.RecipientRole).StoredAsText();
+        builder.Property(notification => notification.RequiredAction).StoredAsText();
         builder.Property(notification => notification.Delivery).StoredAsText();
         builder.Property(notification => notification.CreatedAt).IsInsertTime();
         builder.Property(notification => notification.DeliveredAt).IsInsertTime();

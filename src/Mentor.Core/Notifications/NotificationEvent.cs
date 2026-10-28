@@ -7,13 +7,14 @@ public enum NotificationDelivery
     Simulated,
 }
 
-/// <summary>The material workflow actions that raise an event (ADR-009).</summary>
+/// <summary>The material workflow actions that raise an event (ADR-009; withdrawal by ADR-015).</summary>
 public enum NotificationEventType
 {
     MentorApplicationDecided,
     InvitationSent,
     MentorResponded,
     WillingnessRecorded,
+    CandidateWithdrawn,
     RevisionCreated,
     AcceptanceRecorded,
     FormationDecided,
@@ -39,6 +40,7 @@ public sealed class NotificationEvent
 
     public NotificationEventType EventType { get; init; }
 
+    /// <summary>The kind of record the event is about; one of <see cref="NotificationSubject"/>.</summary>
     public required string SubjectType { get; init; }
 
     public Guid SubjectId { get; init; }
@@ -47,7 +49,7 @@ public sealed class NotificationEvent
 
     public RecipientRole RecipientRole { get; init; }
 
-    public required string RequiredAction { get; init; }
+    public RequiredAction RequiredAction { get; init; }
 
     public NotificationDelivery Delivery { get; init; }
 

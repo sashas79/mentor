@@ -1,6 +1,8 @@
 using System.Text.Json.Serialization;
 using Mentor.Api.Authorisation;
 using Mentor.Api.Identity;
+using Mentor.Api.Meetings;
+using Mentor.Api.Notifications;
 using Mentor.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -29,6 +31,8 @@ public static class ApiHost
         builder.AddMentorIdentity();
         services.AddDefaultDenyAuthorization();
         services.AddAuthorisationMatrix();
+        // Modules (COMP-MEETINGS-NOTIFICATIONS).
+        services.AddNotificationEvents();
         services.AddProblemDetails();
         services.AddExceptionHandler<RedactingExceptionHandler>();
         // A malformed parameter or body is answered with 400 in every environment instead of an exception.
@@ -63,6 +67,9 @@ public static class ApiHost
             .AllowAnonymous();
         app.MapCapabilities();
         app.MapMentorIdentity();
+        // Modules (COMP-MEETINGS-NOTIFICATIONS).
+        app.MapMeetings();
+        app.MapNotifications();
         if (app.Configuration.GetValue<bool>(OpenApiSwitch))
         {
             app.MapOpenApi().AllowAnonymous();

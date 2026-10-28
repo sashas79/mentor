@@ -146,7 +146,7 @@ public sealed class MentorDbContextTests(PostgresServer postgres)
                 SubjectId = candidate.Id,
                 RecipientEmployeeId = protege.Id,
                 RecipientRole = RecipientRole.Protege,
-                RequiredAction = "NONE",
+                RequiredAction = RequiredAction.None,
                 Delivery = NotificationDelivery.Simulated,
             });
             await context.SaveChangesAsync(Cancellation);

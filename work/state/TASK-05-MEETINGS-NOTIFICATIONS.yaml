@@ -1,0 +1,143 @@
+schema_version: 1
+task_state:
+  task: TASK-05-MEETINGS-NOTIFICATIONS
+  status: done
+  work_baseline: baselines/work/WORK-0001.yaml
+  started: 2026-10-28T12:40:41Z
+  updated: 2026-10-28T13:21:26Z
+  verification:
+    - control: control://verification/build
+      result: PASS
+      command: dotnet build src/Mentor.slnx --no-incremental
+      note: >-
+        Run on execute/orchestrated after the squash merge onto cb1a272 (TASK-03 done), which applied without conflict:
+        5 projects with TreatWarningsAsErrors and NuGet audit; 0 warnings, 0 errors. No package was added.
+    - control: control://verification/unit-test
+      result: PASS
+      command: dotnet test src/Mentor.slnx
+      note: >-
+        Full suite on the merged tree: Mentor.Tests.Unit 78/78; Mentor.Tests.Integration 249/249 (PostgreSQL 17 via
+        Testcontainers), including every TASK-01, TASK-02 and TASK-03 test; 23 unit and 21 integration tests are new,
+        and the matrix and endpoint guard tests of TASK-03 cover the six new endpoints. The implementer's mutation run,
+        in the task worktree, that checked notification records with an
+        any-employee permission, let a meeting request ignore unknown members, always claimed simulated delivery,
+        listed every recipient's events in the inbox, copied no agreed terms onto a session, and let an introduction
+        be proposed for any candidate failed exactly the tests that guard each rule.
+  acceptance:
+    # Several criteria are shared with other tasks; the notes give this task's share and the test that shows it.
+    - criterion: AC-FR-055-01
+      note: >-
+        GET /api/relationships/{id}/meetings answers the protégé, the mentor and Talent Management with the agreed
+        frequency and duration read from the formed agreement's content, and every planned session carries the copy
+        (MeetingScheduleTests). The screen is TASK-15; the agreement fields are written by TASK-09.
+    - criterion: AC-FR-056-01
+      note: >-
+        A proposed introduction of an accepted candidate and the planned sessions of a relationship, with a proposed
+        time where known or marked arranged outside the application, are viewable through the meeting endpoints
+        (MeetingScheduleTests).
+    - criterion: AC-FR-057-01
+      note: >-
+        WorkflowNotifications maps every material action (application decided, invitation, mentor response, each
+        willingness, withdrawal, replacement revision, acceptance, formation decision, completion request and decision)
+        to the event type, subject, intended recipient, role and required next action, and the inbox shows each
+        (WorkflowNotificationsTests, NotificationInboxTests). The commands that raise them are TASK-07 to TASK-12.
+    - criterion: AC-FR-057-02
+      note: >-
+        Events are recorded rows delivered to an in-app inbox whose delivery is reported as Simulated on the inbox and
+        on /api/capabilities, with delivered_at equal to created_at; no transport, queue or reminder exists
+        (NotificationInboxTests). The inbox screen is TASK-15.
+    - criterion: AC-FR-057-03
+      note: >-
+        The inbox lists the caller's own events only; retrieving or marking another recipient's event answers 403 with
+        no details, for an unrelated employee and for a Talent Management administrator alike, under both identity
+        schemes (NotificationInboxTests).
+    - criterion: AC-FR-058-01
+      note: >-
+        The meeting flows run against the store alone, and the backend references no calendar, Graph or Exchange
+        assembly (MeetingScheduleTests, MeetingRequestTests). The demonstrator environment is TASK-16.
+    - criterion: AC-FR-059-01
+      note: >-
+        A session or introduction is recorded from an empty body; the request type carries only the time and the
+        arranged-outside flag, and a body with anything else is refused with 400 (MeetingScheduleTests,
+        MeetingRequestTests, MeetingRedactionTests).
+    - criterion: AC-DR-013-01
+      note: >-
+        A meeting answers with exactly its schedule fields: candidate or relationship, optional time, arranged flag,
+        frequency and duration copied from the agreement, who recorded it and when; nothing else exists to return
+        (MeetingScheduleTests). The schema share is TASK-02 (SchemaTests).
+    - criterion: AC-NFR-002-01
+      note: >-
+        Notes sent in a meeting body or query string are refused and reach neither a record, a response nor a log, with
+        every log category at Trace (MeetingRedactionTests); the notification views carry identifiers and enumerations
+        only. Administrator screens and exports are TASK-14 and TASK-15.
+    - criterion: AC-NFR-010-01
+      note: >-
+        With Notifications:Delivery=None, the production default, the pending action is still recorded and listed with
+        no delivery claimed; with Simulated it is expressly identified on the inbox and the capabilities; no calendar or
+        transport is involved either way (NotificationInboxTests).
+  notes:
+    - >-
+      Raising events (ADR-009): a command injects the scoped NotificationEvents (Mentor.Api.Notifications) and calls
+      Raise(WorkflowNotifications.<Action>(record, ...)) before its SaveChangesAsync, passing the record as the command
+      leaves it (status, mentor_response or withdrawn_by already set). Raise only adds rows to the scoped
+      MentorDbContext, so the event commits or rolls back with the action and its audit entries. Per module: TASK-07
+      MentorApplicationDecided; TASK-08 InvitationSent, MentorResponded, WillingnessRecorded(candidate, actor),
+      CandidateWithdrawn; TASK-09 RevisionCreated(candidate, actor), AcceptanceRecorded(candidate, actor,
+      otherParticipantHasAccepted); TASK-10 FormationDecided (both participants); TASK-12 GoalCompletionRequested,
+      GoalCompletionDecided.
+    - >-
+      No event is addressed to Talent Management: administrators are known by app role, not by a record the
+      application could address, so their pending work (applications to decide, drafts at step 3) is a query over the
+      records, which TASK-07 and TASK-10 serve.
+    - >-
+      Migration MeetingsNotifications adds CANDIDATE_WITHDRAWN to the event-type check (ADR-015 names withdrawal, which
+      ADR-009's list omits) and a check limiting required_action to the RequiredAction enumeration, stored as text like
+      every other enumeration. A new next action is a new migration.
+    - >-
+      Agreement content (CONTRACT-AGREEMENT-CONTENT): TASK-09 writes the meeting interval and duration as positive whole
+      numbers at terms.meetingIntervalWeeks and terms.approximateMinutesPerMeeting; AgreementMeetingTerms.Of(content)
+      (Mentor.Core.Agreements, with the property names as constants) reads them, and a session copies them when it is
+      recorded. A relationship without a formed agreement, a legacy one, has none.
+    - >-
+      Notifications:Delivery is None in appsettings.json: events are recorded without a delivery claim and the inbox
+      lists them with delivery None. A prototype run sets Simulated. In tests, WorkflowApi starts the API with Simulated
+      unless told otherwise.
+    - >-
+      Endpoint conventions used here: an unknown record answers 404 before any record check, a failed
+      IsPermittedAsync answers Forbid (403), a creation answers 201 with Location through CreatedAtRoute, and a request
+      body that must stay closed to free text carries [JsonUnmappedMemberHandling(Disallow)] so unknown members are
+      refused with 400 rather than dropped.
+    - >-
+      Routes: GET and POST /api/candidates/{candidateId}/meetings (introductions; POST requires ACCEPTED or DRAFTING,
+      else 409), GET and POST /api/relationships/{relationshipId}/meetings (the schedule and its sessions), GET and PUT
+      /api/meetings/{meetingId} (time and arranged flag only), GET /api/notifications[?unread=true], GET
+      /api/notifications/{id}, POST /api/notifications/{id}/read. TASK-08 and TASK-11 map /api/candidates/{id} and
+      /api/relationships/{id} themselves; the meeting sub-routes do not collide.
+    - >-
+      Test support added for later tasks: WorkflowApi (the real API on a test database with the TestCallers, JSON calls
+      as any profile) and CallerMentorship (a candidate, a formed relationship with meeting terms, or a legacy
+      relationship between the Employee and Mentor callers).
+  changed_paths:
+    - src/Mentor.Core/Agreements/AgreementMeetingTerms.cs
+    - src/Mentor.Core/Notifications/NotificationEvent.cs
+    - src/Mentor.Core/Notifications/NotificationSubject.cs
+    - src/Mentor.Core/Notifications/RequiredAction.cs
+    - src/Mentor.Core/Notifications/WorkflowNotifications.cs
+    - src/Mentor.Infrastructure/Persistence/Configuration/NotificationEventConfiguration.cs
+    - src/Mentor.Infrastructure/Persistence/Migrations/20261028125355_MeetingsNotifications.cs
+    - src/Mentor.Infrastructure/Persistence/Migrations/20261028125355_MeetingsNotifications.Designer.cs
+    - src/Mentor.Infrastructure/Persistence/Migrations/MentorDbContextModelSnapshot.cs
+    - src/Mentor.Api/Hosting/ApiHost.cs
+    - src/Mentor.Api/Meetings/MeetingEndpoints.cs
+    - src/Mentor.Api/Notifications/NotificationEndpoints.cs
+    - src/Mentor.Api/Notifications/NotificationEvents.cs
+    - tests/Mentor.Tests.Unit/Meetings/AgreementMeetingTermsTests.cs
+    - tests/Mentor.Tests.Unit/Meetings/MeetingRequestTests.cs
+    - tests/Mentor.Tests.Unit/Notifications/WorkflowNotificationsTests.cs
+    - tests/Mentor.Tests.Integration/Support/CallerMentorship.cs
+    - tests/Mentor.Tests.Integration/Support/WorkflowApi.cs
+    - tests/Mentor.Tests.Integration/Meetings/MeetingRedactionTests.cs
+    - tests/Mentor.Tests.Integration/Meetings/MeetingScheduleTests.cs
+    - tests/Mentor.Tests.Integration/Notifications/NotificationInboxTests.cs
+    - tests/Mentor.Tests.Integration/Persistence/AuditNotificationMeetingTests.cs
+    - tests/Mentor.Tests.Integration/Persistence/MentorDbContextTests.cs

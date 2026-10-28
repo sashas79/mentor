@@ -55,6 +55,33 @@ public sealed class AuditNotificationMeetingTests(PostgresServer postgres)
         Assert.Equal(delivered ? true : null, deliveredAtCreation);
     }
 
+    // CONTRACT-NOTIFICATION-EVENTS: the required next action is one of the application's vocabulary, and a withdrawal
+    // (ADR-015) is a material action like the rest of ADR-009's list.
+    [Theory]
+    [InlineData("CANDIDATE_WITHDRAWN", "SELECT_ANOTHER_MENTOR", null)]
+    [InlineData("INVITATION_SENT", "RESPOND_TO_INVITATION", null)]
+    [InlineData("INVITATION_SENT", "WRITE_MEETING_NOTES", "ck_notification_event_required_action")]
+    [InlineData("MEETING_HELD", "NONE", "ck_notification_event_event_type")]
+    public async Task An_event_names_a_material_action_and_a_required_action_of_the_vocabulary(string eventType, string action, string? refusedBy)
+    {
+        await using var db = await postgres.CreateDatabaseAsync();
+        var mentorship = await new Seed(db).FormedMentorshipAsync();
+
+        Task Insert() => db.ExecuteAsync(Login.App, """
+            INSERT INTO mentor.notification_event (id, event_type, subject_type, subject_id, recipient_employee_id, recipient_role, required_action, delivery)
+            VALUES (gen_random_uuid(), $1, 'CANDIDATE', $2, $3, 'PROTEGE', $4, 'SIMULATED')
+            """, eventType, mentorship.Candidate, mentorship.Protege, action);
+
+        if (refusedBy is null)
+        {
+            await Insert();
+        }
+        else
+        {
+            await Rejected.WithAsync(PostgresErrorCodes.CheckViolation, Insert, refusedBy);
+        }
+    }
+
     [Theory]
     [InlineData("INTRODUCTORY", false, true)]
     [InlineData("RECURRING_SESSION", true, false)]
