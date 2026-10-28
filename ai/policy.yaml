@@ -1,0 +1,18 @@
+# Project AI Policy. Derived by the core from the effective controls and the current Architecture Baseline; content-addressed, not human-baselined.
+schema_version: 1
+ai_policy:
+  id: project-ai-policy
+  controls:
+    - control: control://policy/evidence-required
+    - control: control://policy/human-approval
+    - control: control://policy/repository-scope
+  provenance:
+    architecture_baseline:
+      id: ARCH-0001
+      digest: sha256:d8c46b708b1bc18fc64cca68f469d845d1ebac943fea6edb308a01958b447d23
+      candidate_digest: sha256:52b3c72052cfcde87d1d8078a3ad21928813cc5730a3be4863f3485ef6a89c30
+    engineering_resolution_digest: sha256:d17c01e47a3508fcd22cfafae3eaafd81c35d3a4283529915a33ee5ccaec0927
+  binding:
+    algorithm: sha256
+    canonicalisation: harness-v1
+    digest: sha256:75cace793c57f0d48900f8254456fffb975657c6933f145116eb059154e3e28b

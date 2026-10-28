@@ -1,0 +1,19 @@
+# Architecture Baseline. Append-only; corrections create a new superseding record.
+schema_version: 1
+baseline:
+  id: ARCH-0001
+  type: architecture
+  candidate:
+    path: evidence/candidates/CAND-ARCH-0003.yaml
+    digest: sha256:52b3c72052cfcde87d1d8078a3ad21928813cc5730a3be4863f3485ef6a89c30
+  approval:
+    path: evidence/approvals/APR-ARCH-0003.yaml
+    digest: sha256:03fccec79cd50a3db798562484df3ffde8980b4b0ae1224149c7a0526bebbf1a
+  established_at: 2026-10-28T04:49:47Z
+  repository:
+    git_commit: c89c27f25e6ac12b74b342157b0036db2d521734
+  supersedes: null
+  binding:
+    algorithm: sha256
+    canonicalisation: harness-v1
+    digest: sha256:d8c46b708b1bc18fc64cca68f469d845d1ebac943fea6edb308a01958b447d23
