@@ -41,7 +41,11 @@ internal sealed class ProbeHost : IAsyncDisposable
     {
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions { EnvironmentName = Environments.Development });
         builder.WebHost.UseTestServer();
-        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["Identity:Mode"] = identityMode.ToString() });
+        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Identity:Mode"] = identityMode.ToString(),
+            ["ConnectionStrings:Mentor"] = ApiFactory.UnreachableDatabase,
+        });
         builder.Configuration.AddInMemoryCollection(settings ?? new Dictionary<string, string?>());
         builder.AddMentorApiHost();
 

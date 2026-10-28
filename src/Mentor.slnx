@@ -2,4 +2,6 @@
   <Project Path="../tests/Mentor.Tests.Integration/Mentor.Tests.Integration.csproj" />
   <Project Path="../tests/Mentor.Tests.Unit/Mentor.Tests.Unit.csproj" />
   <Project Path="Mentor.Api/Mentor.Api.csproj" />
+  <Project Path="Mentor.Core/Mentor.Core.csproj" />
+  <Project Path="Mentor.Infrastructure/Mentor.Infrastructure.csproj" />
 </Solution>

@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Domain model and module commands and queries; no infrastructure dependency (ADR-001). -->
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Mentor.Tests.Unit" />
+    <InternalsVisibleTo Include="Mentor.Tests.Integration" />
+  </ItemGroup>
+
+</Project>

@@ -1,3 +1,4 @@
+using Mentor.Core.Notifications;
 using Microsoft.Extensions.Options;
 
 namespace Mentor.Api.Hosting;

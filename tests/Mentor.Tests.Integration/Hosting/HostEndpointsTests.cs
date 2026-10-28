@@ -16,14 +16,13 @@ public sealed class HostEndpointsTests
     private static readonly HashSet<string> PublicRoutes =
         [HealthEndpoints.Live, HealthEndpoints.Ready, CapabilitiesEndpoint.Route, "/openapi/{documentName}.json"];
 
-    [Theory]
-    [InlineData(HealthEndpoints.Live)]
-    [InlineData(HealthEndpoints.Ready)]
-    public async Task Health_endpoints_answer_without_credentials(string route)
+    // Readiness depends on the database; DatabaseConnectionTests covers it.
+    [Fact]
+    public async Task Liveness_answers_without_credentials_or_a_database()
     {
         await using var api = new ApiFactory(Environments.Production);
 
-        var response = await api.GetAsync(route);
+        var response = await api.GetAsync(HealthEndpoints.Live);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("Healthy", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));

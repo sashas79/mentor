@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Mentor.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Net.Http.Headers;
@@ -22,6 +23,7 @@ public static class ApiHost
 
         var services = builder.Services;
         services.AddPrototypeSwitches();
+        services.AddMentorPersistence();
         services.AddDefaultDenyAuthorization();
         services.AddProblemDetails();
         services.AddExceptionHandler<RedactingExceptionHandler>();
@@ -36,7 +38,7 @@ public static class ApiHost
                 .AllowAnyMethod()
                 // The client reads the ETag it returns in If-Match (ADR-005).
                 .WithExposedHeaders(HeaderNames.ETag, HeaderNames.Location)));
-        services.AddHealthChecks();
+        services.AddHealthChecks().AddDbContextCheck<MentorDbContext>("database", tags: [HealthEndpoints.ReadyTag]);
         services.AddOpenApi();
         return builder;
     }

@@ -1,3 +1,5 @@
+using Mentor.Core.Notifications;
+
 namespace Mentor.Api.Hosting;
 
 /// <summary>

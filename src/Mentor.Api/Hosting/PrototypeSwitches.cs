@@ -1,3 +1,4 @@
+using Mentor.Core.Notifications;
 using Microsoft.Extensions.Options;
 
 namespace Mentor.Api.Hosting;
@@ -6,13 +7,6 @@ namespace Mentor.Api.Hosting;
 public enum IdentityMode
 {
     Entra,
-    Simulated,
-}
-
-/// <summary>How notification events reach their recipient (ADR-009). Simulated is the labelled in-app inbox of the prototype.</summary>
-public enum NotificationDelivery
-{
-    None,
     Simulated,
 }
 

@@ -1,0 +1,162 @@
+schema_version: 1
+task_state:
+  task: TASK-02-DATA-STORE
+  status: done
+  work_baseline: baselines/work/WORK-0001.yaml
+  started: 2026-10-28T05:49:36Z
+  updated: 2026-10-28T06:55:07Z
+  verification:
+    - control: control://verification/build
+      result: PASS
+      command: dotnet build src/Mentor.slnx --no-incremental
+      note: 5 projects (Mentor.Core, Mentor.Infrastructure, Mentor.Api and both test projects) with TreatWarningsAsErrors; 0 warnings, 0 errors.
+    - control: control://verification/unit-test
+      result: PASS
+      command: dotnet test src/Mentor.slnx
+      note: >-
+        Mentor.Tests.Unit 32/32; Mentor.Tests.Integration 182/182, including 142 persistence tests against PostgreSQL 17
+        (postgres:17-alpine via Testcontainers; Docker Desktop was started for the run). The migration applies and
+        reverses cleanly, and the model has no pending changes. Constraint tests name the exact constraint that must
+        refuse. A mutation run that disabled the goal-completion trigger, widened the relationship column whitelist and
+        silenced the legacy attribution check failed exactly the 5 tests that guard those rules.
+  acceptance:
+    # Several criteria are shared with later tasks; the notes give this task's share and the test that shows it.
+    - criterion: AC-FR-017-01
+      note: The request is its own row, still referenced by its candidate after formation (MentorDbContextTests).
+    - criterion: AC-FR-054-01
+      note: Nothing limits relationships per person; three relationships of the same pair stay separate (RelationshipTests).
+    - criterion: AC-FR-061-01
+      note: PostgreSQL is the authoritative store; the register is reconstructed by a query over stored records of both provenances (MentorDbContextTests). The export endpoints are TASK-14.
+    - criterion: AC-FR-064-01
+      note: Every entity has its own table; relationships carry DIGITAL or LEGACY provenance; a legacy row can have no formed agreement or goal (RelationshipTests).
+    - criterion: AC-DR-001-01
+      note: employee holds a unique, non-null Entra object id, display name and optional level/title; the legacy entry role cannot create employees (PrivilegeTests).
+    - criterion: AC-DR-002-01
+      note: mentor_profile holds employee, biography, role/title, industry and mentoring experience, and a checked approval decision. The discovery query is TASK-07.
+    - criterion: AC-DR-003-01
+      note: mentorship_request holds protégé, motivation, goals, separately stored nontechnical expectations, server-assigned submission time and disposition.
+    - criterion: AC-DR-004-01
+      note: mentor_selection holds request, mentor, invitation time, response and time; a declined candidate cannot be formed (CandidateTests).
+    - criterion: AC-DR-005-01
+      note: >-
+        A digital relationship must name its candidate's participants and hold State, Status and IsActive; a legacy row
+        may leave them NULL beside its source text. The formation prerequisites are enforced by the mutual-acceptance
+        check and the content-hash keys; the formation command is TASK-10.
+    - criterion: AC-DR-006-01
+      note: Revisions are insert-only and identified by a database-verified SHA-256 content hash; a replacement leaves the accepted revision unchanged (AgreementTests, ImmutabilityTests).
+    - criterion: AC-DR-007-01
+      note: Each acceptance names its revision and that revision's hash, once per participant, and is insert-only; applicability is derived from the current revision (AgreementTests).
+    - criterion: AC-DR-008-01
+      note: A formation decision is bound to a revision of its candidate and that revision's hash, with at most one approval; a legacy relationship cannot receive formation evidence.
+    - criterion: AC-DR-009-01
+      note: Each goal references its relationship and formed agreement; the agreed wording is immutable and only completion_status changes.
+    - criterion: AC-DR-010-01
+      note: Progress is bound to the relationship's protégé, is server-dated, carries an optional completion flag and never completes the goal (GoalTests).
+    - criterion: AC-DR-011-01
+      note: A decision is bound to a completion request and the relationship's mentor, once per request; the goal is Complete only with an approved decision (GoalTests).
+    - criterion: AC-DR-013-01
+      note: meeting holds owner, optional time, frequency and duration, and has no free-text column (SchemaTests); there is no calendar link.
+    - criterion: AC-DR-014-01
+      note: >-
+        audit_entry is insert-only, server-timed, and distinguishes APPLICATION (Entra or simulated) entries from
+        LEGACY_SOURCE entries (database account plus source reference). Writing entries from commands is TASK-04.
+    - criterion: AC-DR-015-01
+      note: Replacement revisions and permitted_change rows are separate records; a permitted change touches no revision.
+    - criterion: AC-NFR-002-01
+      note: No column can hold meeting discussion (SchemaTests). The API, log, audit and report shares are TASK-01, TASK-04, TASK-05 and TASK-14.
+    - criterion: AC-NFR-003-01
+      note: Every reference is a foreign key (44 modelled plus 2 composite in SQL); an unresolved historic person becomes a review exception with no employee created (LegacyEntryTests).
+    - criterion: AC-NFR-005-01
+      note: After acceptance and a replacement, the old revision and acceptances are unchanged and no longer apply; evidence and formed agreements cannot be updated by any role.
+    - criterion: AC-NFR-007-01
+      note: Nothing in the store depends on a recoverability decision, so the prototype is not blocked. The decision record itself belongs to TASK-16 (infra/).
+    - criterion: AC-NFR-009-01
+      note: >-
+        Production refuses a database connection without TLS (DatabaseConnectionTests); access is limited by least-privilege
+        roles. Encryption at rest and hosting are TASK-16.
+    - criterion: AC-DR-016-01
+      note: An unresolved source row is kept as an UNRESOLVED_PERSON review exception with its source reference, outside the relationship table.
+    - criterion: AC-DR-016-02
+      note: mentor_legacy_entry has no INSERT on employee, and employee requires an Entra object id.
+  changed_paths:
+    - src/Mentor.slnx
+    - src/dotnet-tools.json
+    - src/Mentor.Core/Mentor.Core.csproj
+    - src/Mentor.Core/Employees/Employee.cs
+    - src/Mentor.Core/MentorRegistry/MentorProfile.cs
+    - src/Mentor.Core/Requests/MentorshipRequest.cs
+    - src/Mentor.Core/Requests/MentorSelection.cs
+    - src/Mentor.Core/Agreements/AgreementRevision.cs
+    - src/Mentor.Core/Agreements/AgreementContentHash.cs
+    - src/Mentor.Core/Agreements/AgreementAcceptance.cs
+    - src/Mentor.Core/Agreements/PermittedChange.cs
+    - src/Mentor.Core/Formation/FormationDecision.cs
+    - src/Mentor.Core/Formation/FormedAgreement.cs
+    - src/Mentor.Core/Relationships/MentorshipRelationship.cs
+    - src/Mentor.Core/Goals/DevelopmentGoal.cs
+    - src/Mentor.Core/Goals/GoalProgress.cs
+    - src/Mentor.Core/Goals/GoalApproval.cs
+    - src/Mentor.Core/Meetings/Meeting.cs
+    - src/Mentor.Core/Notifications/NotificationEvent.cs
+    - src/Mentor.Core/Audit/AuditEntry.cs
+    - src/Mentor.Core/Legacy/LegacyEntryAuthorisation.cs
+    - src/Mentor.Core/Legacy/LegacyReviewException.cs
+    - src/Mentor.Infrastructure/Mentor.Infrastructure.csproj
+    - src/Mentor.Infrastructure/Persistence/EnumColumn.cs
+    - src/Mentor.Infrastructure/Persistence/ServerTime.cs
+    - src/Mentor.Infrastructure/Persistence/MentorDatabase.cs
+    - src/Mentor.Infrastructure/Persistence/MentorDbContext.cs
+    - src/Mentor.Infrastructure/Persistence/DesignTimeMentorDbContextFactory.cs
+    - src/Mentor.Infrastructure/Persistence/PersistenceRegistration.cs
+    - src/Mentor.Infrastructure/Persistence/Configuration/AgreementAcceptanceConfiguration.cs
+    - src/Mentor.Infrastructure/Persistence/Configuration/AgreementRevisionConfiguration.cs
+    - src/Mentor.Infrastructure/Persistence/Configuration/AuditEntryConfiguration.cs
+    - src/Mentor.Infrastructure/Persistence/Configuration/ContentHashRule.cs
+    - src/Mentor.Infrastructure/Persistence/Configuration/DevelopmentGoalConfiguration.cs
+    - src/Mentor.Infrastructure/Persistence/Configuration/EmployeeConfiguration.cs
+    - src/Mentor.Infrastructure/Persistence/Configuration/FormationDecisionConfiguration.cs
+    - src/Mentor.Infrastructure/Persistence/Configuration/FormedAgreementConfiguration.cs
+    - src/Mentor.Infrastructure/Persistence/Configuration/GoalApprovalConfiguration.cs
+    - src/Mentor.Infrastructure/Persistence/Configuration/GoalProgressConfiguration.cs
+    - src/Mentor.Infrastructure/Persistence/Configuration/LegacyEntryAuthorisationConfiguration.cs
+    - src/Mentor.Infrastructure/Persistence/Configuration/LegacyReviewExceptionConfiguration.cs
+    - src/Mentor.Infrastructure/Persistence/Configuration/MeetingConfiguration.cs
+    - src/Mentor.Infrastructure/Persistence/Configuration/MentorProfileConfiguration.cs
+    - src/Mentor.Infrastructure/Persistence/Configuration/MentorSelectionConfiguration.cs
+    - src/Mentor.Infrastructure/Persistence/Configuration/MentorshipRelationshipConfiguration.cs
+    - src/Mentor.Infrastructure/Persistence/Configuration/MentorshipRequestConfiguration.cs
+    - src/Mentor.Infrastructure/Persistence/Configuration/NotificationEventConfiguration.cs
+    - src/Mentor.Infrastructure/Persistence/Configuration/PermittedChangeConfiguration.cs
+    - src/Mentor.Infrastructure/Persistence/Migrations/20261028062339_InitialSchema.cs
+    - src/Mentor.Infrastructure/Persistence/Migrations/20261028062339_InitialSchema.Designer.cs
+    - src/Mentor.Infrastructure/Persistence/Migrations/20261028062339_InitialSchema.Rules.cs
+    - src/Mentor.Infrastructure/Persistence/Migrations/MentorDbContextModelSnapshot.cs
+    - src/Mentor.Api/Mentor.Api.csproj
+    - src/Mentor.Api/Hosting/ApiHost.cs
+    - src/Mentor.Api/Hosting/PrototypeSwitches.cs
+    - src/Mentor.Api/Hosting/Capabilities.cs
+    - src/Mentor.Api/Hosting/CapabilitiesEndpoint.cs
+    - tests/Mentor.Tests.Unit/Hosting/ProductionDisablesSimulationTests.cs
+    - tests/Mentor.Tests.Unit/Persistence/AgreementContentHashTests.cs
+    - tests/Mentor.Tests.Unit/Persistence/EnumColumnTests.cs
+    - tests/Mentor.Tests.Unit/Persistence/MentorDatabaseOptionsValidatorTests.cs
+    - tests/Mentor.Tests.Integration/Mentor.Tests.Integration.csproj
+    - tests/Mentor.Tests.Integration/Support/ApiFactory.cs
+    - tests/Mentor.Tests.Integration/Support/ProbeHost.cs
+    - tests/Mentor.Tests.Integration/Hosting/HostEndpointsTests.cs
+    - tests/Mentor.Tests.Integration/Persistence/AgreementTests.cs
+    - tests/Mentor.Tests.Integration/Persistence/AuditNotificationMeetingTests.cs
+    - tests/Mentor.Tests.Integration/Persistence/CandidateTests.cs
+    - tests/Mentor.Tests.Integration/Persistence/DatabaseConnectionTests.cs
+    - tests/Mentor.Tests.Integration/Persistence/GoalTests.cs
+    - tests/Mentor.Tests.Integration/Persistence/ImmutabilityTests.cs
+    - tests/Mentor.Tests.Integration/Persistence/LegacyEntryTests.cs
+    - tests/Mentor.Tests.Integration/Persistence/MentorDbContextTests.cs
+    - tests/Mentor.Tests.Integration/Persistence/PostgresServer.cs
+    - tests/Mentor.Tests.Integration/Persistence/PrivilegeTests.cs
+    - tests/Mentor.Tests.Integration/Persistence/Rejected.cs
+    - tests/Mentor.Tests.Integration/Persistence/RelationshipTests.cs
+    - tests/Mentor.Tests.Integration/Persistence/SchemaTests.cs
+    - tests/Mentor.Tests.Integration/Persistence/Seed.cs
+    - tests/Mentor.Tests.Integration/Persistence/Tables.cs
+    - tests/Mentor.Tests.Integration/Persistence/TestDatabase.cs

@@ -1,4 +1,5 @@
 using Mentor.Api.Hosting;
+using Mentor.Core.Notifications;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 
