@@ -11,8 +11,10 @@ adr:
     API's capabilities endpoint reports simulated mode, in which case a persistent banner labels every
     screen as simulated. API access goes through a client generated from the API's OpenAPI document at
     build time, so the frontend cannot drift from CONTRACT-MENTORSHIP-API. Every resource the API returns
-    carries the list of actions the caller is permitted to perform; the frontend renders affordances from
-    that list and treats server rejections as the outcome. No workflow state, prerequisite check, value
+    carries the list of actions the caller is permitted to perform and, for candidates and relationships,
+    its version as an ETag that the client returns in If-Match on every state-changing request (ADR-005);
+    on 409 the client re-reads and lets the user decide again. The frontend renders affordances from that
+    list and treats server rejections as the outcome. No workflow state, prerequisite check, value
     enumeration or permission is computed in the browser. Role-appropriate navigation offers the
     protégé, mentor and administrator areas according to the roles the API reports.
   rationale: |-

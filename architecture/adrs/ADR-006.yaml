@@ -5,24 +5,34 @@ adr:
   title: Independent enumerated relationship attributes State, Status and IsActive with audited administrator edits
   status: proposed
   decision: |-
-    The relationship table stores state, status and is_active as three separate columns with check
-    constraints: state in (IN_PROGRESS, ON_HOLD, COMPLETE) or null only for legacy rows under review;
-    status in (NEEDS_REASSIGNING) or null meaning blank; is_active in ('Y', 'N') or null only for legacy
-    rows under review. Digitally formed rows are inserted with IN_PROGRESS, null and 'N' and the database
-    requires all three to be non-null when provenance is digital. One administrator command updates any
-    subset of the three columns; the server validates only membership in the enumerations and the
-    existence of the formed relationship. There is no trigger, derived column or rule that changes one
-    attribute because another changed, no transition table, and no rejection of any combination. Each
-    executed change writes one audit entry per attribute with prior value, new value, administrator and
-    UTC time. Unresolved legacy values are represented by null plus a review-exception record, never by
-    an extra enumeration value.
+    The mentorship_relationship row stores state, status and is_active as three separate columns with
+    check constraints: state in (IN_PROGRESS, ON_HOLD, COMPLETE); status in (BLANK, NEEDS_REASSIGNING),
+    where BLANK is the business value "blank"; is_active in ('Y', 'N'). For provenance DIGITAL all three
+    columns are NOT NULL and are inserted at formation as IN_PROGRESS, BLANK and 'N' (ADR-005). For
+    provenance LEGACY each column may be NULL, meaning the source value is unresolved and a
+    legacy_review_exception row exists for it (ADR-008). NULL is never a business value and is never
+    written for a digital row; a check constraint enforces provenance = DIGITAL implies all three NOT
+    NULL.
+
+    One administrator command updates any subset of the three columns on an existing relationship row
+    and carries the row version (ADR-005). The server validates only that the row exists and that each
+    supplied value is in its enumeration. It never derives, recalculates, defaults or rejects a
+    combination; no trigger alters another column; nothing starts a reassignment; and because the
+    command requires an existing relationship row it cannot form or activate a candidate. The
+    formation-time default 'N' is written once at insert and never again, so a later explicit
+    administrator choice stands. Setting a value on a legacy row is an explicit, audited administrator
+    resolution of that unknown, never an automatic mapping. Each executed change writes one audit entry
+    per attribute with prior value, new value, administrator and server UTC time (ADR-007). The
+    relationship row holds no agreement content; the formed agreement and the formation decision are
+    separate evidence rows (ADR-004, ADR-013), so attribute edits cannot touch formation evidence.
   rationale: |-
     FR-043 to FR-051, FR-071 and BR-006 to BR-009 define three independent attributes with closed value
-    sets, free movement between State values, independent Status and IsActive edits, tolerance of unusual
-    combinations, a default of N at formation that never overrides a later explicit choice and a full
-    change history. Database check constraints make the value sets deterministic, nullable columns
-    confined to legacy rows keep "unknown" out of the business value sets as AC-FR-044-01 requires, and
-    per-attribute audit entries satisfy AC-FR-051-01 directly.
+    sets, free movement between State values, independent Status and IsActive edits, tolerance of
+    unusual combinations, a default of N at formation that never overrides a later explicit choice and
+    a full change history. Making "blank" an explicit value keeps every digital row fully populated and
+    lets NULL mean exactly one thing, the unresolved legacy value that AC-FR-044-01 and BR-006 require
+    to be held as unknown rather than as a fourth business value. Database check constraints make the
+    value sets deterministic and per-attribute audit entries satisfy AC-FR-051-01 directly.
   requirement_refs:
     - REQ-FR-043
     - REQ-FR-044

@@ -2,7 +2,7 @@
 schema_version: 1
 contract:
   id: CONTRACT-DATABASE-SCHEMA
-  name: PostgreSQL authoritative schema (EF Core migrations, constraints, roles and privileges)
+  name: PostgreSQL authoritative schema (EF Core migrations; evidence and operational table classes; check constraints including the mutual-acceptance invariant; composite content-hash foreign keys; unique invariants; version columns; roles and column-level privileges)
   type: data
   requirement_refs:
     - REQ-FR-061

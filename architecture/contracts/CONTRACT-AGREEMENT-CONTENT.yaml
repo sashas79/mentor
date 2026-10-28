@@ -2,9 +2,11 @@
 schema_version: 1
 contract:
   id: CONTRACT-AGREEMENT-CONTENT
-  name: Agreement content document (canonical JSON schema of fixed policy text and entered terms, with content_hash and substantive_hash identity rules)
+  name: Agreement content document (canonical JSON of the substantive content only, with sections parties, policy, terms, goals, barriers, contingencies and responsibilities; content_hash identity rule; administrative annex and permitted_change record held on the candidate outside the content)
   type: data
   requirement_refs:
+    - REQ-BR-020
+    - REQ-BR-023
     - REQ-FR-022
     - REQ-FR-023
     - REQ-FR-024

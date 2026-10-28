@@ -1,0 +1,25 @@
+# Human decision evidence. Append-only; final for this candidate.
+schema_version: 1
+approval:
+  id: APR-ARCH-0001
+  gate: gate://architecture-baseline
+  decision: rejected
+  candidate:
+    type: architecture
+    manifest: evidence/candidates/CAND-ARCH-0001.yaml
+    digest: sha256:13100154e782357999048322b6194836ffb42681e9354afd4e711fae4b3fd341
+  approver:
+    identity: sasha
+    authority: architecture
+  identity_assurance:
+    mechanism: declared-project-identity
+    level: declared
+  captured_at: 2026-10-27T15:10:43Z
+  captured_via:
+    interface: cli
+    adapter: null
+  binding:
+    algorithm: sha256
+    canonicalisation: harness-v1
+    digest: sha256:3c5c3b0fd078a2885b4962b69a8fabfcdc8417d6c45505c397d405cc62b3852b
+  comment: Correct F09–F12, run a consistency check across ADR-004, ADR-005, ADR-006, ADR-009 and ADR-013

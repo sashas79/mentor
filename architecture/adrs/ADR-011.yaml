@@ -9,8 +9,12 @@ adr:
     legacy tables; it is not stored. Two Talent Management endpoints return it as JSON and as a UTF-8 CSV
     file with a byte-order mark (CONTRACT-REGISTER-EXPORT) whose columns are Mentor, Mentor level,
     Protégé, Protégé level, State, Status, IsActive, Start date, End date, Duration, Provenance, Source
-    reference, Source Active text, Source Duration text, Source date text and Review exception. Unknown
-    values are empty cells next to the retained source text; dates are written as ISO 8601. There is no
+    reference, Source Active text, Source Duration text, Source date text and Review exception. A BLANK
+    Status and an unresolved legacy value are both empty cells; the Provenance and Review exception
+    columns and the retained source text beside them make the unresolved case distinguishable. Review
+    exception is derived: it is set for a legacy row that still has a NULL State, Status or IsActive,
+    and the register also lists the legacy_review_exception rows that have no relationship row (unresolved
+    identity or no mentor) with their source text only. Dates are written as ISO 8601. There is no
     import or synchronisation from the spreadsheet; the tracker file remains provenance only. Export
     requests are audited. The export contains no goal progress text and no meeting content.
   rationale: |-

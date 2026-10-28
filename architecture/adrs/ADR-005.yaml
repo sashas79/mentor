@@ -2,41 +2,82 @@
 schema_version: 1
 adr:
   id: ADR-005
-  title: Formation as one transactional command with prerequisite re-validation and optimistic concurrency
+  title: Concurrency control by head-row version tokens and exclusive formation in one transaction
   status: proposed
   decision: |-
-    Formation approval and relationship formation are one command, ApproveFormation, executed by a
-    Talent Management administrator against a candidate and the revision the administrator reviewed. The
-    command runs in a single database transaction and, inside it:
-    1. loads the candidate with its concurrency token and verifies that the token equals the one the
-       administrator's request carries and that the referenced revision is still the candidate's current
-       revision;
-    2. verifies that the candidate's two parties are still the identified mentor and protégé and that
-       both willingness-to-proceed decisions are current (not withdrawn, declined or invalidated by a
-       party change);
-    3. verifies that exactly those two parties hold applicable acceptances whose substantive_hash equals
-       the current revision's substantive_hash;
-    4. inserts the FormationApproval with administrator, server UTC time, candidate, revision and hashes;
-    5. inserts the MentorshipRelationship with State In Progress, Status blank, IsActive N, provenance
-       digital, the frozen agreement content and hashes, and one DevelopmentGoal per agreed goal;
-    6. writes the audit entries and notification events.
-    Any failed check, or a concurrency conflict caused by a revision or party change committed in the
-    meantime, aborts the transaction and returns a conflict response; nothing is persisted. A relationship
-    row therefore exists only when all prerequisites held at the moment of formation. Administrator edits
-    of State, Status or IsActive are a different command that requires an existing relationship row and
-    cannot create one.
+    Aggregate heads. The candidate row (mentor_selection) and the relationship row carry an explicit
+    version column (bigint, starting at 1). Every API response for these resources exposes the version
+    as an ETag, and every state-changing request must carry it in If-Match; a request without it is
+    refused with 428.
+
+    Command protocol. A state-changing command on a candidate (mentor response, willingness,
+    withdrawal, replacement revision, acceptance, administrative annex change, formation decision) or
+    on a relationship (State, Status or IsActive edit) runs in one database transaction at
+    READ COMMITTED isolation whose first statement is UPDATE <head> SET version = version + 1 WHERE
+    id = ? AND version = ?. Zero rows updated means another command committed first: the transaction is
+    rolled back, 409 Conflict is returned and nothing is persisted; the client re-reads and decides
+    again. The row lock taken by that update is held until commit, so competing commands on the same
+    aggregate execute strictly one after another, and every check made later in the transaction reads
+    a state that no concurrent command can change. Each command then checks the candidate status its
+    transition requires (ADR-015) and fails with 409 if it does not hold. No command ever updates an
+    evidence row.
+
+    Formation. ApproveFormation is a candidate command, by a Talent Management administrator, carrying
+    the candidate version and the revision id and content_hash the administrator reviewed. After the
+    versioned update it verifies, inside the transaction:
+    1. the candidate's status is DRAFTING and, explicitly, mentor_response = ACCEPTED,
+       protege_willing_at and mentor_willing_at are set and withdrawn_at is null (the mutual acceptance
+       invariant of ADR-015);
+    2. the named revision is the candidate's current revision and its content_hash equals the hash
+       supplied;
+    3. acceptance rows exist for that revision from exactly the candidate's protege_employee_id and
+       mentor_employee_id, each with content_hash equal to the revision's; under the lock this is the
+       derived applicability of ADR-004, and no other acceptance is counted.
+    It then inserts the formation_decision (APPROVED, administrator, server UTC time, candidate,
+    revision, content_hash), the mentorship_relationship (State IN_PROGRESS, Status BLANK, IsActive N,
+    provenance DIGITAL, candidate reference, the two participants), the formed_agreement evidence row
+    (content, content_hash, administrative annex values), one development_goal per agreed goal, the
+    audit entries and the notification events, and sets the candidate status to FORMED. Any failed
+    check aborts the transaction with 409 or 422 and persists nothing. A stale approval, whether
+    against a superseded revision, after a concurrent revision, after a withdrawal or for a candidate
+    replaced by a new selection, fails at the version check, the status check or the current-revision
+    check.
+
+    A Talent Management administrator may instead record a REJECTED formation_decision for the current
+    revision. It is evidence only: it forms nothing and leaves the participants free to revise or
+    withdraw; a later approval still has to pass every check above.
+
+    Exclusivity invariants enforced by the database in addition to the protocol: at most one APPROVED
+    formation_decision per candidate (partial unique index); at most one relationship per candidate
+    (unique candidate_id, NULL for legacy rows); exactly one formed_agreement per digital relationship
+    (unique relationship_id); at most one acceptance per (revision, participant); unique
+    (candidate, revision_number); at most one mentor_profile per employee; at most one goal_approval per
+    completion request.
+
+    Relationship edits. The administrator edit command carries the relationship version; a conflicting
+    concurrent edit receives 409 and is retried by the client after re-reading, so one administrator's
+    explicit choice is never silently overwritten by another's.
   rationale: |-
-    FR-030, FR-031 and FR-070 require that approval depends on current acceptances of identical current
-    content and that a stale approval (E2E-10) can never form a relationship; BR-003 and E2E-02 require
-    that any missing prerequisite prevents formation. Checking inside one transaction with a concurrency
-    token is the only way to make the stale-formation race deterministic. Forming the relationship in the
-    same transaction as the approval removes any window in which an approval exists without its
-    relationship or a relationship without its approval evidence, and FR-071 fixes the initial IsActive
-    value as N with no actor input.
+    FR-030, FR-031 and FR-070 require that approval depends on current mutual pairing acceptance and on
+    acceptances of identical current content by the identified participants, and that a stale approval
+    (E2E-10) can never form a relationship; BR-003 and E2E-02 require that any missing prerequisite
+    prevents formation; FR-050 forbids silently overwriting an explicit administrator choice. A
+    versioned update as the first statement gives both optimistic detection of stale input and, through
+    the row lock, mutual exclusion of competing commands on one aggregate, so READ COMMITTED suffices
+    and no serializable retry logic is needed. Re-checking the mutual acceptance columns explicitly,
+    rather than trusting the status alone, keeps formation correct even if the invariant were ever
+    relaxed. Unique indexes make the exclusivity of formation a property of the store rather than of
+    code paths. Forming the relationship in the same transaction as the approval removes any window in
+    which an approval exists without its relationship or a relationship without its approval evidence,
+    and FR-071 fixes the initial IsActive value as N with no actor input.
   requirement_refs:
+    - REQ-FR-020
     - REQ-FR-021
+    - REQ-FR-027
     - REQ-FR-030
     - REQ-FR-031
+    - REQ-FR-033
+    - REQ-FR-050
     - REQ-FR-070
     - REQ-FR-071
     - REQ-BR-003

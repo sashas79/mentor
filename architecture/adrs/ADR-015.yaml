@@ -1,0 +1,54 @@
+# Architecture decision record derived under Engineering Harness control.
+schema_version: 1
+adr:
+  id: ADR-015
+  title: Candidate lifecycle with affirmative mutual willingness as the single pairing prerequisite
+  status: proposed
+  decision: |-
+    A candidate is one mentor_selection row: one mentorship request, whose owner is the protégé, paired
+    with one discoverable mentor. protege_employee_id and mentor_employee_id are set at creation and are
+    immutable columns (ADR-013); these two employees are the identified participants of the candidate
+    and of every revision, acceptance and relationship derived from it.
+
+    Status values and transitions (every transition is a versioned command, ADR-005):
+    - INVITED: created by the protégé selecting a discoverable mentor; mentor_response = PENDING.
+    - DECLINED (terminal): the mentor records mentor_response = DECLINED.
+    - ACCEPTED: the mentor records mentor_response = ACCEPTED; an introductory conversation may be
+      arranged outside the application and a meeting row is optional (ADR-010).
+    - DRAFTING: reached when both participants have recorded their affirmative willingness to proceed.
+      Willingness is affirmative-only: the protégé sets protege_willing_at and the mentor sets
+      mentor_willing_at, each only for themselves and only while the candidate is ACCEPTED; there is no
+      negative willingness value and a Talent Management administrator cannot record it for anyone.
+      The transition to DRAFTING happens in the command that records the second willingness.
+    - FORMED (terminal): set only by the formation command (ADR-005).
+    - WITHDRAWN (terminal): either participant may withdraw from INVITED, ACCEPTED or DRAFTING;
+      withdrawn_by and withdrawn_at are recorded. A participant who no longer wishes to proceed
+      withdraws; willingness cannot be revoked any other way. Proceeding later with the same or another
+      mentor is a new selection with fresh decisions.
+
+    Mutual acceptance invariant, enforced by a database check constraint on mentor_selection and
+    re-checked explicitly by the formation command: status in (DRAFTING, FORMED) implies
+    mentor_response = ACCEPTED and protege_willing_at is not null and mentor_willing_at is not null and
+    withdrawn_at is null. Because willingness is affirmative, recorded by the participant alone and
+    ended only by terminal withdrawal, "current mutual willingness" means exactly status = DRAFTING.
+    Agreement revisions and acceptances are accepted only while the candidate is DRAFTING (ADR-004) and
+    formation requires DRAFTING (ADR-005), so pairing, drafting and formation apply one definition.
+
+    Each decision (invitation sent, mentor response, each willingness, withdrawal) writes an audit entry
+    with the acting participant and server UTC time (ADR-007) and a notification event (ADR-009).
+  rationale: |-
+    FR-018 to FR-021 and BR-003 require a recorded mentor response, an independent affirmative decision
+    from each identified participant before any formation, and that declined or withdrawn pairings never
+    become relationships (AC-FR-019-02, AC-FR-020-01, AC-FR-020-02, AC-FR-021-02, AC-E2E-02). Making
+    willingness affirmative-only and withdrawal terminal removes every ambiguous intermediate state,
+    lets one invariant express mutual acceptance for pairing, drafting and formation alike, and keeps the
+    participants of a candidate fixed as BR-021 and E2E-11 require.
+  requirement_refs:
+    - REQ-FR-018
+    - REQ-FR-019
+    - REQ-FR-020
+    - REQ-FR-021
+    - REQ-FR-031
+    - REQ-BR-003
+    - REQ-BR-021
+    - REQ-DR-004

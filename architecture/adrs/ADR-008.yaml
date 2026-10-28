@@ -14,18 +14,24 @@ adr:
     session role is not a member of mentor_legacy_entry or whose entered_by employee is not the employee
     mapped to that session account, so every entry is attributed to the administrator who performed it.
 
-    A legacy relationship row carries provenance = legacy, source_file, source_row, the verbatim source
+    A legacy relationship row carries provenance = LEGACY, source_file, source_row, the verbatim source
     text for Active, Duration, Start and End, the resolved mentor and protégé employee identities, the
-    nullable typed dates and State/Status/IsActive values, entered_by and entered_at (actual entry time).
-    A typed date is populated only when the source text is an unambiguous day/month/year date; "ongoing"
-    and similar text stays in the source column with the typed date null. State, Status and IsActive are
-    populated only from the mapping decisions recorded in the specification; any row whose person cannot
-    be resolved to an Entra-backed employee, whose interpretation is unsupported or which has no mentor
-    is inserted into legacy_review_exception with its source reference and reason instead of into the
-    relationship table, and no employee or Entra identity is created for an unresolved person. Legacy
-    rows have no acceptance, approval, formation or goal evidence; a database constraint forbids
-    formation evidence on legacy provenance and requires it on digital provenance. The audit trail
-    records the entry with provenance legacy_source.
+    nullable typed dates and nullable State, Status and IsActive values, entered_by and entered_at
+    (actual entry time). A typed date is populated only when the source text is an unambiguous
+    day/month/year date; "ongoing" and similar text stays in the source column with the typed date null.
+    State, Status and IsActive are populated only from the mapping decisions recorded in the
+    specification and are otherwise NULL, meaning unresolved (ADR-006); NULL is never replaced by BLANK
+    or a guessed value, and a legacy_review_exception row records each unresolved value. Any row whose
+    person cannot be resolved to an Entra-backed employee or which has no mentor is inserted into
+    legacy_review_exception with its source reference and reason instead of into the relationship
+    table, and no employee or Entra identity is created for an unresolved person. Legacy rows have no
+    candidate, revision, acceptance, formation decision, formed agreement or goal evidence: the
+    relationship's candidate reference is NULL for LEGACY and NOT NULL for DIGITAL provenance by check
+    constraint, and formed_agreement rows exist only for digital relationships. A legacy_review_exception
+    row is insert-only evidence of the source condition; whether a value is still unresolved is derived
+    from the NULL attribute, so an administrator's later explicit resolution through the application
+    (ADR-006) needs no update to the exception row. The audit trail records the entry with provenance
+    legacy_source.
   rationale: |-
     FR-063, BR-016 and BR-022 require manual, controlled entry by a Talent Management administrator only,
     with identity resolution, provenance and accountability and without an importer or new interface;

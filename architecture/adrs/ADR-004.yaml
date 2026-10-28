@@ -2,51 +2,71 @@
 schema_version: 1
 adr:
   id: ADR-004
-  title: Immutable content-addressed agreement draft revisions with applicability-tracked acceptances and reset by replacement
+  title: Immutable content-addressed agreement revisions, derived acceptance applicability and a separate administrative annex
   status: proposed
   decision: |-
-    An agreement draft is a sequence of immutable revisions belonging to one candidate. Each revision row
-    stores the complete content document (CONTRACT-AGREEMENT-CONTENT) as canonical JSON, the revision
-    number, the parent revision, the creating actor and UTC time, and two identities computed by the
-    server: content_hash, the SHA-256 of the canonical JSON, and substantive_hash, the SHA-256 of the
-    canonical JSON restricted to the substantive fields (parties, duration category, dates, meeting and
-    contact terms, missed-meeting arrangements, review date, goals, barriers, contingencies,
-    responsibilities and the fixed policy text) after whitespace normalisation. Revision rows are never
-    updated or deleted; the application role has no update or delete privilege on the table.
+    Revision. An agreement draft is a sequence of immutable revisions belonging to one candidate that is
+    DRAFTING (ADR-015). A revision row stores the content document (CONTRACT-AGREEMENT-CONTENT) as
+    canonical JSON, the revision number, the parent revision, the creating participant and the server
+    UTC time, and content_hash, the SHA-256 of the canonical JSON computed by the server at insert. The
+    content document consists solely of the substantive content: parties, policy, terms, goals,
+    barriers, contingencies and responsibilities. parties names the candidate's protégé and mentor and
+    is written by the server from the candidate, never from the request body. content_hash is the one
+    identity of the accepted content; revision rows are evidence and are never updated or deleted
+    (ADR-013).
 
-    An acceptance row records the participant, the revision, both hashes, the server UTC time and an
-    applicability state (applicable or superseded) with the superseding revision reference. A formation
-    approval decision references a revision and its hashes in the same way.
+    Administrative annex. The administrative data of a draft (admin_reference, admin_remarks) is not
+    content. It lives on the candidate head (mentor_selection), is not part of any revision, is not
+    hashed and is not covered by any acceptance; the draft view shows it labelled "administrative, not
+    part of the accepted agreement". Only a Talent Management administrator may change it, by a
+    versioned candidate command (ADR-005) that requires a permission basis from the enumerated set
+    ADMINISTRATIVE_REFERENCE or ADMINISTRATIVE_REMARK and writes a permitted_change evidence row
+    (candidate, actor, server UTC time, basis, field, prior value, new value) and an audit entry. The
+    change touches no revision, no content_hash and no acceptance, so the workflow step is unchanged.
+    This is the only no-reset change the application permits: every change to content is a replacement
+    revision, so nothing is ever classified as non-substantive by inference, and a typographical
+    correction inside content is substantive.
 
-    Any change to the current content is submitted as a new candidate document. The server classifies it:
-    - substantive when substantive_hash changes, or when the submitter is not a Talent Management
-      administrator, or when no permission-basis code is given. The server inserts a new revision, marks
-      every acceptance and draft-specific approval decision of the previous revision superseded in the
-      same transaction, sets the candidate's workflow step to 1 and writes an audit entry with the reset
-      outcome. Both parties must accept the new revision before approval.
-    - permitted non-substantive only when substantive_hash is unchanged, the submitter is a Talent
-      Management administrator and a permission-basis code from the application's enumerated set
-      (TYPOGRAPHICAL_CORRECTION, FORMATTING, ADMINISTRATIVE_REFERENCE) is supplied. The server inserts a
-      new revision that carries the same substantive_hash, records a permitted-change row with actor,
-      time, permission basis and the field-level difference, keeps the candidate's step and leaves the
-      existing acceptances applicable because they are bound to the unchanged substantive_hash; the
-      accepted snapshot is untouched.
-    - rejected in every other case; nothing is silently treated as non-substantive.
+    Acceptance. A participant's acceptance command carries the candidate version, the revision id and
+    the content_hash of the content displayed to them. The server verifies that the candidate is
+    DRAFTING, that the revision is the candidate's current revision and that the hash matches, then
+    inserts an acceptance row (participant, revision, content_hash copied from the revision, server UTC
+    time), unique per (revision, participant); a composite foreign key (revision_id, content_hash) ties
+    the copy to the revision (ADR-013). Acceptances are evidence, never updated. Applicability is not
+    stored: an acceptance is applicable exactly when its revision is the candidate's current revision
+    and the candidate is DRAFTING; otherwise it is inapplicable because a later revision superseded it
+    or the candidate was withdrawn or formed. The API reports the derived applicability with every
+    acceptance. The workflow step of a DRAFTING candidate is derived likewise: 1 with no current
+    revision or none accepted, 2 with one acceptance, 3 with both; FORMED is step 4.
 
-    Substituting a party ends the candidate's agreement drafting: all acceptances of the candidate are
-    superseded and the candidate returns to pairing. Changing the identified parties after acceptance
-    is substantive by definition. On formation the approved revision's content and hashes are copied into
-    the formed agreement, which the application never updates.
+    Replacement revision. Either participant of a DRAFTING candidate submits a complete replacement
+    content document; every participant submission is substantive. The server inserts the new revision
+    with the parent reference and advances current_revision_id in the same versioned transaction
+    (ADR-005). By derivation every acceptance and formation decision of the earlier revision becomes
+    inapplicable and the candidate returns to step 1; the audit entry carries outcome RESET_TO_STEP_1
+    and the identifiers of the acceptances and decisions made inapplicable (ADR-007). Earlier revisions,
+    acceptances and decisions stay unchanged as evidence.
+
+    Formation record. On formation (ADR-005) the formed_agreement evidence row of the relationship
+    copies the approved revision's content and content_hash, bound to the revision by the same
+    composite foreign key, together with the administrative annex values at that moment. The retained
+    agreement content is therefore byte-identical to the accepted content and its hash is verifiable by
+    recomputation; the annex is retained beside it, not inside it. The row is never updated; different
+    terms after formation require a new candidate.
   rationale: |-
     FR-027 to FR-029 and FR-067 to FR-070 require acceptances bound to exact content, replacement rather
     than edit after any acceptance, preservation of superseded evidence and a strictly limited no-reset
-    exception that is explicitly permitted and recorded by the application. Hashing the canonical
-    content gives a stable content identity that acceptances and approvals can reference; the separate
-    substantive hash turns the non-substantive exception into a mechanical check the server can enforce
-    instead of a judgement, and restricting it to Talent Management administrators implements BR-023.
-    NFR-005 leaves the version/hash mechanism to architecture; SHA-256 over canonical JSON is
-    deterministic, cheap and testable.
+    change that is explicitly permitted and recorded by the application and never overwrites the
+    accepted snapshot. Keeping the administrative annex outside the hashed content removes the
+    inconsistency between what participants accept, what content_hash identifies and what formation
+    retains: the three are the same bytes. Deriving applicability from the candidate head instead of
+    storing it keeps every evidence row immutable while FR-028 and AC-FR-028-02 are answered from the
+    same facts. The annex command with its permitted_change record preserves the behaviour required by
+    FR-068, BR-020 and BR-023 (AC-E2E-09, AC-BR-023-01) and confines it to Talent Management
+    administrators, and carrying the displayed hash in the acceptance command gives AC-FR-022-02 and
+    AC-FR-027-03 a mechanical check.
   requirement_refs:
+    - REQ-FR-021
     - REQ-FR-022
     - REQ-FR-027
     - REQ-FR-028
@@ -60,6 +80,7 @@ adr:
     - REQ-BR-004
     - REQ-BR-019
     - REQ-BR-020
+    - REQ-BR-021
     - REQ-BR-023
     - REQ-DR-006
     - REQ-DR-007

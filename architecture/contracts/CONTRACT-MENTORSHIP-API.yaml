@@ -2,7 +2,7 @@
 schema_version: 1
 contract:
   id: CONTRACT-MENTORSHIP-API
-  name: Mentorship REST API (OpenAPI 3.1 document served by the API host and used to generate the frontend client)
+  name: Mentorship REST API (OpenAPI 3.1 document served by the API host and used to generate the frontend client; ETag and If-Match concurrency on candidates and relationships)
   type: api
   requirement_refs:
     - REQ-FR-004

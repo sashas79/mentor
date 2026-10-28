@@ -24,21 +24,24 @@ adr:
       visible only to their owner and TM.
     - Mentorship request: EMPLOYEE creates own; owner reads own; MENTOR reads a request only while named
       as its candidate; TM reads all.
-    - Mentor selection: request owner selects a discoverable mentor and may withdraw; candidate MENTOR
-      reads and records accept or decline; each party records only their own willingness-to-proceed
-      decision; TM reads.
-    - Agreement draft: the two parties of a mutually accepted candidate prepare and substantively revise
-      the current draft and read every revision of their candidate; each party records only their own
-      acceptance of the current content; TM reads all drafts and alone records a permitted non-substantive
-      change; nobody updates an accepted snapshot.
-    - Formation approval: TM only; the parties read the outcome.
+    - Mentor selection (candidate, ADR-015): the request owner, who is the protégé, selects a
+      discoverable mentor; the candidate MENTOR reads and records accept or decline; each participant
+      records only their own affirmative willingness to proceed; either participant may withdraw the
+      candidate before formation; TM reads and records none of these decisions. Participants cannot be
+      substituted; a different participant is a new selection.
+    - Agreement draft: the two participants of a DRAFTING candidate create replacement revisions and
+      read every revision of their candidate; each participant records only their own acceptance of the
+      current revision; TM reads all revisions and alone changes the candidate's administrative annex
+      (ADR-004); nobody updates a revision, an acceptance or a decision.
+    - Formation decision: TM only (approve, which forms the relationship, or reject); the parties read
+      the outcome.
     - Relationship: parties read their own; TM reads all and updates State, Status and IsActive.
     - Goals and progress: parties read their relationship's goals and progress; the protégé submits
       progress and completion requests; the mentor approves or rejects completion; TM reads structured
       goals and progress. No actor has access to private discussion content because none is stored.
     - Meetings: parties read and record meetings of their own candidate or relationship; TM reads.
-    - Notification events: the intended recipient alone reads and marks their events; no other actor,
-      TM included, retrieves another recipient's pending-action details.
+    - Notification events: the intended recipient alone reads their events and marks them read; no other
+      actor, TM included, retrieves another recipient's pending-action details.
     - Register, export and audit trail: TM only.
     - Legacy entry: no API operation exists; database entry is governed by ADR-008.
     - OPERATOR: no row; technical access to the environment grants no application permission.

@@ -2,29 +2,71 @@
 schema_version: 1
 adr:
   id: ADR-013
-  title: Persistence through EF Core migrations with database-enforced integrity and privilege separation
+  title: Persistence through EF Core migrations with evidence and operational table classes, database-enforced integrity and privilege separation
   status: proposed
   decision: |-
     Persistence uses Entity Framework Core with the Npgsql provider against PostgreSQL 16 or later.
-    Migrations live in src/Mentor.Infrastructure and are the only way the schema changes. Keys are UUIDs;
-    all timestamps are timestamptz in UTC. Every reference between employees, profiles, requests,
-    selections, revisions, acceptances, approvals, relationships, goals, progress entries, decisions,
-    meetings, events and audit entries is a foreign key; enumerations are check constraints; candidates
-    and relationships carry a concurrency token (xmin or a version column). Two database roles exist:
-    mentor_app, used by the API, with insert and select on evidence tables (revisions, acceptances,
-    permitted changes, formation approvals, goal approvals, audit entries, notification events) and
-    update confined to the mutable tables (profiles, requests, selections, relationship attributes, goal
-    status, meetings, event read markers); and mentor_legacy_entry (ADR-008). Nothing in the schema holds
-    private discussion content. Connections require TLS. Encryption at rest, backup schedule, recovery
-    objectives and operator access are platform decisions documented in infra/ before production
-    acceptance; the prototype runs PostgreSQL in a container with a local volume.
+    Migrations live in src/Mentor.Infrastructure and are the only way the schema changes. Keys are
+    UUIDs; timestamps are timestamptz in UTC and are assigned by the server. Every reference between
+    records is a foreign key; enumerations are check constraints; the exclusivity invariants of ADR-005
+    are unique indexes.
+
+    Tables fall into two classes.
+    Evidence tables are insert-only: agreement_revision, agreement_acceptance, permitted_change,
+    formation_decision, formed_agreement, goal_progress, goal_approval and audit_entry. They carry no
+    mutable state; anything that changes over time about them (applicability, pending status, current
+    revision, workflow step) is derived from them and the head rows (ADR-004) and is never written back.
+    Operational tables hold current state and may be updated but never deleted: employee,
+    mentor_profile, mentorship_request, mentor_selection (the candidate head: status, mentor_response,
+    mentor_responded_at, protege_willing_at, mentor_willing_at, withdrawn_by, withdrawn_at,
+    current_revision_id, admin_reference, admin_remarks, version), mentorship_relationship (state,
+    status, is_active, version), development_goal (completion_status), meeting and notification_event
+    (read_at). The legacy tables legacy_entry_authorisation and legacy_review_exception are written by
+    the legacy entry role only (ADR-008).
+
+    Integrity constraints of the agreement and candidate model. agreement_revision has a unique index
+    on (id, content_hash); agreement_acceptance, formation_decision and formed_agreement reference it
+    with a composite foreign key (revision_id, content_hash), so every stored copy of a content hash is
+    provably the revision's own. mentor_selection has the check constraint status in (DRAFTING, FORMED)
+    implies mentor_response = ACCEPTED and protege_willing_at is not null and mentor_willing_at is not
+    null and withdrawn_at is null (ADR-015), and its request_id, protege_employee_id and
+    mentor_employee_id are immutable columns. mentorship_relationship has the provenance check
+    constraints of ADR-006 and ADR-008.
+
+    Database roles. mentor_app, used by the API, has SELECT on all tables; INSERT on evidence and
+    operational tables; column-level UPDATE only on the mutable columns of operational tables named in
+    the migration, for example mentorship_relationship (state, status, is_active, version, updated_at),
+    development_goal (completion_status), notification_event (read_at), mentor_selection (the head
+    columns listed above) and the editable profile and request fields; no UPDATE on any evidence table
+    or on immutable columns such as development_goal.agreed_description,
+    mentor_selection.protege_employee_id, mentor_selection.mentor_employee_id,
+    mentorship_relationship.candidate_id or mentorship_relationship.provenance; and no DELETE anywhere.
+    mentor_legacy_entry has INSERT on mentorship_relationship, legacy_review_exception and audit_entry
+    for provenance LEGACY rows only, enforced by trigger (ADR-008). Immutability of evidence is
+    therefore a property of the store and does not depend on application code.
+
+    Concurrency. mentor_selection and mentorship_relationship carry the explicit version column used by
+    ADR-005; no xmin-based token is used. Commands run at READ COMMITTED isolation.
+
+    Nothing in the schema holds private discussion content. Connections require TLS. Encryption at
+    rest, backup schedule, recovery objectives and operator access are platform decisions documented
+    in infra/ before production acceptance; the prototype runs PostgreSQL in a container with a local
+    volume.
   rationale: |-
-    NFR-003 requires every stored reference to resolve; NFR-005 requires accepted snapshots and formed
-    agreements to be unchangeable; FR-064 requires separately identifiable records; NFR-007 and NFR-009
-    require protection in storage and transit with a recoverability decision before production.
-    Enforcing these in the database rather than only in code means a defect in the application cannot
-    silently violate them, and role privilege separation makes immutability a property of the store.
+    NFR-003 requires every stored reference to resolve; NFR-005 and FR-029 require accepted snapshots
+    and formed agreements to be unchangeable; FR-033 requires formation evidence to be kept
+    independently of mutable administration fields; FR-064 requires separately identifiable records;
+    NFR-007 and NFR-009 require protection in storage and transit with a recoverability decision before
+    production. Dividing the schema into insert-only evidence and updatable operational tables, binding
+    every content-hash copy to its revision with a composite key, expressing mutual acceptance as a
+    check constraint, and granting the application role privileges that match that division column by
+    column, means a defect in the application cannot silently violate immutability or form a
+    relationship without its prerequisites, and gives ADR-004, ADR-005, ADR-006, ADR-009 and ADR-015
+    one consistent storage model to rely on.
   requirement_refs:
+    - REQ-FR-020
+    - REQ-FR-029
+    - REQ-FR-033
     - REQ-FR-054
     - REQ-FR-061
     - REQ-FR-064

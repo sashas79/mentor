@@ -9,10 +9,16 @@ adr:
     changes business state appends its entries inside the same database transaction as the change, so an
     action and its evidence commit or roll back together. An entry records: server-assigned UTC time
     (never taken from the client), actor employee identity and identity scheme (entra or simulated),
-    action code, affected record type and identifier, prior and new values as JSON for the changed
-    fields, decision context (candidate, revision, content_hash and substantive_hash where applicable),
-    outcome (for example RESET_TO_STEP_1, SUPERSEDED, APPROVED, REJECTED), provenance (application or
-    legacy_source) and, for manual legacy entry, the source file and row reference. The application
+    action code (invitation sent, mentor response, willingness recorded, withdrawal, revision created,
+    acceptance recorded, administrative annex changed, formation decided, attribute changed, goal
+    progress, goal decided, mentor application decided, legacy entry), affected record type and
+    identifier, prior and new values as JSON for the changed fields, decision context (candidate,
+    revision and content_hash where applicable; an annex change references the candidate), outcome (for
+    example RESET_TO_STEP_1, APPROVED, REJECTED, WITHDRAWN) with, for RESET_TO_STEP_1 and WITHDRAWN, the
+    identifiers of the acceptances and decisions made inapplicable, provenance (application or
+    legacy_source) and, for manual legacy entry, the source file and row reference. Applicability itself
+    is never stored on an evidence row; it is derived (ADR-004) and the trail records the event that
+    changed it. The application
     database role holds insert and select privileges only on this table. Administrators query the trail
     through read-only endpoints filtered by record. Values written to the trail are the structured fields
     of the affected record; no free-text discussion content exists to be captured.

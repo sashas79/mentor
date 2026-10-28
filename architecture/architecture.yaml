@@ -91,13 +91,17 @@ architecture:
       responsibility: |-
         Owns the MentorshipRequest (protégé, motivation, technical/career development goals, nontechnical
         expectations stored separately, submission date, disposition) as a record that stays identifiable
-        before and after any agreement, and the MentorSelection that pairs a request with one discoverable
-        mentor: invitation, the mentor's recorded accept/decline response with dates, an introductory
-        conversation marker that can be set as arranged outside the application, and the independent
-        willingness-to-proceed decision of each party. Only a selection with both current willingness
-        decisions becomes a mutually accepted candidate eligible for agreement drafting. Declined and
-        withdrawn selections keep their disposition and never become relationships; substituting a party
-        invalidates that candidate's pairing decisions and the agreement acceptances that depended on them.
+        before and after any agreement, and the candidate (mentor_selection) that pairs a request with one
+        discoverable mentor under the lifecycle of ADR-015: invitation, the mentor's recorded accept or
+        decline, an introductory conversation marker that can be set as arranged outside the application,
+        the affirmative willingness to proceed that each identified participant records only for
+        themselves, and withdrawal by either participant. A candidate is DRAFTING, and therefore eligible
+        for agreement drafting and formation, only while the mentor has accepted and both willingness
+        decisions are recorded, which a database check constraint enforces. The candidate head carries
+        the fixed participants, the current status and decisions, the current revision reference, the
+        administrative annex and the version token for concurrency control (ADR-005). Declined and
+        withdrawn candidates keep their disposition, never become relationships and, by derivation, have
+        no applicable acceptances or decisions (ADR-004); a different mentor or protégé is a new selection.
       requirement_refs:
         - REQ-FR-014
         - REQ-FR-015
@@ -113,7 +117,7 @@ architecture:
     - id: COMP-AGREEMENT-DRAFTING
       name: Agreement draft lifecycle, content snapshots and acceptances
       responsibility: |-
-        Owns workflow Steps 1 and 2 for a mutually accepted candidate. An agreement draft is an immutable
+        Owns workflow Steps 1 and 2 for a DRAFTING candidate (ADR-015). An agreement draft is an immutable
         content snapshot (CONTRACT-AGREEMENT-CONTENT) that reproduces the substantive commitments of the
         existing mentorship agreement: fixed policy text (voluntary partnership, confidentiality, honest and
         constructive feedback, openness to feedback, amicable conclusion, review every three to six months,
@@ -121,14 +125,19 @@ architecture:
         category 6/12/12+ months, optional start and end dates, meeting interval in weeks, approximate
         minutes per meeting, between-meeting contact limits, missed-meeting arrangements, review date,
         individual SMART development goals, barriers, contingency plans and the responsibilities of each
-        party). Each revision carries a stable content identity (ADR-004). Each participant independently
-        accepts the exact current content; acceptances are retained with actor, UTC timestamp, content
-        identity and current applicability. A substantive change after any acceptance creates a replacement
-        revision, marks every draft-specific acceptance and decision of the earlier revision inapplicable
-        and returns the candidate to Step 1; superseded content, acceptances and decisions are preserved as
-        evidence. Only a Talent Management administrator may record an explicitly permitted non-substantive
-        change, which is stored separately from, and never overwrites, the accepted snapshot. After
-        formation no draft operation can touch the formed agreement.
+        party). Each revision is an insert-only evidence row whose content is exactly that substantive
+        content and whose one identity is its content_hash (ADR-004). Each participant independently
+        accepts the exact current revision, naming the revision and the content_hash displayed to them;
+        acceptances are insert-only evidence retaining actor, server UTC time and content identity, and
+        their applicability is derived from the candidate's current revision and status rather than
+        stored. Every participant submission is a substantive replacement revision: it makes the earlier
+        revision's acceptances and decisions inapplicable, returns the candidate to Step 1 and is audited
+        with what it invalidated, while earlier revisions, acceptances and decisions stay unchanged as
+        evidence. The administrative annex of a draft (reference, remarks) is held on the candidate head
+        outside the content, is not hashed or accepted, and may be changed only by a Talent Management
+        administrator with a recorded permission basis; this is the only no-reset change and it never
+        alters a revision or its identity. A formed or withdrawn candidate accepts no further draft
+        operation.
       requirement_refs:
         - REQ-FR-022
         - REQ-FR-023
@@ -158,17 +167,23 @@ architecture:
     - id: COMP-FORMATION
       name: Formation approval and relationship formation
       responsibility: |-
-        Owns workflow Steps 3 and 4. A Talent Management administrator's formation approval is bound to one
-        candidate and the content identity of its current draft. Approval and formation run as a single
-        transactional command (ADR-005) that re-validates at that moment that the same candidate, the same
-        identified parties and the same current content have current mutual pairing acceptance and two
-        applicable participant acceptances, rejects any attempt that relies on superseded content or
-        decisions (including a concurrent revision), records the FormationApproval with actor, UTC time,
-        candidate and content identity, creates the MentorshipRelationship with State In Progress, blank
-        Status and IsActive N, freezes the formed agreement snapshot and instantiates its individual goals.
-        Formation evidence is stored independently of the relationship's administrative fields. After
-        formation, different terms, goals or a different mentor require a new request, candidate, agreement,
-        acceptances and approval; nothing transfers.
+        Owns workflow Steps 3 and 4. A Talent Management administrator's formation decision is bound to one
+        candidate and the content identity of its current revision. Approval and formation run as a single
+        transactional command (ADR-005) that first takes the candidate's version lock and then verifies
+        that the candidate is DRAFTING with the mentor's acceptance and both participants' affirmative
+        willingness recorded and no withdrawal (ADR-015), that the reviewed revision and content_hash are
+        still current, and that acceptances of that revision exist from exactly the identified protégé and
+        mentor with matching content_hash; any reliance on a superseded revision, a concurrent revision, a
+        withdrawal or a candidate replaced by a new selection fails and persists nothing. On success it
+        records the APPROVED FormationDecision with administrator, server UTC time, candidate, revision and
+        content_hash, creates the MentorshipRelationship with State In Progress, Status BLANK and IsActive
+        N, writes the immutable formed_agreement evidence row (the accepted content and content_hash,
+        byte-identical to the approved revision, with the administrative annex values retained beside
+        them), instantiates the individual goals and marks the candidate FORMED. The administrator may
+        instead record a REJECTED
+        decision, which forms nothing. Formation evidence lives in insert-only tables independent of the
+        relationship's administrative fields. After formation, different terms, goals or a different mentor
+        require a new request, candidate, agreement, acceptances and approval; nothing transfers.
       requirement_refs:
         - REQ-FR-030
         - REQ-FR-031
@@ -184,14 +199,16 @@ architecture:
       name: Formed relationship administration
       responsibility: |-
         Owns the operational attributes of a formed MentorshipRelationship: State (In Progress, On hold,
-        Complete), Status (Needs reassigning or blank) and IsActive (Y or N) are three independent,
-        database-constrained attributes (ADR-006). Talent Management administrators change each one
-        independently, in any direction and in any combination, through the API; no rule derives,
-        recalculates or rejects a combination, no edit triggers reassignment, and no edit can form or
-        activate an unformed candidate. The formation-time default IsActive N never overwrites a later
-        explicit administrator choice. Every change is written to the audit trail with prior value, new
-        value, acting administrator and UTC timestamp. Supports any number of relationships involving the
-        same person over time and carries the digital-versus-legacy provenance indicator.
+        Complete), Status (BLANK or Needs reassigning) and IsActive (Y or N) are three independent,
+        database-constrained attributes that are non-null for digitally formed rows, while a legacy row
+        holds NULL for a value its source left unresolved (ADR-006). Talent Management administrators
+        change each one independently, in any direction and in any combination, through a command that
+        carries the row version (ADR-005); no rule derives, recalculates or rejects a combination, no edit
+        triggers reassignment, and no edit can form or activate an unformed candidate. The formation-time
+        default IsActive N is written once and never overwrites a later explicit administrator choice.
+        Every change is written to the audit trail with prior value, new value, acting administrator and
+        server UTC time. Supports any number of relationships involving the same person over time and
+        carries the digital-versus-legacy provenance indicator.
       requirement_refs:
         - REQ-FR-043
         - REQ-FR-044
@@ -213,13 +230,15 @@ architecture:
       name: Development goals, progress and completion decisions
       responsibility: |-
         Owns the DevelopmentGoal records instantiated from the formed agreement, each with its fixed agreed
-        wording, a reference to the relationship and agreement, and a completion status that changes without
-        touching agreement content. The protégé submits dated GoalProgress entries without approval and may
-        request formal completion; the request is visibly pending until the identified mentor alone approves
-        or rejects it (GoalApproval with mentor, decision and UTC timestamp). A rejection leaves the goal
-        incomplete; there is no rejection-reason field, resubmission loop, escalation or administrator
-        approval step. Talent Management administrators read structured goals and progress only. No field
-        for private meeting discussion content exists.
+        wording, a reference to the relationship and formed agreement, and a completion status that changes
+        without touching agreement content. The protégé submits dated GoalProgress entries without
+        approval and may flag one as a completion request; progress entries and the mentor's GoalApproval
+        decisions (mentor, approved or rejected, server UTC time) are insert-only evidence. A request is
+        pending while it has no decision, which is derived rather than stored, and the goal's completion
+        status is set to complete only in the transaction that records an approved decision. A rejection
+        leaves the goal incomplete; there is no rejection-reason field, resubmission loop, escalation or
+        administrator approval step. Talent Management administrators read structured goals and progress
+        only. No field for private meeting discussion content exists.
       requirement_refs:
         - REQ-FR-034
         - REQ-FR-035
@@ -239,12 +258,13 @@ architecture:
         Owns the MeetingSchedule representation (ADR-010): proposed introductory meetings for a candidate
         and planned recurring sessions for a relationship, with a proposed or scheduled time where known
         and the agreed frequency and duration taken from the agreement, with no notes field and no calendar
-        integration. Owns the NotificationEvent records (ADR-009, CONTRACT-NOTIFICATION-EVENTS) written in
-        the same transaction as every material workflow action (invitation, mentor response, willingness to
-        proceed, draft acceptance, draft supersession, formation approval, mentor application decision,
-        goal-completion request and decision), each identifying the action, the intended recipient and
-        role, and the required next action. Events are retrievable only by their intended recipient and are
-        delivered in the prototype as an in-app notice with an explicitly simulated delivery log; no
+        integration. Owns the NotificationEvent records (ADR-009, CONTRACT-NOTIFICATION-EVENTS), operational
+        records written in the same transaction as every material workflow action (invitation, mentor
+        response, willingness to proceed, draft acceptance, draft supersession, formation decision, mentor
+        application decision, goal-completion request and decision), each identifying the action, the
+        intended recipient and role, and the required next action; the audit trail, not the event, is the
+        evidence of the action. Events are retrievable only by their intended recipient, who alone may mark
+        them read, and are delivered in the prototype as an in-app inbox labelled as simulated delivery; no
         transport, queue, reminder schedule or production notification service is required.
       requirement_refs:
         - REQ-FR-055
@@ -305,13 +325,15 @@ architecture:
       responsibility: |-
         Owns the AdministrationAudit log (ADR-007, CONTRACT-AUDIT-ENTRY): an insert-only table written in
         the same database transaction as every business-critical action (mentor approval, invitation and
-        response, willingness decisions, draft creation, acceptance, supersession and permitted change,
-        formation approval, State/Status/IsActive edits, goal-completion decisions and legacy entry) with
+        response, willingness decisions, withdrawal, revision creation, acceptance, administrative annex
+        change, formation decision, State/Status/IsActive edits, goal-completion decisions and legacy
+        entry) with
         the true actor and identity scheme, the server-assigned UTC timestamp, action, affected record,
-        prior and new values, the applicable decision context (candidate, revision and content identity) and
-        the manual-entry source reference. Entries distinguish actual application events from legacy-source
-        claims and never contain private discussion content. Administrators can query the trail to verify
-        current and superseded acceptances and decisions.
+        prior and new values, the outcome, the applicable decision context (candidate, revision and
+        content_hash) and, for a replacement revision or a withdrawal, the identifiers of the acceptances
+        and decisions it made inapplicable, and the manual-entry source reference. Entries distinguish
+        actual application events from legacy-source claims and never contain private discussion content.
+        Administrators can query the trail to verify current and superseded acceptances and decisions.
       requirement_refs:
         - REQ-FR-028
         - REQ-FR-033
@@ -325,15 +347,22 @@ architecture:
       name: Authoritative PostgreSQL persistence
       responsibility: |-
         Owns the PostgreSQL schema (CONTRACT-DATABASE-SCHEMA) and its EF Core mapping and migrations
-        (ADR-013). Realises every conceptual entity as separately identifiable records: employees, mentor
-        profiles, requests, selections and willingness decisions, draft revisions, acceptances, permitted
-        changes, formation approvals, relationships, goals, progress entries, goal approvals, meetings,
-        notification events, audit entries, legacy provenance and review exceptions. Enforces referential
-        integrity with foreign keys, the State/Status/IsActive enumerations with check constraints,
-        immutability of snapshot and evidence tables by withholding update and delete privileges from the
-        application role, optimistic concurrency tokens on candidates, and UTC timestamps. Contains no
-        column for private meeting discussion content. Requires TLS for connections; at-rest encryption,
-        backup and recovery are platform decisions recorded before production.
+        (ADR-013). Realises every conceptual entity as separately identifiable records in two table
+        classes: insert-only evidence tables (agreement revisions, acceptances, permitted changes,
+        formation decisions, formed agreements, goal progress entries, goal approvals, audit entries) and
+        operational tables that hold current state, are updated only through column-level grants and are
+        never deleted (employees, mentor profiles, requests, candidates, relationships, goals, meetings,
+        notification events), plus the legacy provenance and review-exception tables written by the legacy
+        entry role. Enforces referential integrity with foreign keys, the State/Status/IsActive
+        enumerations with check constraints (Status BLANK is a value; NULL is confined to unresolved legacy
+        values), the exclusivity invariants of ADR-005 with unique indexes, the content identity of every
+        acceptance, decision and formed agreement with composite foreign keys on (revision, content_hash),
+        the mutual-acceptance invariant of ADR-015 with a check constraint on the candidate head and the
+        fixed participants of a candidate as immutable columns, immutability of evidence by withholding
+        update and delete privileges, optimistic concurrency with explicit version columns on candidates
+        and relationships, and server-assigned UTC timestamps. Contains no column for private
+        meeting discussion content. Requires TLS for connections; at-rest encryption, backup and recovery
+        are platform decisions recorded before production.
       requirement_refs:
         - REQ-FR-017
         - REQ-FR-054
@@ -366,8 +395,9 @@ architecture:
         under src/web, that provides role-appropriate screens for protégés, mentors and Talent Management
         administrators: sign-in through Entra or the labelled simulated identity, own profile, mentor
         application and profile maintenance, mentor discovery, mentorship request and invitation, mentor
-        response and willingness decisions, agreement draft preparation, full-content review and acceptance,
-        goals, progress and completion requests and decisions, administrator approvals, relationship
+        response and willingness decisions, agreement draft preparation, full-content review that shows the
+        content identity and the administrative annex labelled as not part of the accepted agreement,
+        acceptance, goals, progress and completion requests and decisions, administrator decisions, relationship
         State/Status/IsActive administration, register and export, notification inbox and meeting
         schedule. It calls CONTRACT-MENTORSHIP-API through a generated typed client, renders the permitted
         actions the server reports and never enforces a business rule itself; a persistent banner marks
@@ -549,6 +579,7 @@ architecture:
     - ADR-012
     - ADR-013
     - ADR-014
+    - ADR-015
   contract_refs:
     - CONTRACT-MENTORSHIP-API
     - CONTRACT-ENTRA-IDENTITY

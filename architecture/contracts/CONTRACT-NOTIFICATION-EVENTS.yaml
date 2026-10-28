@@ -2,7 +2,7 @@
 schema_version: 1
 contract:
   id: CONTRACT-NOTIFICATION-EVENTS
-  name: Workflow notification event record (event type, subject, intended recipient and role, required next action, simulated delivery log)
+  name: Workflow notification event record (event type, subject, intended recipient and role, required next action, simulated delivery, read marker)
   type: event
   requirement_refs:
     - REQ-FR-057
