@@ -1,3 +1,4 @@
+using System.Data;
 using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Text.Json;
@@ -90,13 +91,17 @@ public sealed record CandidateEvidenceView(
 /// <summary>
 /// The administrator's read-only view of the trail (ADR-007), filtered by record. audit-trail.read is Talent
 /// Management's alone (ADR-003), so the endpoint check is the whole check; the candidate view still takes the record
-/// check every action on an existing record takes.
+/// check every action on an existing record takes. The candidate view is read in one read-only snapshot: the head its
+/// applicability is derived from and every list it holds describe the same moment.
 /// </summary>
 internal static class AuditTrailEndpoints
 {
     public const string RecordTypeRoute = "/api/audit-trail/records/{recordType}";
     public const string RecordRoute = "/api/audit-trail/records/{recordType}/{recordId:guid}";
     public const string CandidateRoute = "/api/audit-trail/candidates/{candidateId:guid}";
+
+    /// <summary>The database refuses any write inside the view's transaction; the view only ever reads.</summary>
+    private const string ReadOnlyTransaction = "SET TRANSACTION READ ONLY";
 
     public static void Map(IEndpointRouteBuilder endpoints)
     {
@@ -129,6 +134,13 @@ internal static class AuditTrailEndpoints
         endpoints.MapGet(CandidateRoute, async Task<Results<Ok<CandidateEvidenceView>, NotFound, ForbidHttpResult>> (
                 Guid candidateId, ClaimsPrincipal user, IAuthorizationService authorization, MentorDbContext db, CancellationToken cancellationToken) =>
             {
+                // The head and every list come from one snapshot (REPEATABLE READ; ADR-013 fixes READ COMMITTED for
+                // commands, and this is no command). A replacement that commits while the view is read, a new revision
+                // made current and then evidence recorded on it, is seen whole or not at all: the applicability derived
+                // from the head is the applicability of the evidence listed, and no acceptance or decision names a
+                // revision the view lacks.
+                await using var snapshot = await db.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead, cancellationToken);
+                await db.Database.ExecuteSqlRawAsync(ReadOnlyTransaction, cancellationToken);
                 var candidate = await db.MentorSelections.AsNoTracking().SingleOrDefaultAsync(selection => selection.Id == candidateId, cancellationToken);
                 if (candidate is null)
                 {
@@ -140,29 +152,36 @@ internal static class AuditTrailEndpoints
                     return TypedResults.Forbid();
                 }
 
-                return TypedResults.Ok(await CandidateEvidenceAsync(db, candidate, cancellationToken));
+                var evidence = await CandidateEvidenceAsync(db, candidate, cancellationToken);
+                await snapshot.CommitAsync(cancellationToken);
+                return TypedResults.Ok(evidence);
             })
             .WithName("GetCandidateEvidence")
             .RequirePermission(AuthorisationMatrix.AuditTrail.Read);
     }
 
+    /// <summary>
+    /// The view of <paramref name="candidate"/>, the head as it was read in the caller's snapshot. Each acceptance and
+    /// decision brings the number of the revision it names with it, so nothing is looked up in another list.
+    /// </summary>
     private static async Task<CandidateEvidenceView> CandidateEvidenceAsync(MentorDbContext db, MentorSelection candidate, CancellationToken cancellationToken)
     {
         var revisions = await db.AgreementRevisions.AsNoTracking()
             .Where(revision => revision.CandidateId == candidate.Id)
             .OrderBy(revision => revision.RevisionNumber)
             .ToListAsync(cancellationToken);
-        var numbers = revisions.ToDictionary(revision => revision.Id, revision => revision.RevisionNumber);
-
         var acceptances = await db.AgreementAcceptances.AsNoTracking()
-            .Join(db.AgreementRevisions, acceptance => acceptance.RevisionId, revision => revision.Id, (acceptance, revision) => new { acceptance, revision.CandidateId })
+            .Join(db.AgreementRevisions, acceptance => acceptance.RevisionId, revision => revision.Id,
+                (acceptance, revision) => new { acceptance, revision.CandidateId, revision.RevisionNumber })
             .Where(row => row.CandidateId == candidate.Id)
             .OrderBy(row => row.acceptance.AcceptedAt).ThenBy(row => row.acceptance.Id)
-            .Select(row => row.acceptance)
+            .Select(row => new { row.acceptance, row.RevisionNumber })
             .ToListAsync(cancellationToken);
         var decisions = await db.FormationDecisions.AsNoTracking()
             .Where(decision => decision.CandidateId == candidate.Id)
-            .OrderBy(decision => decision.DecidedAt).ThenBy(decision => decision.Id)
+            .Join(db.AgreementRevisions, decision => decision.RevisionId, revision => revision.Id,
+                (decision, revision) => new { decision, revision.RevisionNumber })
+            .OrderBy(row => row.decision.DecidedAt).ThenBy(row => row.decision.Id)
             .ToListAsync(cancellationToken);
         var entries = await EntriesAsync(db,
             entry => entry.CandidateId == candidate.Id || (entry.RecordType == AuditRecordType.Candidate && entry.RecordId == candidate.Id),
@@ -177,12 +196,12 @@ internal static class AuditTrailEndpoints
             [.. revisions.Select(revision => new RevisionEvidenceView(
                 revision.Id, revision.RevisionNumber, revision.ParentRevisionId, revision.ContentHash, revision.CreatedByEmployeeId, revision.CreatedAt,
                 revision.Id == candidate.CurrentRevisionId))],
-            [.. acceptances.Select(acceptance => new AcceptanceEvidenceView(
-                acceptance.Id, acceptance.RevisionId, numbers[acceptance.RevisionId], acceptance.ContentHash, acceptance.ParticipantEmployeeId, acceptance.AcceptedAt,
-                ApplicabilityRule.Of(candidate.Status, candidate.CurrentRevisionId, acceptance.RevisionId)))],
-            [.. decisions.Select(decision => new DecisionEvidenceView(
-                decision.Id, decision.RevisionId, numbers[decision.RevisionId], decision.ContentHash, decision.Outcome, decision.AdministratorEmployeeId, decision.DecidedAt,
-                ApplicabilityRule.Of(candidate.Status, candidate.CurrentRevisionId, decision.RevisionId)))],
+            [.. acceptances.Select(row => new AcceptanceEvidenceView(
+                row.acceptance.Id, row.acceptance.RevisionId, row.RevisionNumber, row.acceptance.ContentHash, row.acceptance.ParticipantEmployeeId, row.acceptance.AcceptedAt,
+                ApplicabilityRule.Of(candidate.Status, candidate.CurrentRevisionId, row.acceptance.RevisionId)))],
+            [.. decisions.Select(row => new DecisionEvidenceView(
+                row.decision.Id, row.decision.RevisionId, row.RevisionNumber, row.decision.ContentHash, row.decision.Outcome, row.decision.AdministratorEmployeeId, row.decision.DecidedAt,
+                ApplicabilityRule.Of(candidate.Status, candidate.CurrentRevisionId, row.decision.RevisionId)))],
             entries);
     }
 

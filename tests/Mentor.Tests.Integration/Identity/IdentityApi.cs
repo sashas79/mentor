@@ -5,6 +5,7 @@ using System.Text.Json;
 using Mentor.Api.Identity;
 using Mentor.Tests.Integration.Persistence;
 using Mentor.Tests.Integration.Support;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace Mentor.Tests.Integration.Identity;
@@ -12,7 +13,8 @@ namespace Mentor.Tests.Integration.Identity;
 /// <summary>The API as Program composes it, on a test database, and the calls the identity tests make of it.</summary>
 internal static class IdentityApi
 {
-    public static ApiFactory Start(TestDatabase db, string identityMode = "Entra", IReadOnlyDictionary<string, string>? settings = null)
+    /// <summary>The API on <paramref name="db"/>; <paramref name="testServices"/>, if given, are applied after everything Program registers.</summary>
+    public static ApiFactory Start(TestDatabase db, string identityMode = "Entra", IReadOnlyDictionary<string, string>? settings = null, Action<IServiceCollection>? testServices = null)
     {
         var all = new Dictionary<string, string>
         {
@@ -24,7 +26,7 @@ internal static class IdentityApi
             all[key] = value;
         }
 
-        return new ApiFactory(Environments.Development, all);
+        return new ApiFactory(Environments.Development, all, testServices);
     }
 
     public static Task<Guid> EmployeeAsync(TestDatabase db, Guid objectId, string displayName) =>

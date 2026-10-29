@@ -6,9 +6,11 @@ using Mentor.Api.Hosting;
 using Mentor.Core.Agreements;
 using Mentor.Core.Audit;
 using Mentor.Core.Relationships;
+using Mentor.Infrastructure.Persistence;
 using Mentor.Tests.Integration.Persistence;
 using Mentor.Tests.Integration.Support;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using static Mentor.Tests.Integration.Identity.IdentityApi;
 
 namespace Mentor.Tests.Integration.Audit;
@@ -171,6 +173,52 @@ public sealed class AuditTrailEndpointTests(PostgresServer server)
         Assert.Equal([rejected], reset.GetProperty("invalidatedDecisionIds").EnumerateArray().Select(id => id.GetGuid()));
         // The content itself is the draft's to show; the trail names it by its hash.
         Assert.DoesNotContain("\"content\"", evidence.GetRawText());
+    }
+
+    // AC-FR-028-02: applicability is derived from the head the view was read with. A replacement committed while the
+    // evidence is being read (the mentor's second revision made current, accepted by them and rejected by the
+    // administrator, in one transaction) is seen whole or not at all: never a head that still names the first revision
+    // beside evidence of the second, and never an acceptance of a revision the view lacks.
+    [Theory]
+    [InlineData("mentor_selection")] // committed once the head is read, before the revisions
+    [InlineData("agreement_revision")] // committed once the revisions are read, before the acceptances and decisions
+    public async Task A_replacement_committed_while_the_evidence_is_read_is_seen_whole_or_not_at_all(string afterReading)
+    {
+        await using var db = await server.CreateDatabaseAsync();
+        var callers = await TestCallers.RecordAsync(db, IdentityMode.Entra);
+        var seed = new Seed(db);
+        var protege = await seed.EmployeeAsync("Protégé");
+        var mentor = await seed.EmployeeAsync("Mentor");
+        var administrator = await seed.EmployeeAsync("Talent Management");
+        var candidate = await seed.CandidateAsync(await seed.RequestAsync(protege), protege, mentor);
+        var first = await seed.RevisionAsync(candidate, protege);
+        var protegeAccepted = await seed.AcceptanceAsync(first, protege);
+        var replacement = new ConcurrentReplacement(db, candidate, first, mentor, administrator, afterReading);
+        await using var api = Start(db, testServices: services =>
+            services.ConfigureDbContext<MentorDbContext>(options => options.AddInterceptors(replacement)));
+
+        var during = await GetAsync(api, CandidateRoute(candidate), As(callers, Profile.Administrator));
+        var second = replacement.Second;
+        var after = await GetAsync(api, CandidateRoute(candidate), As(callers, Profile.Administrator));
+
+        // The view read while the replacement committed is the state before it, whole.
+        Assert.Equal(first.Id, during.GetProperty("currentRevisionId").GetGuid());
+        Assert.Equal((first.Id, 1, first.ContentHash, true), Revision(Assert.Single(during.GetProperty("revisions").EnumerateArray())));
+        Assert.Equal((protegeAccepted, first.Id, 1, first.ContentHash, protege, "Applicable"), Acceptance(Assert.Single(during.GetProperty("acceptances").EnumerateArray())));
+        Assert.Empty(during.GetProperty("decisions").EnumerateArray());
+
+        // The next view is the state after it, whole: the replacement was committed, not lost.
+        Assert.Equal(second.Id, after.GetProperty("currentRevisionId").GetGuid());
+        Assert.Collection(after.GetProperty("revisions").EnumerateArray(),
+            revision => Assert.Equal((first.Id, 1, first.ContentHash, false), Revision(revision)),
+            revision => Assert.Equal((second.Id, 2, second.ContentHash, true), Revision(revision)));
+        Assert.Collection(after.GetProperty("acceptances").EnumerateArray(),
+            acceptance => Assert.Equal((protegeAccepted, first.Id, 1, first.ContentHash, protege, "Superseded"), Acceptance(acceptance)),
+            acceptance => Assert.Equal((replacement.MentorAccepted, second.Id, 2, second.ContentHash, mentor, "Applicable"), Acceptance(acceptance)));
+        var rejection = Assert.Single(after.GetProperty("decisions").EnumerateArray());
+        Assert.Equal((replacement.Rejected, second.Id, 2, "Rejected", "Applicable"),
+            (rejection.GetProperty("id").GetGuid(), rejection.GetProperty("revisionId").GetGuid(), rejection.GetProperty("revisionNumber").GetInt32(),
+                rejection.GetProperty("outcome").GetString(), rejection.GetProperty("applicability").GetString()));
     }
 
     // AC-FR-033-01, AC-FR-065-01: formation evidence stays as it was after the relationship's attributes change, and

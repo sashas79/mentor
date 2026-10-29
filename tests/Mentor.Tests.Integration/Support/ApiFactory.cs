@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Mentor.Tests.Integration.Support;
@@ -8,9 +9,10 @@ namespace Mentor.Tests.Integration.Support;
 /// <summary>
 /// The API exactly as Program composes it, in the given environment and with the given settings. Unless the settings
 /// name one, its database is a TLS connection to a port where nothing listens. Its Entra configuration is that of
-/// <see cref="TestEntra"/>, whose tokens it trusts; the settings can override or remove any of it.
+/// <see cref="TestEntra"/>, whose tokens it trusts; the settings can override or remove any of it. The test services,
+/// if any, are applied after everything Program registers, so a test can add to or replace it.
 /// </summary>
-internal sealed class ApiFactory(string environment, IReadOnlyDictionary<string, string>? settings = null)
+internal sealed class ApiFactory(string environment, IReadOnlyDictionary<string, string>? settings = null, Action<IServiceCollection>? testServices = null)
     : WebApplicationFactory<Program>
 {
     public const string UnreachableDatabase = "Host=127.0.0.1;Port=9;Database=mentor;Username=mentor_api;SSL Mode=Require;Timeout=2";
@@ -31,6 +33,11 @@ internal sealed class ApiFactory(string environment, IReadOnlyDictionary<string,
         }
 
         builder.ConfigureTestServices(TestEntra.TrustSigningKey);
+        if (testServices is not null)
+        {
+            builder.ConfigureTestServices(testServices);
+        }
+
         builder.ConfigureLogging(logging => logging.ClearProviders());
     }
 }

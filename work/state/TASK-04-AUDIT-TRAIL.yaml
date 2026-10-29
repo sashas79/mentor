@@ -4,32 +4,37 @@ task_state:
   status: done
   work_baseline: baselines/work/WORK-0001.yaml
   started: 2026-10-28T12:40:36Z
-  updated: 2026-10-29T07:43:08Z
+  updated: 2026-10-29T08:34:00Z
   verification:
     - control: control://verification/build
       result: PASS
       command: dotnet build src/Mentor.slnx --no-incremental
       note: >-
-        Run on execute/orchestrated after the squash merge onto ba0dd74 (TASK-06 done). The one conflict, the module
-        registrations in src/Mentor.Api/Hosting/ApiHost.cs, was resolved by keeping both sides' lines (AddAuditTrail and
-        MapAuditTrail beside the employee-profile and meetings/notifications modules): 5 projects with
-        TreatWarningsAsErrors and NuGet audit; 0 warnings, 0 errors. No package was added and no migration was needed:
-        audit_entry.record_type keeps its text column under the enumeration converter, and dotnet ef migrations
-        has-pending-model-changes (dotnet-ef 10.0.14 from src/dotnet-tools.json) reports no change against TASK-05's
-        MeetingsNotifications snapshot.
+        Run on execute/orchestrated at f86c2ce (the squash merge onto ba0dd74, TASK-06 done) with the review fix
+        9e100d5 cherry-picked onto it, the fix having been left out of that merge: 5 projects with TreatWarningsAsErrors
+        and NuGet audit; 0 warnings, 0 errors. The fix changes the candidate-view endpoint and test code only, no
+        entity, configuration or package, so the model and TASK-05's MeetingsNotifications snapshot are as the merge
+        verified them (dotnet ef migrations has-pending-model-changes reported no change there) and no migration was
+        needed.
     - control: control://verification/unit-test
       result: PASS
       command: dotnet test src/Mentor.slnx
       note: >-
-        Full suite on the merged tree: Mentor.Tests.Unit 113/113 (92 after TASK-06, 21 with this task);
-        Mentor.Tests.Integration 284/284 (269 after TASK-06, 15 with this task) against PostgreSQL 17 via
-        Testcontainers, including every TASK-01, TASK-02, TASK-03, TASK-05 and TASK-06 test; TASK-05's
-        AuditNotificationMeetingTests, which insert audit rows through SQL, and MentorDbContextTests, which now sets
-        RecordType = AuditRecordType.Candidate, pass unchanged in behaviour. The implementer's three mutation runs, in
-        the task worktree, each failed the tests that guard the rule: applicability that never reports Superseded failed
-        4 rule tests and 3 endpoint tests; a writer claiming LEGACY_SOURCE provenance was refused by the database in all
-        9 write and endpoint tests; an audit endpoint without a matrix permission failed TASK-01's guard test and the
-        permission test under both identity modes.
+        Full suite on the merged tree with the review fix applied, run three times: Mentor.Tests.Unit 113/113 (92 after
+        TASK-06, 21 with this task); Mentor.Tests.Integration 286/286 (269 after TASK-06, 17 with this task, of which 2
+        are the fix's race theory) against PostgreSQL 17 via Testcontainers, including every TASK-01, TASK-02, TASK-03,
+        TASK-05 and TASK-06 test. The first run failed one case once,
+        EntraBearerTests.Entra_mode_refuses_to_start_without_the_configuration_token_validation_needs(AzureAd:Scopes),
+        with an ObjectDisposedException from WebApplicationFactory's DeferredHost.StartAsync in place of the expected
+        OptionsValidationException: a host-startup disposal race in a Production-environment factory with no test
+        services, a path the fix does not change; the second and third runs passed every test. The race theory passes
+        at both interleaving points on this tree; the implementer's record that it failed against the unfixed endpoint
+        exactly as the review described (a 500, KeyNotFoundException, when the replacement lands after the revisions
+        read; a head still naming the first revision beside two revisions when it lands after the head read) is from the
+        task worktree at 9e100d5, as are the three mutation runs that each failed the tests guarding the rule
+        (applicability never reporting Superseded: 4 rule and 3 endpoint tests; a writer claiming LEGACY_SOURCE
+        provenance: refused by the database in all 9 write and endpoint tests; an audit endpoint without a matrix
+        permission: TASK-01's guard test and the permission test under both identity modes).
   acceptance:
     # Several criteria are shared with the tasks that own the commands; the notes give this task's share and the test that shows it.
     - criterion: AC-FR-028-01
@@ -42,7 +47,9 @@ task_state:
       note: >-
         Applicability is derived from the candidate head (ApplicabilityRule, ADR-004) and never stored: retained
         evidence stays on record and reads Superseded, Formed or Withdrawn, only the current draft's evidence reads
-        Applicable (ApplicabilityTests, AuditTrailEndpointTests).
+        Applicable (ApplicabilityTests, AuditTrailEndpointTests). The head and the evidence it is derived for are read
+        in one snapshot, so a replacement committed while the view is read is seen whole or not at all and the view
+        never labels evidence against a head of another moment (AuditTrailEndpointTests, the race theory).
     - criterion: AC-FR-033-01
       note: >-
         After a State change with its audit entry, the formation decision, the acceptances and the formed agreement are
@@ -120,6 +127,17 @@ task_state:
     - >-
       Module registration follows the shared "// Modules." lines of ApiHost.cs (AddAuditTrail/MapAuditTrail beside the
       employee-profile and meetings/notifications modules); a later module adds its own Add/Map pair there.
+    - >-
+      Review fix: GET /api/audit-trail/candidates/{id} reads the head and every list inside one transaction begun at
+      IsolationLevel.RepeatableRead and marked SET TRANSACTION READ ONLY (ADR-013's READ COMMITTED is for commands; a
+      read-only REPEATABLE READ transaction never fails on serialisation and the store refuses any write in it), so a
+      replacement committed mid-read is seen whole or not at all; each acceptance and decision row carries its revision
+      number from a join rather than a lookup in the revisions list. Any query that assembles one view from several
+      statements should read them in the same way. Tests can add services to the API host after Program's
+      (IdentityApi.Start / ApiFactory testServices), for example an EF command interceptor that commits a concurrent
+      write between the request's statements (ConcurrentReplacement); the API's DbContext options accept it through
+      services.ConfigureDbContext<MentorDbContext>. The fix (9e100d5 in the task worktree) was left out of the squash
+      merge f86c2ce and applied to execute/orchestrated in a corrective commit on top of it.
   changed_paths:
     - src/Mentor.Core/Audit/AuditEntry.cs
     - src/Mentor.Core/Audit/AuditRecordType.cs
@@ -141,4 +159,7 @@ task_state:
     - tests/Mentor.Tests.Integration/Audit/Actors.cs
     - tests/Mentor.Tests.Integration/Audit/AuditTrailWriterTests.cs
     - tests/Mentor.Tests.Integration/Audit/AuditTrailEndpointTests.cs
+    - tests/Mentor.Tests.Integration/Audit/ConcurrentReplacement.cs
+    - tests/Mentor.Tests.Integration/Support/ApiFactory.cs
+    - tests/Mentor.Tests.Integration/Identity/IdentityApi.cs
     - tests/Mentor.Tests.Integration/Persistence/MentorDbContextTests.cs
