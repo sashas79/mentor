@@ -48,7 +48,7 @@ public sealed class AuditEntry
 
     public AuditAction Action { get; init; }
 
-    public required string RecordType { get; init; }
+    public AuditRecordType RecordType { get; init; }
 
     public Guid? RecordId { get; init; }
 

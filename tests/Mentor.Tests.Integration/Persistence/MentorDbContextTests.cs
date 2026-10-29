@@ -130,7 +130,7 @@ public sealed class MentorDbContextTests(PostgresServer postgres)
                 ActorEmployeeId = administrator.Id,
                 IdentityScheme = IdentityScheme.Simulated,
                 Action = AuditAction.FormationDecided,
-                RecordType = "CANDIDATE",
+                RecordType = AuditRecordType.Candidate,
                 RecordId = candidate.Id,
                 CandidateId = candidate.Id,
                 RevisionId = revision.Id,

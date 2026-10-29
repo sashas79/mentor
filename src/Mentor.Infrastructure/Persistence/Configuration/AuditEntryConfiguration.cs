@@ -37,6 +37,7 @@ internal sealed class AuditEntryConfiguration : IEntityTypeConfiguration<AuditEn
             .HasConstraintName("fk_audit_entry_revision_content");
 
         builder.Property(entry => entry.Action).StoredAsText();
+        builder.Property(entry => entry.RecordType).StoredAsText();
         builder.Property(entry => entry.IdentityScheme).StoredAsText();
         builder.Property(entry => entry.Provenance).StoredAsText();
         builder.Property(entry => entry.PriorValues).HasColumnType("jsonb");

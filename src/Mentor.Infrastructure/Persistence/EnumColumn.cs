@@ -25,6 +25,9 @@ internal static class EnumColumn
     public static string StoredValue<TEnum>(TEnum value)
         where TEnum : struct, Enum => Converter<TEnum>.ToStored[value];
 
+    /// <summary>The stored value of an enumeration member whose type is known only at run time, by the same rule.</summary>
+    public static string StoredValue(Enum value) => ToUpperSnakeCase(value.ToString());
+
     public static TEnum FromStoredValue<TEnum>(string stored)
         where TEnum : struct, Enum => Converter<TEnum>.FromStored[stored];
 

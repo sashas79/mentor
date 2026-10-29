@@ -1,0 +1,144 @@
+schema_version: 1
+task_state:
+  task: TASK-04-AUDIT-TRAIL
+  status: done
+  work_baseline: baselines/work/WORK-0001.yaml
+  started: 2026-10-28T12:40:36Z
+  updated: 2026-10-29T07:43:08Z
+  verification:
+    - control: control://verification/build
+      result: PASS
+      command: dotnet build src/Mentor.slnx --no-incremental
+      note: >-
+        Run on execute/orchestrated after the squash merge onto ba0dd74 (TASK-06 done). The one conflict, the module
+        registrations in src/Mentor.Api/Hosting/ApiHost.cs, was resolved by keeping both sides' lines (AddAuditTrail and
+        MapAuditTrail beside the employee-profile and meetings/notifications modules): 5 projects with
+        TreatWarningsAsErrors and NuGet audit; 0 warnings, 0 errors. No package was added and no migration was needed:
+        audit_entry.record_type keeps its text column under the enumeration converter, and dotnet ef migrations
+        has-pending-model-changes (dotnet-ef 10.0.14 from src/dotnet-tools.json) reports no change against TASK-05's
+        MeetingsNotifications snapshot.
+    - control: control://verification/unit-test
+      result: PASS
+      command: dotnet test src/Mentor.slnx
+      note: >-
+        Full suite on the merged tree: Mentor.Tests.Unit 113/113 (92 after TASK-06, 21 with this task);
+        Mentor.Tests.Integration 284/284 (269 after TASK-06, 15 with this task) against PostgreSQL 17 via
+        Testcontainers, including every TASK-01, TASK-02, TASK-03, TASK-05 and TASK-06 test; TASK-05's
+        AuditNotificationMeetingTests, which insert audit rows through SQL, and MentorDbContextTests, which now sets
+        RecordType = AuditRecordType.Candidate, pass unchanged in behaviour. The implementer's three mutation runs, in
+        the task worktree, each failed the tests that guard the rule: applicability that never reports Superseded failed
+        4 rule tests and 3 endpoint tests; a writer claiming LEGACY_SOURCE provenance was refused by the database in all
+        9 write and endpoint tests; an audit endpoint without a matrix permission failed TASK-01's guard test and the
+        permission test under both identity modes.
+  acceptance:
+    # Several criteria are shared with the tasks that own the commands; the notes give this task's share and the test that shows it.
+    - criterion: AC-FR-028-01
+      note: >-
+        GET /api/audit-trail/candidates/{id} lists every acceptance of the candidate with its participant, server time,
+        revision number and content hash, and the applicability derived for it now; the acceptances of a replaced
+        revision read Superseded beside the current draft's Applicable acceptance (AuditTrailEndpointTests). The
+        participants' draft view is TASK-09.
+    - criterion: AC-FR-028-02
+      note: >-
+        Applicability is derived from the candidate head (ApplicabilityRule, ADR-004) and never stored: retained
+        evidence stays on record and reads Superseded, Formed or Withdrawn, only the current draft's evidence reads
+        Applicable (ApplicabilityTests, AuditTrailEndpointTests).
+    - criterion: AC-FR-033-01
+      note: >-
+        After a State change with its audit entry, the formation decision, the acceptances and the formed agreement are
+        unchanged and the candidate view still shows the approval as the one the relationship was formed on; a
+        historical relationship has only its LEGACY_SOURCE claim with its source reference and no formation evidence
+        (AuditTrailEndpointTests). Entering the claim is TASK-13.
+    - criterion: AC-FR-051-01
+      note: >-
+        An AttributeChanged entry carries the prior value, the new value, the acting administrator with their identity
+        scheme and the server time of the change, one entry per attribute (AuditTrailWriterTests,
+        AuditTrailEndpointTests). The edit command is TASK-11.
+    - criterion: AC-FR-065-01
+      note: >-
+        AuditTrail.Append takes the actor from the authenticated Caller alone and writes APPLICATION provenance only; the
+        store refuses a legacy claim from the application (TASK-02 LegacyEntryTests) and the trail shows a legacy row's
+        claim apart from any digital event, with nothing backfilled (AuditTrailEndpointTests). The entry of each
+        command is written by the task that owns the command (TASK-07 to TASK-13).
+    - criterion: AC-FR-069-01
+      note: >-
+        InapplicableEvidenceAsync names exactly the acceptances and decisions bound to the replaced revision; the
+        RESET_TO_STEP_1 entry carries them with the actor, time, new revision and hash; the candidate view tells the
+        prior content from the current by revision number and hash and shows the earlier decision as Superseded, so no
+        old approval becomes effective (AuditTrailWriterTests, AuditTrailEndpointTests).
+    - criterion: AC-DR-014-01
+      note: >-
+        An entry read over HTTP carries actor (employee, name, identity scheme), action, record type and identifier,
+        prior and new values, true occurredAt, decision context, outcome, invalidated identifiers, provenance and source
+        file and row; APPLICATION entries and LEGACY_SOURCE claims are told apart (AuditTrailEndpointTests).
+    - criterion: AC-NFR-002-01
+      note: >-
+        AuditValues takes identifiers, enumerations, flags, numbers, dates, times and short references only; the trail
+        and its endpoints return the entry's structured fields, never revision content, and no column of the schema
+        holds discussion notes (TASK-02 SchemaTests). Logs, screens and reports are TASK-01, TASK-14 and TASK-15.
+    - criterion: AC-NFR-004-01
+      note: >-
+        The entry commits in the transaction of its action, stamped with that transaction's server time (equal to the
+        changed row's updated_at); an action the database refuses leaves no entry and an entry it refuses leaves no
+        action; an occurred_at supplied by any statement, application or legacy, is replaced by now()
+        (AuditTrailWriterTests).
+  notes:
+    - >-
+      Writing: inject the scoped AuditTrail and call Append(caller, new AuditEvent(action, recordType, recordId) { ... })
+      on the same MentorDbContext and inside the same transaction as the business change, before the command's own
+      SaveChangesAsync; never save an entry on its own. The caller must have an employee record (TASK-06 creates it on
+      first access) or Append throws. Provenance, actor, identity scheme and time are never the command's to set.
+    - >-
+      AuditEntry.RecordType is now the AuditRecordType enumeration, stored as text under the upper-snake names
+      (CANDIDATE, AGREEMENT_ACCEPTANCE, RELATIONSHIP, LEGACY_REVIEW_EXCEPTION, ...) with no check constraint: add a
+      member without a migration, and legacy entry scripts (TASK-13) must use those spellings.
+    - >-
+      Record and context per action: candidate transitions (InvitationSent, MentorResponded, WillingnessRecorded,
+      CandidateWithdrawn, FormationDecided) record CANDIDATE with CandidateId set and, from drafting on, Revision;
+      evidence inserts record the evidence row (RevisionCreated AGREEMENT_REVISION, AcceptanceRecorded
+      AGREEMENT_ACCEPTANCE, AnnexChanged PERMITTED_CHANGE) with CandidateId and Revision; AttributeChanged records
+      RELATIONSHIP, one entry per attribute (ADR-006); MentorApplicationDecided MENTOR_PROFILE; GoalProgressSubmitted
+      and GoalCompletionDecided GOAL; RegisterExported REGISTER with no record id. The candidate view lists entries by
+      record CANDIDATE or by CandidateId context; the record endpoints match record type and id literally.
+    - >-
+      Outcomes are the AuditOutcome constants. RESET_TO_STEP_1 and WITHDRAWN require Invalidated:
+      InapplicableEvidenceAsync(candidate.CurrentRevisionId), read under the candidate's version lock, or
+      InapplicableEvidence.None.
+    - >-
+      Values: AuditValues.Set(field, value) with the camel-case property names of the record; enumerations serialise as
+      their stored values (IN_PROGRESS) through AuditValuesJson, so a value in the trail reads like its column.
+    - >-
+      Endpoints, all under audit-trail.read: GET /api/audit-trail/records/{recordType}, GET
+      /api/audit-trail/records/{recordType}/{recordId} and GET /api/audit-trail/candidates/{candidateId}; recordType is
+      the AuditRecordType member name. Enumerations in responses use member names (Applicable, LegacySource), as the
+      host's JSON options do everywhere.
+    - >-
+      Shared with TASK-09 and TASK-10: Mentor.Core.Agreements.ApplicabilityRule.Of(status, currentRevisionId,
+      revisionId) derives Applicable, Superseded, Formed or Withdrawn for acceptances and decisions, and
+      RevisionReference(RevisionId, ContentHash) is the pair a command names a revision by. EnumColumn gained a
+      non-generic StoredValue(Enum).
+    - >-
+      Module registration follows the shared "// Modules." lines of ApiHost.cs (AddAuditTrail/MapAuditTrail beside the
+      employee-profile and meetings/notifications modules); a later module adds its own Add/Map pair there.
+  changed_paths:
+    - src/Mentor.Core/Audit/AuditEntry.cs
+    - src/Mentor.Core/Audit/AuditRecordType.cs
+    - src/Mentor.Core/Audit/AuditOutcome.cs
+    - src/Mentor.Core/Audit/AuditValues.cs
+    - src/Mentor.Core/Audit/AuditEvent.cs
+    - src/Mentor.Core/Agreements/RevisionReference.cs
+    - src/Mentor.Core/Agreements/Applicability.cs
+    - src/Mentor.Infrastructure/Persistence/EnumColumn.cs
+    - src/Mentor.Infrastructure/Persistence/AuditValuesJson.cs
+    - src/Mentor.Infrastructure/Persistence/Configuration/AuditEntryConfiguration.cs
+    - src/Mentor.Api/Audit/AuditTrail.cs
+    - src/Mentor.Api/Audit/AuditTrailEndpoints.cs
+    - src/Mentor.Api/Audit/AuditTrailModule.cs
+    - src/Mentor.Api/Hosting/ApiHost.cs
+    - tests/Mentor.Tests.Unit/Audit/AuditValuesTests.cs
+    - tests/Mentor.Tests.Unit/Audit/ApplicabilityTests.cs
+    - tests/Mentor.Tests.Unit/Audit/AuditTrailTests.cs
+    - tests/Mentor.Tests.Integration/Audit/Actors.cs
+    - tests/Mentor.Tests.Integration/Audit/AuditTrailWriterTests.cs
+    - tests/Mentor.Tests.Integration/Audit/AuditTrailEndpointTests.cs
+    - tests/Mentor.Tests.Integration/Persistence/MentorDbContextTests.cs

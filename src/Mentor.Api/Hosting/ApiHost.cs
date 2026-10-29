@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Mentor.Api.Audit;
 using Mentor.Api.Authorisation;
 using Mentor.Api.Employees;
 using Mentor.Api.Identity;
@@ -33,6 +34,7 @@ public static class ApiHost
         services.AddDefaultDenyAuthorization();
         services.AddAuthorisationMatrix();
         // Modules.
+        services.AddAuditTrail(); // COMP-AUDIT-TRAIL (ADR-007)
         services.AddEmployeeProfiles(); // COMP-EMPLOYEE-PROFILE
         services.AddNotificationEvents(); // COMP-MEETINGS-NOTIFICATIONS
         services.AddProblemDetails();
@@ -70,6 +72,7 @@ public static class ApiHost
         app.MapCapabilities();
         app.MapMentorIdentity();
         // Modules.
+        app.MapAuditTrail(); // COMP-AUDIT-TRAIL (ADR-007)
         app.MapEmployeeProfiles(); // COMP-EMPLOYEE-PROFILE
         app.MapMeetings(); // COMP-MEETINGS-NOTIFICATIONS
         app.MapNotifications();
