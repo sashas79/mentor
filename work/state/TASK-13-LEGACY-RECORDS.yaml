@@ -1,0 +1,74 @@
+schema_version: 1
+task_state:
+  task: TASK-13-LEGACY-RECORDS
+  status: in_progress
+  work_baseline: baselines/work/WORK-0001.yaml
+  started: 2026-11-09T13:37:27Z
+  updated: 2026-11-09T15:05:22Z
+  verification: []
+  acceptance:
+    - criterion: AC-FR-062-01
+      note: An unknown start or end date stays NULL with the cell kept; "ongoing" never becomes a date (LegacyEntryScriptTests.A_validated_row_is_entered_as_a_legacy_relationship_with_its_source_and_nothing_invented; LegacyReadingTests.A_date_is_read_only_from_day_month_year).
+    - criterion: AC-FR-062-02
+      note: Non-date text such as "ongoing" is kept as source text. Only D/M/YYYY real dates are read, per the product_domain decision. A two-digit year, another order or separator, or an impossible day stays unknown.
+    - criterion: AC-FR-063-01
+      note: Entry is a reviewed SQL script, from infra/legacy-entry/, run under mentor_legacy_entry. There is no importer, entry screen or API route (HostEndpointsTests.No_endpoint_enters_a_historical_relationship), and no application assembly reads a spreadsheet (LegacyEntryScriptTests.Entry_takes_only_the_cells_and_the_resolved_people_and_needs_no_importer).
+    - criterion: AC-FR-063-02
+      note: An admitted row keeps every cell verbatim and its resolved employees (foreign keys), source file and row, entering administrator and actual entry time; the readable values are typed only as the recorded decisions allow.
+    - criterion: AC-FR-063-03
+      note: An unresolved person or a missing mentor holds the row whole as a review exception (UNRESOLVED_PERSON, NO_MENTOR). Each State, Status or IsActive the decisions leave unresolved is an UNRESOLVED_VALUE exception of the relationship. Nothing is guessed.
+    - criterion: AC-FR-063-04
+      note: Entry writes no candidate, revision, acceptance, formation decision, formed agreement or goal. The procedure takes no time, entrant or typed value; times are the database's time of entry. Authority is decided (REQ-BR-022).
+    - criterion: AC-FR-064-01
+      note: Entered rows carry provenance LEGACY and no candidate. The API reports them as Legacy with their source, and no digital lifecycle object exists for them.
+    - criterion: AC-E2E-07
+      note: A validated tracker row is entered through the real template and reported through the API and trail with its source provenance, unresolved values and dates, and legacy classification. Unresolved identities are review exceptions, nothing digital is fabricated, "ongoing" is not a date, and Active never sets IsActive.
+    - criterion: AC-DR-001-01
+      note: No employee is created by legacy entry. A historical name without an employee record is a review exception, and the legacy role cannot insert employees (TASK-02 PrivilegeTests).
+    - criterion: AC-DR-014-01
+      note: Each record written has a LEGACY_ENTRY audit entry with actor, action, record, structured values and true time. It names its source file and row, with provenance LEGACY_SOURCE and identity scheme DATABASE, distinct from application events.
+    - criterion: AC-NFR-003-01
+      note: Every reference is a foreign key to an existing employee. An unresolved identity is held as a review exception, never replaced with a guess.
+    - criterion: AC-NFR-004-01
+      note: Each legacy entry keeps its true actor, the database's entry time and its values; no historical event timestamp is stored or accepted.
+    - criterion: AC-BR-022-01
+      note: A Talent Management administrator's own legacy-entry account, once authorised with authorise-account.sql, enters rows attributed to that administrator. Two administrators' entries are each attributed to their own administrator.
+    - criterion: AC-BR-022-02
+      note: An account that is not authorised is refused, and so is the application's account, which can neither run the procedure nor authorise itself. No API route exists, and a refused script enters nothing.
+    - criterion: AC-DR-016-01
+      note: A source row whose person is absent from the directory or has no employee record is kept with its source file, row and every cell as an UNRESOLVED_PERSON review exception.
+    - criterion: AC-DR-016-02
+      note: No employee record or Entra identity is created for an unresolved person; the employee count is unchanged after entry.
+  notes:
+    - "Branch: execute/task-13-legacy-records, created from 1395953 (TASK-11) in its own worktree at .claude/worktrees/task-13-legacy-records, separate from TASK-12's uncommitted work."
+    - "Mechanism: migration 20261109134300_LegacyEntryProcedure adds mentor.enter_legacy_row, which is SECURITY INVOKER and executable only by mentor_legacy_entry, and three reading functions. A reviewed script made from infra/legacy-entry/entry-script.template.sql calls the procedure once per row with the verbatim cells and the resolved Entra object identifiers. The procedure applies the recorded decisions, enters the row once as a LEGACY relationship or a review exception, attributes it to the account's authorised administrator, and writes its LEGACY_SOURCE audit entries. The model is unchanged."
+    - "Interpretations:
+       - People resolve to existing employee records by Entra object identifier; ADR-008 says an Entra-backed employee, and the legacy role creates no employees.
+       - Duration reads only the three BR-010 category names.
+       - Active reads only the three recorded decisions; \"Yes\" (proposed only) and every other value stay unresolved, and IsActive is never read.
+       - Letter case and spacing are ignored, nothing else.
+       - A row held as a review exception can later be entered as its relationship."
+    - "Prepared scripts hold personal data, so the README keeps them with the tracker, not in the repository. Provisioning role membership is TASK-16's."
+    - "Review in progress. An 8-agent read-only review confirmed four findings, all fixed:
+       - a blank Mentor cell given an identifier became a relationship; NO_MENTOR is now decided by the cell alone and is final, and an identifier for an empty person cell is refused;
+       - tab and line-break padding defeated the readings and the blank-cell tests; it is now ignored;
+       - holding a row was not serialised; an advisory lock per source row now serialises it, and a file name with surrounding spaces is refused;
+       - scripts carried no version and no pinned encoding; the template now has both, and the README documents psql -X.
+      Rejected as settled design:
+       - the legacy role's direct INSERT grants, which ADR-013 states;
+       - TASK-02's self-declared authorisation mapping;
+       - TASK-02's trigger search_path, flagged as a follow-up.
+      Tests now run scripts statement by statement as psql does, pin each cell's column and pin the procedure's EXECUTE grant.
+      Pending:
+       - the test-adequacy re-review, because the first test reviewer errored;
+       - the mutation check;
+       - the final verification."
+  changed_paths:
+    - src/Mentor.Infrastructure/Persistence/Migrations/20261109134300_LegacyEntryProcedure.cs
+    - src/Mentor.Infrastructure/Persistence/Migrations/20261109134300_LegacyEntryProcedure.Designer.cs
+    - infra/legacy-entry/README.md
+    - infra/legacy-entry/entry-script.template.sql
+    - infra/legacy-entry/authorise-account.sql
+    - tests/Mentor.Tests.Integration/Legacy/LegacyEntryScript.cs
+    - tests/Mentor.Tests.Integration/Legacy/LegacyEntryScriptTests.cs
+    - tests/Mentor.Tests.Integration/Legacy/LegacyReadingTests.cs
