@@ -339,7 +339,7 @@ public sealed class RelationshipAdministrationTests(PostgresServer server)
 
     // ADR-006: under /api/relationships the API answers exactly these routes: the module's own, none of which creates or
     // removes a relationship or changes anything but its three attributes, and a relationship's meetings
-    // (COMP-MEETINGS-NOTIFICATIONS), which change no relationship.
+    // (COMP-MEETINGS-NOTIFICATIONS) and goals (COMP-GOALS-PROGRESS), which change no relationship.
     [Fact]
     public async Task Under_the_relationships_prefix_the_api_answers_exactly_these_routes()
     {
@@ -355,6 +355,7 @@ public sealed class RelationshipAdministrationTests(PostgresServer server)
         [
             "GET /api/relationships",
             "GET /api/relationships/{relationshipId:guid}",
+            "GET /api/relationships/{relationshipId:guid}/goals",
             "GET /api/relationships/{relationshipId:guid}/meetings",
             "PATCH /api/relationships/{relationshipId:guid}",
             "POST /api/relationships/{relationshipId:guid}/meetings",

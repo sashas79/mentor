@@ -4,6 +4,7 @@ using Mentor.Api.Audit;
 using Mentor.Api.Authorisation;
 using Mentor.Api.Employees;
 using Mentor.Api.Formation;
+using Mentor.Api.Goals;
 using Mentor.Api.Identity;
 using Mentor.Api.Meetings;
 using Mentor.Api.MentorRegistry;
@@ -46,6 +47,7 @@ public static class ApiHost
         services.AddAgreementDrafting(); // COMP-AGREEMENT-DRAFTING
         services.AddFormation(); // COMP-FORMATION
         services.AddRelationshipAdministration(); // COMP-RELATIONSHIP-ADMIN
+        services.AddGoalsAndProgress(); // COMP-GOALS-PROGRESS
         services.AddNotificationEvents(); // COMP-MEETINGS-NOTIFICATIONS
         services.AddProblemDetails();
         services.AddExceptionHandler<RedactingExceptionHandler>();
@@ -89,6 +91,7 @@ public static class ApiHost
         app.MapAgreementDrafting(); // COMP-AGREEMENT-DRAFTING
         app.MapFormation(); // COMP-FORMATION
         app.MapRelationshipAdministration(); // COMP-RELATIONSHIP-ADMIN
+        app.MapGoalsAndProgress(); // COMP-GOALS-PROGRESS
         app.MapMeetings(); // COMP-MEETINGS-NOTIFICATIONS
         app.MapNotifications();
         if (app.Configuration.GetValue<bool>(OpenApiSwitch))

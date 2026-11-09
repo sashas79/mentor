@@ -1,0 +1,78 @@
+schema_version: 1
+task_state:
+  task: TASK-12-GOALS-PROGRESS
+  status: done
+  work_baseline: baselines/work/WORK-0001.yaml
+  started: 2026-11-09T12:54:47Z
+  updated: 2026-11-09T14:00:43Z
+  verification:
+    - control: control://verification/build
+      result: PASS
+      command: "dotnet build src/Mentor.slnx --no-incremental && (cd src && dotnet ef migrations has-pending-model-changes --no-build --project Mentor.Infrastructure --startup-project Mentor.Api)"
+      note: Clean rebuild of all five projects, 0 warnings and 0 errors; no model changes since the last migration. TASK-12 adds no schema.
+    - control: control://verification/unit-test
+      result: PASS
+      command: dotnet test src/Mentor.slnx --no-build
+      note: "Unit 329/329 (37 new: GoalCompletionTests, ProgressSubmissionTests, GoalBodiesTests); integration 414/414 (15 new: GoalWorkflowTests, GoalConfidentialityTests, GoalContractTests; RelationshipAdministrationTests route guard updated)."
+  acceptance:
+    - criterion: AC-FR-034-01
+      note: Each goal is its own development_goal record with its own completion status, pending request and progress. The relationship's goal list is pinned goal by goal against each goal's own read for the protégé, the mentor and Talent Management, with a second relationship present (GoalWorkflowTests.The_parties_and_talent_management_read_goals_and_progress_and_nobody_else_does).
+    - criterion: AC-FR-035-01
+      note: The protégé submits a dated progress update (server-stamped submittedAt) against a goal of their relationship, through POST /api/goals/{goalId}/progress. Only the protégé may (GoalWorkflowTests.Only_the_protege_submits_progress_and_asks_for_completion), whatever the relationship's State (Progress_requests_and_decisions_go_on_whatever_the_relationships_state).
+    - criterion: AC-FR-036-01
+      note: A completion request is shown as pending, by the entry's completion Pending and the goal's pendingCompletionRequestId, while the goal stays Incomplete until the mentor decides. One request awaits the mentor at a time, and a complete goal takes none (GoalWorkflowTests.One_request_awaits_the_mentor_at_a_time_and_a_complete_goal_takes_none).
+    - criterion: AC-FR-037-01
+      note: The request stays unconfirmed until the relationship's own mentor approves it. Talent Management, the protégé, another approved mentor and outsiders are refused, including a mentor of the protégé's other relationship (Only_the_relationships_mentor_decides_completion_and_talent_management_has_no_step; A_goal_is_read_and_decided_only_through_its_own_relationship).
+    - criterion: AC-FR-037-02
+      note: goal_approval keeps the mentor, the Approved or Rejected decision and the server time, which the view shows and the trail audits. A rejection leaves the goal incomplete, a body carrying a reason is refused, and a decided request is never decided again. A later request is decided on its own (A_rejection_is_retained_and_leaves_the_goal_incomplete_with_no_reason_stage_or_second_decision).
+    - criterion: AC-FR-039-01
+      note: Completion is decided only through the identified mentor's action; no administrator step exists, and Talent Management's attempts are refused.
+    - criterion: AC-FR-040-01
+      note: Talent Management reads every goal of a relationship with its completion status and structured progress, exactly as the parties read it (GoalWorkflowTests; GoalConfidentialityTests).
+    - criterion: AC-FR-066-01
+      note: Talent Management sees completion status through the API. No field, body member or route carries private discussion content, and notes or a reason sent in a body are refused (GoalBodiesTests; GoalConfidentialityTests).
+    - criterion: AC-E2E-04
+      note: Progress needs no approval. A request stays visibly pending and incomplete until the mentor alone approves. A rejection is audited, leaves the goal incomplete, and adds no administrator stage, reason or resubmission loop (GoalWorkflowTests, under both identity schemes).
+    - criterion: AC-E2E-08
+      note: Talent Management reads goals and progress. Notes or a reason sent anyway reach no record, response or log even at Trace, and the progress update itself never reaches the audit trail or a log (GoalConfidentialityTests).
+    - criterion: AC-DR-009-01
+      note: A goal carries its relationship and formed-agreement references, its agreed description and its completion status. No route changes the wording (route guard), and the database refuses it (TASK-02 immutability and privilege tests). An approval changes only completion_status, leaving the formed agreement byte-identical.
+    - criterion: AC-DR-010-01
+      note: A progress entry carries its goal, the protégé, the dated update and the completion-request flag. Submitting progress, or a request, never completes the goal.
+    - criterion: AC-DR-011-01
+      note: A decision carries its completion request, the mentor, approved or rejected, and the real time. A pending request is no approval, and a rejection leaves the goal incomplete (GoalCompletionTests; GoalWorkflowTests).
+  notes:
+    - "Routes: GET /api/relationships/{relationshipId}/goals; GET /api/goals/{goalId}; POST /api/goals/{goalId}/progress; POST /api/goals/{goalId}/completion-requests; POST /api/goals/{goalId}/completion-requests/{requestId}/decision. Each command answers 200 with the goal as it leaves it, following the acceptance and formation-decision precedent for evidence rows."
+    - "DEC-008 interpretation: no retry, escalation or reason workflow exists for a rejected request, and the rejected request is never decided again. FR-036 itself is kept: the protégé may later make a new request as a new entry, as the TASK-02 schema already models. A goal has at most one pending request, and a Complete goal takes none. Ordinary progress is never held back, whatever the goal's or the relationship's state."
+    - "Concurrency: goals carry no version or ETag (CONTRACT-MENTORSHIP-API names candidates and relationships only). Each goal command takes the goal's row lock (SELECT ... FOR NO KEY UPDATE) as its first statement at READ COMMITTED, so commands on one goal run one after another. The unique index on goal_approval.progress_id stays the backstop."
+    - "Evidence: progress entries and decisions are insert-only rows. A request's standing is derived from its decision. Audit, in the command's transaction (ADR-007):
+       - GoalProgressSubmitted on the GoalProgress record {goalId, completionRequested}, with no narrative text;
+       - GoalCompletionDecided on the GoalApproval record {progressId, decision}, outcome APPROVED or REJECTED;
+       - on approval, GoalCompletionDecided on the Goal record, completionStatus INCOMPLETE to COMPLETE.
+      Notifications (ADR-009):
+       - a request tells the mentor, with DecideGoalCompletion;
+       - a decision tells the protégé, with None after an approval and SubmitProgress after a rejection;
+       - ordinary progress tells nobody."
+    - "Review: an 8-agent read-only review (spec, correctness, security, tests, each adversarially verified). The security reviewer found nothing. Five findings were confirmed and fixed:
+       - a progress update holding a control character such as NUL got a 500; it is now refused with 400;
+       - the relationship goal list is now pinned goal by goal;
+       - goal-to-relationship resolution is now tested with two relationships;
+       - a later request is now decided after a rejection;
+       - goal actions are now tested under On hold and Complete.
+      Four were rejected: binding a numeric decision follows the formation precedent (decision 7); the unforced race follows the suite's concurrency precedent; read-snapshot consistency is required by no criterion; the NotNull time assertions are an established idiom."
+    - "Mutation check: 33 deliberate regressions, each rebuilt and run against the unit tests and the Goals and Relationships integration tests. All 33 were caught, the four from the review findings included, and every mutated file was restored."
+  changed_paths:
+    - src/Mentor.Core/Goals/GoalCompletion.cs
+    - src/Mentor.Core/Goals/ProgressSubmission.cs
+    - src/Mentor.Api/Goals/GoalViews.cs
+    - src/Mentor.Api/Goals/GoalsAndProgress.cs
+    - src/Mentor.Api/Goals/GoalEndpoints.cs
+    - src/Mentor.Api/Hosting/ApiHost.cs
+    - tests/Mentor.Tests.Unit/Goals/GoalCompletionTests.cs
+    - tests/Mentor.Tests.Unit/Goals/ProgressSubmissionTests.cs
+    - tests/Mentor.Tests.Unit/Goals/GoalBodiesTests.cs
+    - tests/Mentor.Tests.Integration/Goals/GoalApi.cs
+    - tests/Mentor.Tests.Integration/Goals/GoalWorkflowTests.cs
+    - tests/Mentor.Tests.Integration/Goals/GoalConfidentialityTests.cs
+    - tests/Mentor.Tests.Integration/Goals/GoalContractTests.cs
+    - tests/Mentor.Tests.Integration/Relationships/RelationshipAdministrationTests.cs
