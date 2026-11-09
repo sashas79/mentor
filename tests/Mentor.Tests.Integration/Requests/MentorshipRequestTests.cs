@@ -170,7 +170,8 @@ public sealed class MentorshipRequestTests(PostgresServer server)
 
     // FR-017, ADR-003: the matrix has no action that edits a request, and none that changes a candidate's participants;
     // under these prefixes the API answers exactly these routes: the module's own, a candidate's meetings
-    // (COMP-MEETINGS-NOTIFICATIONS) and its agreement draft (COMP-AGREEMENT-DRAFTING), whose revisions never name parties.
+    // (COMP-MEETINGS-NOTIFICATIONS), its agreement draft (COMP-AGREEMENT-DRAFTING), whose revisions never name parties,
+    // and its formation (COMP-FORMATION), decided on a revision and read as an outcome.
     [Fact]
     public async Task No_route_edits_a_request_or_changes_a_candidates_participants()
     {
@@ -199,6 +200,7 @@ public sealed class MentorshipRequestTests(PostgresServer server)
             "GET /api/candidates/{candidateId:guid}",
             "GET /api/candidates/{candidateId:guid}/draft",
             "GET /api/candidates/{candidateId:guid}/draft/revisions/{revisionId:guid}",
+            "GET /api/candidates/{candidateId:guid}/formation",
             "GET /api/candidates/{candidateId:guid}/meetings",
             "GET /api/mentorship-requests",
             "GET /api/mentorship-requests/{requestId:guid}",
@@ -208,6 +210,7 @@ public sealed class MentorshipRequestTests(PostgresServer server)
             "POST /api/candidates/{candidateId:guid}/draft/annex",
             "POST /api/candidates/{candidateId:guid}/draft/revisions",
             "POST /api/candidates/{candidateId:guid}/draft/revisions/{revisionId:guid}/acceptances",
+            "POST /api/candidates/{candidateId:guid}/draft/revisions/{revisionId:guid}/formation-decisions",
             "POST /api/candidates/{candidateId:guid}/meetings",
             "POST /api/candidates/{candidateId:guid}/willingness",
             "POST /api/candidates/{candidateId:guid}/withdraw",

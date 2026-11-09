@@ -1,0 +1,216 @@
+schema_version: 1
+task_state:
+  task: TASK-10-FORMATION
+  status: done
+  work_baseline: baselines/work/WORK-0001.yaml
+  started: 2026-11-09T11:00:22Z
+  updated: 2026-11-09T11:30:30Z
+  verification:
+    - control: control://verification/build
+      result: PASS
+      command: dotnet build src/Mentor.slnx --no-incremental
+      note: >-
+        Run on execute/orchestrated (a33565c plus the uncommitted TASK-09 state and this task's changes) after the mutation
+        runs, with every mutated file verified restored: 5 projects with TreatWarningsAsErrors; 0 warnings, 0 errors. No
+        package was added and no entity, configuration or migration changed (TASK-02's formation_decision,
+        mentorship_relationship, formed_agreement and development_goal tables, their constraints and the mentor_app grants
+        hold everything): dotnet ef migrations has-pending-model-changes --no-build --project Mentor.Infrastructure
+        --startup-project Mentor.Api, run from src/ (which holds dotnet-tools.json), reported no change since the last
+        migration.
+    - control: control://verification/unit-test
+      result: PASS
+      command: dotnet test src/Mentor.slnx --no-build
+      note: >-
+        Full suite on the clean rebuild: Mentor.Tests.Unit 249/249 (222 after TASK-09, 27 with this task);
+        Mentor.Tests.Integration 386/386 (372 after TASK-09, 14 with this task) against PostgreSQL 17 via Testcontainers,
+        including every TASK-01 to TASK-09 test (TASK-08's route guard in MentorshipRequestTests now lists the two formation
+        routes), the approval test under both identity schemes. Twenty mutations, each restored by rewriting the original
+        text and built with --no-incremental, each failed at least one test (unit / formation integration tests failed):
+        withdrawal not checked 1/0; superseded revision decidable 2/1; reviewed hash not compared 2/1; one acceptance
+        suffices 1/1; acceptance of other content counts 1/0; acceptance of another revision counts 1/0; IsActive formed Y
+        1/2; State formed On hold 1/2; start date not taken from the terms 1/2; annex reference not retained 1/2; goals
+        numbered from 0 1/10; another candidate's revision found 0/1; a rejection forms too 0/2; candidate not marked
+        FORMED 0/7; request left OPEN 0/2; nobody notified 0/3; relationship formation not audited 0/2; every decision
+        Applicable 0/4; version claim ignored 0/2; undefined outcome accepted 0/1. Two needed a second run: the
+        another-revision mutation first survived, because every superseded acceptance in the unit test also carried other
+        content; the unit test now includes a superseded acceptance with the current hash, and the new integration test
+        Restored_content_in_a_new_revision_needs_both_acceptances_afresh covers the case (a replacement restoring accepted
+        content). The notification mutation first left its parameter unread, which the build refuses (CS9113); it was
+        re-run as raising nothing.
+  acceptance:
+    # Several criteria are shared with other tasks; the notes give this task's share and the test that shows it.
+    - criterion: AC-FR-030-01
+      note: >-
+        After both acceptances the candidate stays DRAFTING with no decision, relationship or goal until an approval
+        (FormationPrerequisiteTests.Without_both_acceptances_of_the_current_revision_nothing_is_decided_or_formed,
+        FormationTests); an approval naming a superseded revision is 409 "Revision superseded" and forms nothing
+        (FormationPrerequisiteTests, FormationRulesTests).
+    - criterion: AC-FR-030-02
+      note: >-
+        The decision records the administrator from the authenticated caller, never from the body (a body naming
+        administratorEmployeeId is 400), shown as administratorEmployeeId; every FormationDecided entry names the
+        administrator and their identity scheme (FormationTests, under Entra and the simulated scheme; FormationBodiesTests).
+    - criterion: AC-FR-030-03
+      note: >-
+        A decision names the revision and the content hash reviewed: a superseded revision is 409, a hash other than the
+        current revision's 422, a stale version 409 "Candidate changed", and a superseded rejection never counts
+        (FormationPrerequisiteTests.A_stale_approval_or_one_of_superseded_content_forms_nothing, FormationTests rejection
+        test). A superseded approval cannot exist: an approval forms the candidate in its own transaction, after which no
+        revision is admitted.
+    - criterion: AC-FR-031-01
+      note: >-
+        FormationRules re-checks under the version lock: mutual willingness column by column, the current revision and
+        its hash, and both participants' acceptances of exactly that revision (FormationRulesTests). Before both
+        acceptances a decision is 409 "Agreement not accepted"; after a withdrawal it is 409; a refusal persists no
+        decision, audit entry or notification and leaves the version unchanged (FormationPrerequisiteTests).
+    - criterion: AC-FR-031-02
+      note: >-
+        Formation proceeds only for the candidate's own current revision (another candidate's revision is 404) accepted
+        by its own protégé and mentor, under its mutual willingness (FormationRulesTests, FormationPrerequisiteTests); the
+        relationship takes the candidate's participants and refuses content naming other parties (FormationRecordsTests;
+        TASK-02's foreign key binds the relationship to the candidate's participants). Legacy rows have no candidate, so
+        no decision, formed agreement or goal can attach to them (TASK-02 constraints; legacy entry is TASK-13).
+    - criterion: AC-FR-032-01
+      note: >-
+        The formed agreement copies the approved revision's content and hash byte for byte; no route changes it, the
+        application's account has no UPDATE on formed_agreement, formation_decision or a goal's agreed wording, and the
+        schema owner is refused by the insert-only triggers
+        (FormationTests.Formation_evidence_stays_as_formed_whatever_later_changes_the_relationship). Earlier revisions and
+        acceptances stay as evidence (FormationPrerequisiteTests).
+    - criterion: AC-FR-032-02
+      note: >-
+        After formation the candidate admits no revision or decision (409) and its request pairs no other mentor (409
+        "Request closed"); different terms take a new request, candidate, agreement, acceptances and approval, which form
+        a second relationship with its own goals, and the first relationship's agreement and goals are unchanged
+        (FormationTests.After_formation_different_terms_need_a_new_request_and_nothing_transfers).
+    - criterion: AC-FR-032-03
+      note: >-
+        Before formation a replacement makes earlier acceptances and decisions inapplicable and needs both acceptances and
+        an approval anew (FormationTests rejection test, FormationPrerequisiteTests; the reset itself is TASK-09); after
+        formation a revision is refused and a change is a new relationship (FormationTests).
+    - criterion: AC-FR-033-01
+      note: >-
+        Formation evidence (the decision, the formed agreement, the goals' wording, the audit entries) is in insert-only
+        rows apart from the relationship's attributes; after State and IsActive change, the decision, formed agreement and
+        goals read exactly as formed (FormationTests). Legacy records are TASK-13; no formation evidence can be attached to
+        a row without a candidate.
+    - criterion: AC-FR-070-01
+      note: >-
+        Approval and replacement both claim the candidate version first, so they run one after the other: taken at once,
+        exactly one succeeds, either forming the relationship or replacing the revision and forming nothing
+        (FormationPrerequisiteTests.An_approval_and_a_replacement_taken_at_once_end_with_exactly_one_taken).
+    - criterion: AC-FR-070-02
+      note: >-
+        The approval is checked against the current revision and its own acceptances only: draft A's acceptances and
+        rejection read Superseded and never count, content restored from draft A in a new revision still needs fresh
+        acceptances, and the approval and the formed agreement name draft B (FormationPrerequisiteTests, FormationTests).
+    - criterion: AC-E2E-01
+      note: >-
+        Formation share: through the API the protégé's request is paired, both record willingness, both accept the same
+        revision and Talent Management approves; the relationship is formed In Progress, Status blank, IsActive N
+        (FR-071 resolved OPEN-002) (FormationTests, under both identity schemes). Discovery is TASK-07, pairing TASK-08,
+        drafting TASK-09.
+    - criterion: AC-E2E-02
+      note: >-
+        Without mutual willingness (withdrawn: 409), without both acceptances (409 "Agreement not accepted") or without an
+        approval (both acceptances alone), no relationship is formed (FormationPrerequisiteTests, FormationRulesTests).
+    - criterion: AC-BR-021-01
+      note: >-
+        Formation share: a withdrawn pairing's acceptances read Withdrawn and admit no decision; the substituted mentor's
+        new pairing on the same request needs its own pairing decisions, acceptances and approval, and only then is a
+        relationship, with a State, formed between the protégé and the new mentor
+        (FormationPrerequisiteTests.A_withdrawn_pairing_forms_nothing_and_a_substituted_mentor_needs_every_step_anew). The
+        withdrawal itself is TASK-08.
+    - criterion: AC-DR-005-01
+      note: >-
+        The formed relationship carries provenance DIGITAL, its candidate, both participants, State IN_PROGRESS, Status
+        BLANK, IsActive N, the duration and the start and end dates of the accepted terms (absent dates stay null), and its
+        history begins with its formation audit entry (FormationTests, FormationRecordsTests). Only the approval command
+        creates it. Legacy rows are TASK-13.
+    - criterion: AC-DR-008-01
+      note: >-
+        formation_decision records the administrator, the candidate, the revision and its content hash (bound to that
+        candidate's revision by TASK-02's composite foreign keys) and a database-stamped time; no body member supplies any
+        of them (FormationTests, FormationBodiesTests). Superseded decisions read Superseded and never form (FormationTests).
+        Nothing creates a decision for a legacy row.
+    - criterion: AC-E2E-10
+      note: >-
+        Participant acceptance of draft A, a replacement draft B, then approvals on the stale version, naming draft A, or
+        with draft A's hash fail (409, 409, 422); draft B needs both acceptances; the approval of draft B forms on draft B
+        and draft A's acceptances read Superseded
+        (FormationPrerequisiteTests.A_stale_approval_or_one_of_superseded_content_forms_nothing; the concurrent variant
+        An_approval_and_a_replacement_taken_at_once_end_with_exactly_one_taken).
+    - criterion: AC-E2E-11
+      note: >-
+        Before formation: the withdrawn pairing forms nothing and the new mentor's pairing goes through every step anew
+        (FormationPrerequisiteTests); after formation: the request is closed and a new request forms a new relationship
+        (FormationTests). TASK-08's PartySubstitutionTests cover the pairing side.
+    - criterion: AC-FR-071-01
+      note: >-
+        Formation writes IsActive N (FormationRecords); no decision body can name it (400) (FormationBodiesTests,
+        FormationPrerequisiteTests); the formed relationship reads N under both identity schemes (FormationTests).
+    - criterion: AC-FR-071-02
+      note: >-
+        Formation writes N only; the ActiveFlag enumeration holds only Y and N, and TASK-02's check constraint refuses any
+        other value ('Yes' and 'y' in RelationshipTests). The edit command that accepts Y or N is TASK-11.
+    - criterion: AC-FR-071-03
+      note: >-
+        The default is written once, at insert, and nothing in formation writes it again: after a later change to Y
+        (written as the application's account may write it; the edit command is TASK-11) and a further formation, the
+        relationship still reads Y (FormationTests.Formation_evidence_stays_as_formed_whatever_later_changes_the_relationship).
+  notes:
+    - >-
+      Module layout follows TASK-06 to TASK-09. Mentor.Core.Formation holds the pure, unit-tested rules: FormationRules
+      (the prerequisites of a decision, checked in ADR-005's order: mutual willingness column by column, the current
+      revision, its hash, both identified participants' acceptances of exactly that revision) and FormationRecords (the
+      relationship, formed agreement and goals composed from the candidate and the approved revision alone).
+      Mentor.Api.Formation holds the scoped Formations service, the views and strict body (FormationViews.cs) and
+      FormationEndpoints (AddFormation/MapFormation on ApiHost's module lines).
+    - >-
+      Routes: GET /api/candidates/{candidateId}/formation (formation.read: protégé, mentor, Talent Management; ETag = the
+      candidate's version) returns the outcome: candidate status, step, current revision, every decision with its
+      applicability and, once formed, the relationship with its formed agreement (content, hash, retained annex) and
+      goals. POST /api/candidates/{candidateId}/draft/revisions/{revisionId}/formation-decisions (formation.decide:
+      Talent Management) with body { outcome: Approved | Rejected, contentHash } and If-Match answers 200 with the outcome
+      and the new ETag. Problems reused: "Version required" (428), "Candidate changed" (409), "Not possible in the
+      candidate's current state" (409), "Revision superseded" (409), "Content mismatch" (422), "No employee profile yet"
+      (409); new: "Agreement not accepted" (409). A revision that is not the candidate's is 404.
+    - >-
+      Decision rule chosen here: a decision of either outcome requires Step 3, because COMP-FORMATION owns Steps 3 and 4
+      and ADR-005 records a rejection instead of an approval. A rejection leaves the candidate DRAFTING at Step 3;
+      Talent Management may later approve the same revision while it stays current and accepted (ADR-005), or the
+      participants revise; rejections may repeat, approvals cannot (one per candidate by index).
+    - >-
+      The approval transaction: version claim; re-check; the APPROVED decision; the relationship (DIGITAL, IN_PROGRESS,
+      BLANK, N, duration and dates from the accepted terms); the formed agreement (the revision's content and hash, and
+      admin_reference and admin_remarks as they stand); one goal per agreed goal (position from 1, agreed wording,
+      INCOMPLETE); candidate FORMED; request disposition FORMED (left to this task by TASK-08); the audit entries; both
+      participants' notifications. Audit (ADR-007): action FormationDecided with the candidate, the revision, its hash and
+      outcome APPROVED or REJECTED on the FormationDecision (new value outcome) and, for an approval, on the Candidate
+      (status DRAFTING to FORMED), the Relationship (its formation values, formedAgreementId, goalCount: the first entry of
+      its history) and the MentorshipRequest (disposition OPEN to FORMED). Notifications: TASK-05's FormationDecided to
+      both participants, ArrangeFirstSession or ReviseDraft.
+    - >-
+      For TASK-11: the relationship starts at version 1 (the column default). The formation view shows the current
+      State, Status and IsActive but carries the candidate's version as its ETag, so the relationship view and edit
+      command should carry the relationship's own version (ADR-005). The formation entry on the Relationship record holds
+      its initial values; later AttributeChanged entries follow it.
+    - >-
+      For TASK-12: goals are created INCOMPLETE with positions from 1 and the agreed wording, bound to the relationship
+      and its formed agreement. For tests, FormationApi (Outcome, Decisions, BothAcceptedAsync, BothAcceptAsync,
+      DraftingWithAsync for a second approved mentor, DecideAsync, TryDecideAsync) forms relationships through the API;
+      DraftApi.FormAsync still seeds a formed state directly for TASK-09's tests.
+  changed_paths:
+    - src/Mentor.Core/Formation/FormationRules.cs
+    - src/Mentor.Core/Formation/FormationRecords.cs
+    - src/Mentor.Api/Formation/FormationViews.cs
+    - src/Mentor.Api/Formation/Formations.cs
+    - src/Mentor.Api/Formation/FormationEndpoints.cs
+    - src/Mentor.Api/Hosting/ApiHost.cs
+    - tests/Mentor.Tests.Unit/Formation/FormationRulesTests.cs
+    - tests/Mentor.Tests.Unit/Formation/FormationRecordsTests.cs
+    - tests/Mentor.Tests.Unit/Formation/FormationBodiesTests.cs
+    - tests/Mentor.Tests.Integration/Formation/FormationApi.cs
+    - tests/Mentor.Tests.Integration/Formation/FormationTests.cs
+    - tests/Mentor.Tests.Integration/Formation/FormationPrerequisiteTests.cs
+    - tests/Mentor.Tests.Integration/Requests/MentorshipRequestTests.cs
