@@ -1,0 +1,157 @@
+schema_version: 1
+task_state:
+  task: TASK-07-MENTOR-REGISTRY
+  status: done
+  work_baseline: baselines/work/WORK-0001.yaml
+  started: 2026-11-09T07:44:42Z
+  updated: 2026-11-09T08:25:02Z
+  verification:
+    - control: control://verification/build
+      result: PASS
+      command: dotnet build src/Mentor.slnx --no-incremental
+      note: >-
+        Run on execute/orchestrated at 5bc6523 (TASK-04 done): 5 projects with TreatWarningsAsErrors and NuGet audit;
+        0 warnings, 0 errors. No package was added and no entity, configuration or migration changed (TASK-02's
+        mentor_profile table already holds the profile): dotnet ef migrations has-pending-model-changes --no-build
+        reported no change since the last migration.
+    - control: control://verification/unit-test
+      result: PASS
+      command: dotnet test src/Mentor.slnx
+      note: >-
+        Full suite on the final tree, run twice (before and, after a clean rebuild, after the mutation runs):
+        Mentor.Tests.Unit 125/125 (113 after TASK-04, 12 with this task); Mentor.Tests.Integration 307/307 (286 after
+        TASK-04, 21 with this task) against PostgreSQL 17 via Testcontainers, including every TASK-01 to TASK-06 test, the
+        new ones through the API as Program composes it under both identity schemes with roles resolved from the
+        database. Three mutation runs, each restored before the next: (A) discovery and the pending list ignoring the
+        decision, so pending profiles were shown, failed 7 tests (both discovery theories, the plain-query test, both
+        approval theories and both pending-list theories); (B) removing the pre-check and the status guard of the
+        decision statement, so a decided application could be decided again, failed 5 (both approval and both decline
+        theories and the simultaneous-decisions test); (C) removing the approve endpoint's matrix permission failed 11
+        (TASK-01's endpoint guard under both modes and every decision test, default deny refusing the administrator
+        too). Nothing else failed in any run.
+  acceptance:
+    # Several criteria are shared with other tasks; the notes give this task's share and the test that shows it.
+    - criterion: AC-FR-007-01
+      note: >-
+        POST /api/mentor-applications is open to any authenticated employee (mentor-application.create, AnyEmployee) who
+        has no application; GET /api/mentor-profiles/me answers 404 "No mentor application" for one who has not applied,
+        which is how a client knows the action is available. A second application, an applicant's or an approved
+        mentor's, is 409 "Already applied" and changes nothing. A caller with no employee record yet is answered 409
+        "No employee profile yet" and applies once their own employee profile has created the record
+        (MentorRegistryTests).
+    - criterion: AC-FR-008-01
+      note: >-
+        A pending profile, and a declined one, is absent from GET /api/mentors for every caller, and GET
+        /api/mentor-profiles/{id} on it is 403 for anyone but its owner and Talent Management (MentorRegistryTests,
+        MentorApplicationDecisionTests).
+    - criterion: AC-FR-008-02
+      note: >-
+        POST /api/mentor-applications/{id}/approve by Talent Management puts the profile into discovery and gives the
+        applicant the Mentor role from their next request; the approval status, deciding administrator and server time are
+        on the profile (MentorApplicationDecisionTests). Approval alone, written straight to the row, has the same effect
+        on discovery (MentorRegistryTests).
+    - criterion: AC-FR-009-01
+      note: >-
+        The Mentor caller, with three relationships (two digitally formed, one historical), is listed in discovery
+        (MentorRegistryTests, Discovery_lists_every_approved_mentor...).
+    - criterion: AC-FR-009-02
+      note: >-
+        The module holds no capacity rule: neither the profile nor discovery carries a count or a limit, so there is
+        nothing for a new request to hit. The selection of a discoverable mentor is TASK-08.
+    - criterion: AC-FR-009-03
+      note: >-
+        The profile has no availability flag and discovery is approval_status = 'APPROVED' and nothing else, ordered by
+        display name; the view has exactly the thirteen profile fields and no relationship count (MentorRegistryTests).
+    - criterion: AC-FR-010-01
+      note: >-
+        PUT /api/mentor-profiles/me by an applicant or an approved mentor changes the biography and the three attributes
+        and nothing else; a body naming the approval is refused with 400 and the row keeps its decision; nobody else
+        reaches the route, and there is no route by id (MentorRegistryTests).
+    - criterion: AC-FR-010-02
+      note: >-
+        An employee reads the edited attributes on GET /api/mentor-profiles/{id} and in GET /api/mentors for a
+        discoverable mentor, identically (MentorRegistryTests).
+    - criterion: AC-FR-011-01
+      note: >-
+        roleTitle, industryExperience and mentoringExperience are separate members of the details, the edit body, the
+        view and the columns, each trimmed and each blank meaning none (MentorProfileDetailsTests, MentorRegistryTests).
+    - criterion: AC-FR-012-01
+      note: >-
+        GET /api/mentors lists several approved mentors with their profiles and display names, and GET
+        /api/mentor-profiles/{id} opens each of them for any employee, a newcomer included (MentorRegistryTests). The
+        screen is TASK-15.
+    - criterion: AC-FR-013-01
+      note: >-
+        Discovery is a filtered join ordered by display name; the backend assemblies reference no AI, ML or inference
+        library and the configuration has no such section (MentorRegistryTests,
+        Discovery_is_a_plain_query_with_no_inference_or_ranking_service; ADR-014).
+    - criterion: AC-BR-001-01
+      note: >-
+        Any employee, an administrator included, submits an application under either identity scheme, and only profiles
+        Talent Management approved appear in discovery (MentorRegistryTests).
+    - criterion: AC-BR-002-01
+      note: >-
+        Discovery's share: an approved mentor with three existing relationships is listed, and the module imposes no
+        limit for the selection to meet; recording the selection is TASK-08.
+    - criterion: AC-DR-002-01
+      note: >-
+        The view carries the employee (id, display name, level/title), biography, role/title, industry experience,
+        mentoring experience and the approval with its decided-by and decided-at, and discovery returns approved profiles
+        only (MentorRegistryTests). The schema share is TASK-02.
+  notes:
+    - >-
+      Module layout follows TASK-06: endpoints in src/Mentor.Api/MentorRegistry/MentorRegistryEndpoints.cs
+      (AddMentorRegistry/MapMentorRegistry on the "// Modules." lines of ApiHost.cs), the commands and queries in the
+      scoped MentorApplications service, the views and the strict edit body in MentorProfileView.cs, and the pure rule
+      MentorProfileDetails.TryCreate (biography required, 2000 characters; role/title 100; industry and mentoring
+      experience 2000; blank means none) in Mentor.Core.MentorRegistry, unit-tested.
+    - >-
+      Routes: POST /api/mentor-applications (201, Location /api/mentor-profiles/{id}); GET
+      /api/mentor-applications/pending (Talent Management, oldest first); POST /api/mentor-applications/{id}/approve and
+      /decline (Talent Management, empty body); GET and PUT /api/mentor-profiles/me; GET /api/mentor-profiles/{id}; GET
+      /api/mentors (every approved profile, by display name). Problem titles are constants on MentorRegistryEndpoints:
+      "No employee profile yet" (409), "Already applied" (409), "No mentor application" (404), "Application already
+      decided" (409). Every response is the one MentorProfileView, whose displayName and levelTitle come from the
+      employee row, so a protégé sees who a discoverable mentor is without employee-profile.read.
+    - >-
+      The decision command (DecideAsync) is the pattern for a state transition that must be taken once: an explicit
+      transaction (READ COMMITTED, ADR-013); the head read and the matrix check; then ExecuteUpdateAsync with the
+      expected status in its WHERE, so two administrators deciding at once end with one decision and the other told 409
+      (the second statement blocks on the row lock, re-evaluates, changes nothing); approval_decided_at set to
+      DateTimeOffset.UtcNow, which Npgsql translates to now(), so the profile's decided_at, its updated_at (guard_update
+      trigger), the audit entry's occurred_at and the notification's created_at all carry the transaction's server
+      time; then the row re-read, AuditTrail.Append (MentorApplicationDecided on MENTOR_PROFILE, prior and new
+      approvalStatus/approvalDecidedByEmployeeId/approvalDecidedAt, outcome APPROVED or DECLINED),
+      NotificationEvents.Raise(WorkflowNotifications.MentorApplicationDecided), one SaveChangesAsync and the commit.
+      No concurrency token was added to the model, so no migration.
+    - >-
+      One application per employee (unique index on employee_id, ADR-005), checked before the insert and caught on a
+      racing insert. A declined applicant keeps the Applicant role, still reads and edits their profile, and cannot
+      apply again: the architecture names no re-application or re-decision flow, and a decided row is never decided
+      again (its decision evidence would be overwritten). If the product wants declined applicants to reapply, that is a
+      new rule for the Work definition, not a module choice.
+    - >-
+      A caller without an employee record (never opened their profile) is refused with 409 rather than given a record
+      here, as TASK-06 asked; the frontend (TASK-15) opens GET /api/employees/me right after sign-in, so the case is a
+      direct API call. For the decision the same refusal protects AuditTrail.Append, which needs the administrator's
+      employee record.
+    - >-
+      For TASK-08: candidate.create selects a discoverable mentor, so the command should require the mentor's
+      MentorProfile.ApprovalStatus == Approved (ProtectedRecord.Of(profile).Discoverable says the same) and nothing
+      about their relationship count (BR-002). For TASK-15: GET /api/mentor-profiles/me (200 or 404 "No mentor
+      application") tells whether to offer the registration action; the session's roles tell applicant from mentor.
+    - >-
+      Test support added: tests/Mentor.Tests.Integration/MentorRegistry/MentorRegistryApi.cs (routes, a complete
+      application body, profile-row lookups, MentorAsync to seed an approved or declined mentor who is not a caller).
+      WorkflowApi's callers already give a pending Applicant and an approved Mentor.
+  changed_paths:
+    - src/Mentor.Core/MentorRegistry/MentorProfileDetails.cs
+    - src/Mentor.Api/MentorRegistry/MentorProfileView.cs
+    - src/Mentor.Api/MentorRegistry/MentorApplications.cs
+    - src/Mentor.Api/MentorRegistry/MentorRegistryEndpoints.cs
+    - src/Mentor.Api/Hosting/ApiHost.cs
+    - tests/Mentor.Tests.Unit/MentorRegistry/MentorProfileDetailsTests.cs
+    - tests/Mentor.Tests.Unit/MentorRegistry/MentorProfileEditTests.cs
+    - tests/Mentor.Tests.Integration/MentorRegistry/MentorRegistryApi.cs
+    - tests/Mentor.Tests.Integration/MentorRegistry/MentorRegistryTests.cs
+    - tests/Mentor.Tests.Integration/MentorRegistry/MentorApplicationDecisionTests.cs

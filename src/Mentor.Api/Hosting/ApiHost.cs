@@ -4,6 +4,7 @@ using Mentor.Api.Authorisation;
 using Mentor.Api.Employees;
 using Mentor.Api.Identity;
 using Mentor.Api.Meetings;
+using Mentor.Api.MentorRegistry;
 using Mentor.Api.Notifications;
 using Mentor.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Cors.Infrastructure;
@@ -36,6 +37,7 @@ public static class ApiHost
         // Modules.
         services.AddAuditTrail(); // COMP-AUDIT-TRAIL (ADR-007)
         services.AddEmployeeProfiles(); // COMP-EMPLOYEE-PROFILE
+        services.AddMentorRegistry(); // COMP-MENTOR-REGISTRY
         services.AddNotificationEvents(); // COMP-MEETINGS-NOTIFICATIONS
         services.AddProblemDetails();
         services.AddExceptionHandler<RedactingExceptionHandler>();
@@ -74,6 +76,7 @@ public static class ApiHost
         // Modules.
         app.MapAuditTrail(); // COMP-AUDIT-TRAIL (ADR-007)
         app.MapEmployeeProfiles(); // COMP-EMPLOYEE-PROFILE
+        app.MapMentorRegistry(); // COMP-MENTOR-REGISTRY
         app.MapMeetings(); // COMP-MEETINGS-NOTIFICATIONS
         app.MapNotifications();
         if (app.Configuration.GetValue<bool>(OpenApiSwitch))
