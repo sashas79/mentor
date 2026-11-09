@@ -1,13 +1,290 @@
 schema_version: 1
 task_state:
   task: TASK-09-AGREEMENT-DRAFTING
-  status: in_progress
+  status: done
   work_baseline: baselines/work/WORK-0001.yaml
   started: 2026-11-09T09:38:46Z
-  updated: 2026-11-09T10:01:33Z
-  verification: []
+  updated: 2026-11-09T10:57:40Z
+  verification:
+    - control: control://verification/build
+      result: PASS
+      command: dotnet build src/Mentor.slnx --no-incremental
+      note: >-
+        Run on execute/orchestrated at a33565c (the TASK-09 checkpoint commit, identical to the final tree apart from this
+        file), after the mutation run with every mutated file verified restored: 5 projects with TreatWarningsAsErrors;
+        0 warnings, 0 errors. No package was added and no entity, configuration or migration changed (TASK-02's
+        agreement_revision, agreement_acceptance and permitted_change tables and mentor_selection's current_revision_id,
+        admin_reference and admin_remarks hold everything): dotnet ef migrations has-pending-model-changes --no-build
+        --project Mentor.Infrastructure --startup-project Mentor.Api, run from src/ (which holds dotnet-tools.json),
+        reported no change since the last migration.
+    - control: control://verification/unit-test
+      result: PASS
+      command: dotnet test src/Mentor.slnx
+      note: >-
+        Full suite on the same tree after the clean rebuild: Mentor.Tests.Unit 222/222 (158 after TASK-08, 64 with this
+        task); Mentor.Tests.Integration 372/372 (343 after TASK-08, 29 with this task) against PostgreSQL 17 via
+        Testcontainers, including every TASK-01 to TASK-08 test (TASK-08's route guard in MentorshipRequestTests now lists
+        the five draft routes), the new ones through the API as Program composes it, the acceptance and annex tests under
+        both identity schemes. Eighteen mutations, each restored by rewriting the original text and each built with
+        --no-incremental, each failed at least one test (unit / agreement integration tests failed): revision not made
+        current 0/22; superseded revision acceptable 0/1; acceptance without the revision's hash 0/1; second acceptance
+        by a participant 0/1; identical content makes a replacement 0/1; reset names nothing invalidated 0/1; protégé
+        party written as the mentor 0/1; annex change resets the draft 0/3; revision checked as draft.read 0/1; annex
+        checked as accept 0/8; other participant always asked to accept 0/1; every acceptance Applicable 0/5; step counts
+        superseded acceptances 1/5; formed candidate admits draft operations 1/1; content omits the policy 1/1; end date
+        before start date allowed 1/1; uppercase hexadecimal escapes 1/0; members in insertion order 6/0.
+  acceptance:
+    # Several criteria are shared with other tasks; the notes give this task's share and the test that shows it.
+    - criterion: AC-FR-022-01
+      note: >-
+        A revision's content holds the identified participants (employee id and display name, written by the server from
+        the candidate), the fixed policy (voluntary partnership, SMART goals, avoiding cancellation, agreeing the next
+        meeting, regular review, confidentiality, honest constructive feedback, openness to feedback, amicable
+        conclusion), the terms (duration, dates, meeting interval and length, between-meeting contact, missed-meeting
+        arrangements, review date), goals, barriers, contingencies and each participant's responsibilities
+        (DraftContentTests, AgreementContentTests). The policy wording is authored from the BRS because SRC-03 is not in
+        the Pack (see notes).
+    - criterion: AC-FR-022-02
+      note: >-
+        GET /api/candidates/{id}/draft and GET .../draft/revisions/{revisionId} return the complete content, policy text
+        included, with its content hash, to the protégé, the mentor and Talent Management before anyone accepts; other
+        employees are 403. An acceptance must name that hash (DraftContentTests, DraftAcceptanceTests).
+    - criterion: AC-FR-023-01
+      note: >-
+        SixMonths, TwelveMonths and TwelvePlusMonths are each saved as a revision and read back
+        (DraftContentTests.Each_duration_category_is_saved_with_either_date_both_or_neither, AgreementContentTests).
+    - criterion: AC-FR-023-02
+      note: >-
+        A TwelvePlusMonths revision is saved with no end date, and with neither date, in the same test; no category
+        requires an end date.
+    - criterion: AC-FR-024-01
+      note: >-
+        Every duration category is saved with neither date, a start only, an end only and both: twelve revisions through
+        the API (DraftContentTests) and the unit theory in AgreementContentTests.
+    - criterion: AC-FR-024-02
+      note: >-
+        Each entered date is stored in the content as yyyy-MM-dd and returned exactly as entered (DraftContentTests). The
+        register and export that report them are TASK-14.
+    - criterion: AC-FR-025-01
+      note: >-
+        terms carries meetingIntervalWeeks (1-52), approximateMinutesPerMeeting (1-480), betweenMeetingContact {interval
+        1-365, unit Days or Weeks}, missedMeetingArrangements and reviewDate, each optional and validated
+        (DraftContentTests, AgreementContentTests).
+    - criterion: AC-FR-025-02
+      note: >-
+        The policy clauses AVOID_CANCELLING, AGREE_NEXT_MEETING and REGULAR_REVIEW (every three to six months) are in
+        every revision's content (AgreementContentTests.The_policy_states_each_fixed_commitment_of_the_agreement_once);
+        nothing schedules, reminds or enforces them (DraftAcceptanceTests: no reminder is raised).
+    - criterion: AC-FR-026-01
+      note: >-
+        Goals (at least one), the SMART_GOALS clause, barriers and contingencies (either may be empty), and
+        responsibilities.mentor and responsibilities.protege (at least one each) are in the same hashed content that is
+        accepted (DraftContentTests, AgreementContentTests).
+    - criterion: AC-FR-026-02
+      note: >-
+        CONFIDENTIALITY, HONEST_CONSTRUCTIVE_FEEDBACK, OPENNESS_TO_FEEDBACK and AMICABLE_CONCLUSION are clauses of the
+        accepted content. No member stores discussion notes (a body naming notes is 400) and nothing completes a
+        relationship (DraftContentTests).
+    - criterion: AC-FR-027-01
+      note: >-
+        Each acceptance row and AcceptanceRecorded entry names the participant who accepted, under the scheme they signed
+        in with; the test runs under Entra and under the labelled simulated scheme
+        (DraftAcceptanceTests.Each_participant_accepts_the_current_revision_for_themselves). The simulated run
+        demonstrates separate acceptances; it is not production identity acceptance.
+    - criterion: AC-FR-027-02
+      note: >-
+        Writing a revision accepts nothing, and one participant's acceptance leaves the other's absent: step 2 after the
+        protégé accepts, step 3 only after the mentor's own acceptance (DraftContentTests, DraftAcceptanceTests).
+    - criterion: AC-FR-027-03
+      note: >-
+        The step counts only acceptances of the current revision. An acceptance of a superseded revision reads
+        Superseded, and the superseded revision cannot be accepted (409 "Revision superseded")
+        (DraftAcceptanceTests.An_acceptance_of_superseded_content_never_counts_with_one_of_the_current_content,
+        AgreementWorkflowTests).
+    - criterion: AC-FR-027-04
+      note: >-
+        After a replacement both earlier acceptances read Superseded and the step is 1; step 3 is reached only when both
+        participants accept the replacement
+        (DraftAcceptanceTests.A_replacement_after_acceptance_returns_the_draft_to_step_1_and_needs_both_acceptances_anew).
+    - criterion: AC-FR-028-01
+      note: >-
+        Talent Management reads every acceptance of the draft, current and superseded, each with participant, accepted
+        at, revision id and number, content hash and applicability, and the AcceptanceRecorded and RevisionCreated
+        entries with actor and scheme in the candidate evidence view (DraftAcceptanceTests).
+    - criterion: AC-FR-028-02
+      note: >-
+        Applicability is derived per acceptance (ApplicabilityRule: Applicable, Superseded, Formed, Withdrawn);
+        superseded acceptances stay listed as Superseded beside the Applicable ones of the current revision
+        (DraftAcceptanceTests, DraftCommandTests).
+    - criterion: AC-FR-029-01
+      note: >-
+        No route edits or removes a revision or an acceptance (PUT, PATCH and DELETE fail for every caller) and the stored
+        content is byte-identical afterwards; a replacement is a new revision with its own id and number
+        (DraftCommandTests.No_route_edits_or_removes_an_accepted_revision_or_its_acceptance). The database refuses such
+        statements too (TASK-02's ImmutabilityTests).
+    - criterion: AC-FR-029-02
+      note: >-
+        An acceptance of another revision is Superseded and never counts toward step 3; an acceptance must name the
+        current revision's exact hash (422 "Content mismatch" otherwise) (DraftAcceptanceTests).
+    - criterion: AC-FR-029-03
+      note: >-
+        A replacement before formation makes the earlier acceptances and draft decisions inapplicable, returns the draft
+        to step 1 and needs both acceptances anew (DraftAcceptanceTests).
+    - criterion: AC-FR-029-04
+      note: >-
+        After the first acceptance a substantive change creates revision 2 with revision 1 as parent; revision 1's stored
+        content, hash and acceptances are unchanged and still readable, and the step is 1 (DraftAcceptanceTests).
+    - criterion: AC-FR-055-01
+      note: >-
+        Both participants, and Talent Management, read the agreed meeting interval and approximate minutes per meeting in
+        the draft content (DraftContentTests). The formed agreement keeps the same content (TASK-10).
+    - criterion: AC-FR-067-01
+      note: >-
+        After acceptance a substantive change produces the next revision at step 1 with no applicable acceptance; its
+        RevisionCreated entry carries the outcome RESET_TO_STEP_1 and names the invalidated acceptances and the draft's
+        formation decision (DraftAcceptanceTests).
+    - criterion: AC-FR-067-02
+      note: >-
+        Both participants accept the replacement independently, each by their own command, before step 3
+        (DraftAcceptanceTests). Formation approval, which requires step 3, is TASK-10.
+    - criterion: AC-FR-067-03
+      note: >-
+        Draft A's acceptances and its rejected formation decision remain in the candidate evidence view, read Superseded
+        and are named in the reset entry; none applies to draft B
+        (DraftAcceptanceTests.A_replacement_is_audited_with_the_acceptances_and_decisions_it_made_inapplicable).
+    - criterion: AC-FR-068-01
+      note: >-
+        A Talent Management annex change (AdministrativeReference or AdministrativeRemark) after both acceptances is
+        recorded and audited, and leaves the revision, its hash and both acceptances unchanged and applicable at step 3
+        (AdministrativeAnnexTests).
+    - criterion: AC-FR-068-02
+      note: >-
+        Only the two enumerated bases exist, each permitting one annex field; a body naming another basis, a field or any
+        content member is 400 and nothing is recorded. Every participant submission is a revision, and a replacement
+        resets (AdministrativeAnnexTests, AnnexChangeTests).
+    - criterion: AC-FR-068-03
+      note: >-
+        Goals, terms and parties are content and change only through a revision, which resets the draft; the annex
+        exception carries none of them (400), and a revision body cannot name its parties or policy (400)
+        (AdministrativeAnnexTests, DraftContentTests).
+    - criterion: AC-FR-069-01
+      note: >-
+        Each supersession is a new revision with parent, number and current flag; the RevisionCreated entry records
+        actor, time, prior and new current revision, the outcome RESET_TO_STEP_1 and the invalidated acceptance and
+        decision ids, which stay Superseded (DraftAcceptanceTests).
+    - criterion: AC-E2E-05
+      note: >-
+        Drafting share: one participant accepts draft A; a substantive change produces draft B at step 1 and makes every
+        draft A decision Superseded without deleting it; both accept B (step 3). Once formed (seeded here; the approval is
+        TASK-10) no draft operation is admitted and the formed agreement holds exactly the accepted content
+        (DraftAcceptanceTests, DraftCommandTests).
+    - criterion: AC-BR-010-01
+      note: >-
+        SixMonths, TwelveMonths and TwelvePlusMonths are saved, TwelvePlusMonths without an end date (DraftContentTests).
+    - criterion: AC-BR-011-01
+      note: >-
+        Every duration category is saved with either, both or neither of StartDate and EndDate (DraftContentTests).
+    - criterion: AC-BR-012-01
+      note: >-
+        Each acceptance is its own row and audit entry by its participant; no body accepts a signature or a scanned
+        document (400) (DraftAcceptanceTests, DraftContentTests). Formation's use of the two acceptances is TASK-10.
+    - criterion: AC-BR-017-01
+      note: >-
+        The meeting and review commitments are policy clauses and terms of the content; the only notifications are the
+        ADR-009 next-action events, none of them a reminder (DraftContentTests, DraftAcceptanceTests).
+    - criterion: AC-BR-018-01
+      note: >-
+        The CONFIDENTIALITY clause is in every revision; no content member and no draft body holds discussion notes (a
+        notes member is 400) (DraftContentTests). Goal and progress visibility is TASK-12 and TASK-14.
+    - criterion: AC-BR-019-01
+      note: >-
+        An acceptance of a superseded revision reads Superseded, never counts toward step 3, and the superseded revision
+        cannot be accepted (DraftAcceptanceTests, AgreementWorkflowTests).
+    - criterion: AC-BR-020-01
+      note: >-
+        Each annex change is a permitted_change row and an AnnexChanged entry with basis, actor, scheme, time, field and
+        prior and new value; the content and its hash are unchanged (AdministrativeAnnexTests).
+    - criterion: AC-DR-006-01
+      note: >-
+        Each revision has its own id, number and parent; a replacement never modifies an earlier revision's stored content
+        (byte-identical in the database), and a formed candidate's formed agreement holds exactly the accepted content
+        (DraftAcceptanceTests, DraftCommandTests).
+    - criterion: AC-DR-007-01
+      note: >-
+        Each acceptance names its participant (protégé or mentor), the revision and that revision's content hash, once per
+        participant per revision; superseded acceptances stay listed and audited as Superseded (DraftAcceptanceTests).
+    - criterion: AC-DR-015-01
+      note: >-
+        A replacement is an agreement_revision row with a RevisionCreated entry (RESET_TO_STEP_1); a permitted edit is a
+        permitted_change row with an AnnexChanged entry (no revision, no outcome); neither alters the accepted revision
+        (AdministrativeAnnexTests, DraftAcceptanceTests).
+    - criterion: AC-NFR-005-01
+      note: >-
+        After acceptance and a replacement, revision 1's content is byte-identical, its acceptances and the draft's
+        decision read Superseded, step 3 needs new acceptances, and draft operations never touch a formed agreement
+        (DraftAcceptanceTests, DraftCommandTests).
+    - criterion: AC-E2E-09
+      note: >-
+        After both acceptances Talent Management's annex change is audited with its basis and leaves step 3 and both
+        acceptances applicable; participants and other employees are refused (403), and a change carrying content or
+        naming no permitted basis is refused (400) (AdministrativeAnnexTests).
+    - criterion: AC-BR-023-01
+      note: >-
+        Talent Management records a reference and a remark after acceptance without reset; each change is audited with
+        actor, time, basis and prior and new value, and the accepted snapshot is unchanged (AdministrativeAnnexTests).
+    - criterion: AC-BR-023-02
+      note: >-
+        The protégé, the mentor, an applicant and a newcomer are refused (403; anonymous 401) on the annex route and
+        nothing is recorded; a participant's change is a revision that resets (AdministrativeAnnexTests).
   notes:
-    - Implementation compiles (src/Mentor.slnx, 0 warnings, 0 errors); tests not yet written.
+    - >-
+      Module layout follows TASK-06 to TASK-08. Mentor.Core.Agreements holds the pure, unit-tested rules: CanonicalJson
+      (RFC 8785), AgreementText (CRLF to LF, NFC, trim, control characters), AgreementPolicy (the fixed clauses),
+      AgreementContent and AgreementDraftDetails (the content document and its validation), AgreementDraftForm (strict
+      request body), AgreementWorkflow (which status admits draft operations; the derived step) and AnnexChange.
+      Mentor.Api.Agreements holds the scoped AgreementDrafts service, the views and strict bodies
+      (AgreementDraftViews.cs) and AgreementDraftEndpoints (AddAgreementDrafting/MapAgreementDrafting on ApiHost's module
+      lines). The ADR-005 version claim moved from Candidates.DecideAsync into CandidateVersion.ClaimAsync, which both
+      modules use.
+    - >-
+      Routes (every POST needs If-Match; every response carries the candidate version as ETag): GET
+      /api/candidates/{candidateId}/draft; POST .../draft/revisions (201 with Location and ETag); GET
+      .../draft/revisions/{revisionId}; POST .../draft/revisions/{revisionId}/acceptances, body { contentHash }; POST
+      .../draft/annex, body { basis, value }. New problem titles: "Revision superseded" (409), "Content mismatch" (422),
+      "Content unchanged" (409), "Annex unchanged" (409); reused: "Version required" (428), "Candidate changed" (409),
+      "Not possible in the candidate's current state" (409), "No employee profile yet" (409).
+    - >-
+      Content contract (CONTRACT-AGREEMENT-CONTENT): the stored document is RFC 8785 canonical JSON and content_hash is
+      the SHA-256 hex of its UTF-8 bytes, so anyone can recompute it. The server writes the parties (employee id and
+      display name) and the policy; participants submit terms, goals, barriers, contingencies and responsibilities only.
+      The document uses stored enumeration values (SIX_MONTHS, WEEKS), dates as yyyy-MM-dd and explicit nulls; the API
+      returns typed content with PascalCase enumerations. Text is normalised, so the same words make the same hash, and
+      resubmitting the current content is 409 "Content unchanged".
+    - >-
+      For the operator to confirm: the policy clause wording is authored from the BRS description because SRC-03 (the
+      original agreement) is not supplied, and Talent Management should check it against the original; the
+      between-meeting contact limit is modelled as { interval, unit DAYS or WEEKS }, an interpretation of "the source's
+      weeks/days wording". Changing either is a code change in AgreementPolicy or AgreementContent and alters future
+      hashes only.
+    - >-
+      Administrative annex: Talent Management only, from the start of drafting until the candidate leaves DRAFTING
+      (ADR-015); reference up to 100 characters on one line, remarks up to 500 with line breaks; a blank value clears the
+      field, and an unchanged value is 409. The annex belongs to the candidate, not a revision, so it survives a
+      replacement. Participants see it, labelled "Administrative, not part of the accepted agreement".
+    - >-
+      Audit (ADR-007): RevisionCreated (record AgreementRevision; outcome RESET_TO_STEP_1 and Invalidated =
+      InapplicableEvidenceAsync(prior current revision) only for a replacement), AcceptanceRecorded (record
+      AgreementAcceptance; outcome ACCEPTED; participantEmployeeId), AnnexChanged (record PermittedChange; CandidateId
+      only; field and basis). Notifications (ADR-009): RevisionCreated and AcceptanceRecorded go to the other participant
+      with AcceptCurrentRevision, or None once both have accepted; Talent Management's pending formation work stays a
+      query.
+    - >-
+      For TASK-10: AgreementWorkflow.StepOf returning 3 means both participants accepted the current revision. Read the
+      terms, dates, duration and goals with AgreementContent.Parse(revision.Content), and copy the revision content
+      byte-for-byte into formed_agreement (DraftApi.FormAsync seeds that shape: APPROVED decision, status FORMED with
+      version + 1, relationship, formed agreement). Claim the candidate version with CandidateVersion.ClaimAsync and
+      check under that lock that the decision's revision is still current, so a replacement racing an approval leaves
+      exactly one of them (as DraftCommandTests shows for a replacement racing an acceptance).
   changed_paths:
     - src/Mentor.Core/Agreements/CanonicalJson.cs
     - src/Mentor.Core/Agreements/AgreementText.cs
@@ -22,3 +299,14 @@ task_state:
     - src/Mentor.Api/Requests/CandidateVersion.cs
     - src/Mentor.Api/Requests/Candidates.cs
     - src/Mentor.Api/Hosting/ApiHost.cs
+    - tests/Mentor.Tests.Unit/Agreements/CanonicalJsonTests.cs
+    - tests/Mentor.Tests.Unit/Agreements/AgreementContentTests.cs
+    - tests/Mentor.Tests.Unit/Agreements/AgreementWorkflowTests.cs
+    - tests/Mentor.Tests.Unit/Agreements/AnnexChangeTests.cs
+    - tests/Mentor.Tests.Unit/Agreements/DraftBodiesTests.cs
+    - tests/Mentor.Tests.Integration/Agreements/DraftApi.cs
+    - tests/Mentor.Tests.Integration/Agreements/DraftContentTests.cs
+    - tests/Mentor.Tests.Integration/Agreements/DraftAcceptanceTests.cs
+    - tests/Mentor.Tests.Integration/Agreements/AdministrativeAnnexTests.cs
+    - tests/Mentor.Tests.Integration/Agreements/DraftCommandTests.cs
+    - tests/Mentor.Tests.Integration/Requests/MentorshipRequestTests.cs
