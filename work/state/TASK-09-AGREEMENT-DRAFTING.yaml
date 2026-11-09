@@ -1,0 +1,24 @@
+schema_version: 1
+task_state:
+  task: TASK-09-AGREEMENT-DRAFTING
+  status: in_progress
+  work_baseline: baselines/work/WORK-0001.yaml
+  started: 2026-11-09T09:38:46Z
+  updated: 2026-11-09T10:01:33Z
+  verification: []
+  notes:
+    - Implementation compiles (src/Mentor.slnx, 0 warnings, 0 errors); tests not yet written.
+  changed_paths:
+    - src/Mentor.Core/Agreements/CanonicalJson.cs
+    - src/Mentor.Core/Agreements/AgreementText.cs
+    - src/Mentor.Core/Agreements/AgreementPolicy.cs
+    - src/Mentor.Core/Agreements/AgreementContent.cs
+    - src/Mentor.Core/Agreements/AgreementDraftForm.cs
+    - src/Mentor.Core/Agreements/AgreementWorkflow.cs
+    - src/Mentor.Core/Agreements/AnnexChange.cs
+    - src/Mentor.Api/Agreements/AgreementDraftViews.cs
+    - src/Mentor.Api/Agreements/AgreementDrafts.cs
+    - src/Mentor.Api/Agreements/AgreementDraftEndpoints.cs
+    - src/Mentor.Api/Requests/CandidateVersion.cs
+    - src/Mentor.Api/Requests/Candidates.cs
+    - src/Mentor.Api/Hosting/ApiHost.cs

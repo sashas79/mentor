@@ -263,12 +263,7 @@ public sealed class Candidates(MentorDbContext db, CallerResolver callers, IAuth
         }
 
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        // Zero rows means another decision committed first. Otherwise the row lock this takes holds every later read of
-        // the transaction to a state no other command can change before it commits.
-        var claimed = await db.MentorSelections
-            .Where(row => row.Id == id && row.Version == decidedOn)
-            .ExecuteUpdateAsync(set => set.SetProperty(row => row.Version, row => row.Version + 1), cancellationToken);
-        if (claimed == 0)
+        if (!await CandidateVersion.ClaimAsync(db, id, decidedOn, cancellationToken))
         {
             return Refused(PairingRefusal.Stale);
         }
