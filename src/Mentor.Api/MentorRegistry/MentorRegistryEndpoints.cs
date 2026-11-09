@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Security.Claims;
 using System.Text.Json;
 using Mentor.Api.Authorisation;
+using Mentor.Api.Employees;
 using Mentor.Core.MentorRegistry;
 using Microsoft.AspNetCore.Http.HttpResults;
 
@@ -23,9 +24,6 @@ public static class MentorRegistryEndpoints
     public const string OwnProfileRoute = "/api/mentor-profiles/me";
     public const string ProfileRoute = "/api/mentor-profiles/{id:guid}";
     public const string DiscoveryRoute = "/api/mentors";
-
-    /// <summary>The problem a caller without an employee record gets: their own employee profile creates the record first.</summary>
-    public const string NoEmployeeProfileYet = "No employee profile yet";
 
     /// <summary>The problem a second application gets: an employee applies once.</summary>
     public const string AlreadyApplied = "Already applied";
@@ -94,7 +92,7 @@ public static class MentorRegistryEndpoints
         return outcome.Refusal switch
         {
             MentorRegistryRefusal.None => TypedResults.CreatedAtRoute(outcome.Profile!, GetProfileName, new { id = outcome.Profile!.Id }),
-            MentorRegistryRefusal.NoEmployeeRecord => NoEmployeeRecordProblem(),
+            MentorRegistryRefusal.NoEmployeeRecord => EmployeeRecordRequired.Problem(),
             MentorRegistryRefusal.AlreadyApplied => Conflict(AlreadyApplied, "The employee has applied already; an employee applies once and maintains that one profile."),
             _ => TypedResults.Forbid(),
         };
@@ -164,7 +162,7 @@ public static class MentorRegistryEndpoints
             MentorRegistryRefusal.None => TypedResults.Ok(outcome.Profile!),
             MentorRegistryRefusal.NotFound => TypedResults.NotFound(),
             MentorRegistryRefusal.AlreadyDecided => Conflict(AlreadyDecided, "The application has been approved or declined already; a decision is taken once."),
-            MentorRegistryRefusal.NoEmployeeRecord => NoEmployeeRecordProblem(),
+            MentorRegistryRefusal.NoEmployeeRecord => EmployeeRecordRequired.Problem(),
             _ => TypedResults.Forbid(),
         };
     }
@@ -180,10 +178,6 @@ public static class MentorRegistryEndpoints
         invalid = TypedResults.ValidationProblem(errors.ToDictionary(error => JsonNamingPolicy.CamelCase.ConvertName(error.Key), error => error.Value));
         return false;
     }
-
-    private static ProblemHttpResult NoEmployeeRecordProblem() => Conflict(
-        NoEmployeeProfileYet,
-        "The action is attributed to the caller's employee record, which their own employee profile creates on first access; open or save that profile first.");
 
     private static ProblemHttpResult NoApplicationProblem() => TypedResults.Problem(
         statusCode: StatusCodes.Status404NotFound,

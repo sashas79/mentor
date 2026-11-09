@@ -78,7 +78,7 @@ public sealed class MentorRegistryTests(PostgresServer server)
 
         var refused = await ProblemAssert.IsProblem(HttpStatusCode.Conflict, await api.SendAsync(HttpMethod.Post, ApplicationsRoute, Profile.Newcomer, Details()));
 
-        Assert.Equal(MentorRegistryEndpoints.NoEmployeeProfileYet, refused.Text("title"));
+        Assert.Equal(EmployeeRecordRequired.Title, refused.Text("title"));
         Assert.Equal(before, await api.Db.ScalarAsync<long>(Login.Owner, "SELECT count(*) FROM mentor.mentor_profile"));
         Assert.Equal(0L, await api.Db.ScalarAsync<long>(Login.Owner, "SELECT count(*) FROM mentor.employee WHERE entra_object_id = $1", api.Callers.ObjectId(Profile.Newcomer)));
         var none = await ProblemAssert.IsProblem(HttpStatusCode.NotFound, await api.SendAsync(HttpMethod.Get, OwnRoute, Profile.Newcomer));

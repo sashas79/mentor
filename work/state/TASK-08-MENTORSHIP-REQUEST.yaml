@@ -1,0 +1,188 @@
+schema_version: 1
+task_state:
+  task: TASK-08-MENTORSHIP-REQUEST
+  status: done
+  work_baseline: baselines/work/WORK-0001.yaml
+  started: 2026-11-09T08:28:42Z
+  updated: 2026-11-09T09:03:39Z
+  verification:
+    - control: control://verification/build
+      result: PASS
+      command: dotnet build src/Mentor.slnx --no-incremental
+      note: >-
+        Run on execute/orchestrated at 122cf5c (TASK-07 done), after the mutation runs and with every mutated file
+        verified restored: 5 projects with TreatWarningsAsErrors and NuGet audit; 0 warnings, 0 errors. No package was
+        added and no entity, configuration or migration changed (TASK-02's mentorship_request and mentor_selection tables
+        hold everything): dotnet ef migrations has-pending-model-changes --no-build reported no change since the last
+        migration.
+    - control: control://verification/unit-test
+      result: PASS
+      command: dotnet test src/Mentor.slnx
+      note: >-
+        Full suite on the final tree, run twice (before the mutation runs, and after a clean rebuild that followed them):
+        Mentor.Tests.Unit 158/158 (125 after TASK-07, 33 with this task); Mentor.Tests.Integration 343/343 (307 after
+        TASK-07, 36 with this task) against PostgreSQL 17 via Testcontainers, including every TASK-01 to TASK-07 test (the
+        registry tests re-run after its refusal moved to EmployeeRecordRequired), the new ones through the API as Program
+        composes it, most under both identity schemes. Five mutation runs, each restored before the next, failed exactly
+        the tests guarding their rule: (A) willingness always recorded as the protégé's: 8 (the lifecycle, withdrawal,
+        introduction and substitution theories); (B) the version claim ignoring If-Match: 2 (the stale-version and
+        simultaneous-decision tests); (C) ended candidates still naming their mentor as a reader of the request: 4 (both
+        request-reader theories and both substitution theories); (D) any applicant selectable: 2 (both selection
+        theories); (E) a withdrawal naming no invalidated evidence: 4 (both withdrawal and both substitution theories).
+        The script's own "restored" pass reused the last mutated binaries, because the restored file kept a timestamp
+        older than the build; the clean --no-incremental rebuild and full run above are the verification of the final
+        tree.
+  acceptance:
+    # Several criteria are shared with other tasks; the notes give this task's share and the test that shows it.
+    - criterion: AC-FR-014-01
+      note: >-
+        POST /api/mentorship-requests records the motivation and takes the protégé from the authenticated caller; a body
+        naming a protégé or a disposition is refused with 400 and nothing is submitted (MentorshipRequestTests,
+        PairingBodiesTests). A caller without an employee record is answered 409 "No employee profile yet" until their own
+        employee profile creates it.
+    - criterion: AC-FR-015-01
+      note: >-
+        developmentGoals carries the technical and career aspirations, required and trimmed, stored in development_goals
+        (MentorshipRequestTests, RequestDetailsTests).
+    - criterion: AC-FR-016-01
+      note: >-
+        nontechnicalExpectations is a separate statement, member and column from developmentGoals, each validated on its
+        own (RequestDetailsTests, MentorshipRequestTests).
+    - criterion: AC-FR-017-01
+      note: >-
+        A request keeps its id and its statements after a relationship is formed from it, readable by the protégé, the
+        mentor and Talent Management, and listed with its FORMED candidate; the relationship reaches it only through the
+        candidate. No route edits a request (MentorshipRequestTests).
+    - criterion: AC-FR-018-01
+      note: >-
+        POST /api/mentorship-requests/{id}/candidates by the protégé creates an INVITED candidate naming the request and
+        the selected mentor; it is listed under the request and in both participants' GET /api/candidates
+        (CandidatePairingTests).
+    - criterion: AC-FR-018-02
+      note: >-
+        After the mentor accepts, an introduction is proposed on TASK-05's /api/candidates/{id}/meetings and marked
+        arranged outside the application (refused with 409 before acceptance); it stays with the candidate through drafting
+        and withdrawal, and recording it changes no pairing decision (CandidatePairingTests).
+    - criterion: AC-FR-019-01
+      note: >-
+        The named approved mentor accepts or declines an INVITED candidate (POST .../accept, .../decline); nobody else
+        answers, and a second answer is 409 (CandidatePairingTests).
+    - criterion: AC-FR-019-02
+      note: >-
+        A declined candidate admits no willingness, answer or withdrawal (409), stays DECLINED with no relationship, and
+        the protégé is told to select another mentor (CandidatePairingTests; the database check constraints are TASK-02's
+        CandidateTests).
+    - criterion: AC-FR-020-01
+      note: >-
+        After the protégé's willingness the candidate is still ACCEPTED; only the mentor's second willingness makes it
+        DRAFTING (CandidatePairingTests, PartySubstitutionTests, CandidateLifecycleTests).
+    - criterion: AC-FR-020-02
+      note: >-
+        Each participant's willingness sets only their own column, once; Talent Management and other mentors are refused;
+        the trail attributes every decision to its own actor and scheme at the server time the candidate records for it
+        (CandidatePairingTests).
+    - criterion: AC-FR-021-01
+      note: >-
+        Declined and withdrawn candidates have no relationship row and admit no further decision (CandidatePairingTests).
+    - criterion: AC-FR-021-02
+      note: >-
+        A withdrawn candidate keeps WITHDRAWN, by whom and when, admits no further decision, never becomes a relationship;
+        withdrawn while drafting, its acceptances and rejected formation decision read Withdrawn in the candidate evidence
+        view and the CandidateWithdrawn entry names them as invalidated (CandidatePairingTests).
+    - criterion: AC-BR-021-01
+      note: >-
+        Participants are fixed: no route changes a candidate's mentor (PUT/PATCH are 403), the application's database
+        account cannot (insufficient privilege, also TASK-02 PrivilegeTests), and another mentor is refused while the
+        pairing stands (409). Withdrawing invalidates the old pairing's acceptances and decision; the new pairing starts
+        INVITED with no decisions; no relationship exists for either until formation (PartySubstitutionTests).
+    - criterion: AC-DR-003-01
+      note: >-
+        The request view carries protégé (id and display name), motivation, development goals, nontechnical expectations,
+        submission date and disposition, as a record apart from candidate, agreement and relationship
+        (MentorshipRequestTests). The schema share is TASK-02.
+    - criterion: AC-DR-004-01
+      note: >-
+        The candidate view carries request, both participants, invitation time, mentor response and its time, each
+        willingness time, the withdrawal, the current revision and the version; a declined candidate has no relationship
+        (CandidatePairingTests).
+    - criterion: AC-E2E-11
+      note: >-
+        Before formation the protégé substitutes the mentor by withdrawing (old pairing and draft decisions inapplicable)
+        and selecting the new mentor, who with the protégé decides afresh; the old mentor acts on nothing of the new
+        pairing and reads the request no longer. After formation the request is closed (409 "Request closed") and a new
+        request pairs the new mentor; the formed relationship is untouched (PartySubstitutionTests). The formation steps
+        themselves are TASK-09 and TASK-10.
+  notes:
+    - >-
+      Module layout follows TASK-06 and TASK-07: src/Mentor.Api/Requests/ holds MentorshipRequestEndpoints
+      (AddMentorshipRequests/MapMentorshipRequests on the "// Modules." lines of ApiHost.cs), the scoped
+      MentorshipRequests and Candidates services, the views and strict bodies (PairingViews.cs) and CandidateQueries; the
+      pure rules RequestDetails (three required statements, 4000 characters each) and CandidateLifecycle (which status
+      admits which decision; whose willingness completes mutual willingness) are in Mentor.Core.Requests, unit-tested.
+    - >-
+      Routes: POST and GET /api/mentorship-requests (own, oldest first); GET /api/mentorship-requests/{requestId}; GET
+      and POST /api/mentorship-requests/{requestId}/candidates (list: all for the protégé and Talent Management, only
+      their own for a mentor; POST: the protégé selects, body { mentorEmployeeId }); GET /api/candidates (the caller's
+      participations, oldest first); GET /api/candidates/{candidateId}; POST .../accept, .../decline, .../willingness,
+      .../withdraw with an empty body and If-Match. Problem titles are constants on MentorshipRequestEndpoints: "Version
+      required" (428), "Candidate changed" (409, stale version), "Not possible in the candidate's current state" (409),
+      "Request closed" (409), "Candidate in progress" (409), "Not a discoverable mentor" (422; pending, declined,
+      never-applied and unknown employees answer alike), "Own request" (422).
+    - >-
+      ADR-005 protocol for TASK-09 to TASK-11 to reuse: Mentor.Api.Hosting.VersionTag writes the strong ETag "<version>"
+      and reads If-Match (exactly one strong tag; a wildcard, weak tag or list is 428). Candidates.DecideAsync is the
+      pattern: 404 for an unknown candidate, then the matrix record check (403), then If-Match (428), then one transaction
+      whose first statement is UPDATE mentor_selection SET version = version + 1 WHERE id AND version = If-Match (0 rows:
+      409 "Candidate changed"); then the head re-read under that row lock, the status check (409), the transition by
+      ExecuteUpdateAsync with DateTimeOffset.UtcNow (now(), the transaction time the audit entry and notification also
+      carry), AuditTrail.Append, NotificationEvents.Raise, one SaveChangesAsync, commit. Responses carry the new ETag; list
+      bodies carry version. Tests: WorkflowApi.SendAsync/JsonAsync/StatusAsync take ifMatch; PairingApi.Tag/DecideAsync.
+    - >-
+      Candidate rules taken here: a request holds one candidate that has not ended (INVITED, ACCEPTED, DRAFTING or
+      FORMED) at a time, checked under SELECT ... FOR UPDATE on the request row so two racing selections end with one; a
+      request with a FORMED candidate, or a disposition other than OPEN, is closed to selection (FR-032). Substituting a
+      party is withdraw-then-select, never an automatic withdrawal by the new selection, because ADR-005 requires every
+      change to a candidate to name its version. A mentor reads a request only while a candidate of it that has not ended
+      names them (ADR-003 "only while named as its candidate"); a declined or withdrawn mentor still reads their own
+      candidate, which carries none of the request's statements.
+    - >-
+      Request disposition stays OPEN here: the matrix has no request update or withdrawal action, so nothing in the API
+      sets WITHDRAWN. TASK-10 sets FORMED in the formation transaction; selection already treats a FORMED candidate as
+      closing the request, so the order does not matter.
+    - >-
+      Audit entries (record CANDIDATE, CandidateId set): InvitationSent by the protégé (new values requestId,
+      protegeEmployeeId, mentorEmployeeId, status, mentorResponse); MentorResponded (outcome ACCEPTED or DECLINED);
+      WillingnessRecorded (status and the actor's own willing-at field); CandidateWithdrawn (outcome WITHDRAWN, Revision
+      and Invalidated = InapplicableEvidenceAsync(current revision) read under the version lock). Notifications use
+      TASK-05's WorkflowNotifications unchanged.
+    - >-
+      Shared refusal: EmployeeRecordRequired (Mentor.Api.Employees) now holds the "No employee profile yet" 409 that
+      TASK-07 defined on MentorRegistryEndpoints (same title, status and detail); the registry and request modules both
+      use it, and the TASK-07 test references it.
+    - >-
+      For TASK-09: agreement drafting acts on a DRAFTING candidate through the same versioned protocol (DecideAsync's
+      shape); a withdrawal already reports a DRAFTING candidate's current revision and its acceptances and decisions as
+      invalidated, so revision and acceptance commands need only write current_revision_id and the evidence rows.
+  changed_paths:
+    - src/Mentor.Core/Requests/RequestDetails.cs
+    - src/Mentor.Core/Requests/CandidateLifecycle.cs
+    - src/Mentor.Api/Hosting/VersionTag.cs
+    - src/Mentor.Api/Hosting/ApiHost.cs
+    - src/Mentor.Api/Employees/EmployeeRecordRequired.cs
+    - src/Mentor.Api/MentorRegistry/MentorRegistryEndpoints.cs
+    - src/Mentor.Api/Requests/PairingViews.cs
+    - src/Mentor.Api/Requests/CandidateQueries.cs
+    - src/Mentor.Api/Requests/MentorshipRequests.cs
+    - src/Mentor.Api/Requests/Candidates.cs
+    - src/Mentor.Api/Requests/MentorshipRequestEndpoints.cs
+    - tests/Mentor.Tests.Unit/Requests/RequestDetailsTests.cs
+    - tests/Mentor.Tests.Unit/Requests/CandidateLifecycleTests.cs
+    - tests/Mentor.Tests.Unit/Requests/PairingBodiesTests.cs
+    - tests/Mentor.Tests.Unit/Hosting/VersionTagTests.cs
+    - tests/Mentor.Tests.Integration/Support/WorkflowApi.cs
+    - tests/Mentor.Tests.Integration/MentorRegistry/MentorRegistryTests.cs
+    - tests/Mentor.Tests.Integration/Requests/PairingApi.cs
+    - tests/Mentor.Tests.Integration/Requests/MentorshipRequestTests.cs
+    - tests/Mentor.Tests.Integration/Requests/CandidatePairingTests.cs
+    - tests/Mentor.Tests.Integration/Requests/CandidateVersionTests.cs
+    - tests/Mentor.Tests.Integration/Requests/PartySubstitutionTests.cs

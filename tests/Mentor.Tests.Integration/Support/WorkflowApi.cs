@@ -49,8 +49,11 @@ internal sealed class WorkflowApi : IAsyncDisposable
     /// <summary>The employee record of a caller who has one.</summary>
     public Guid Employee(Profile profile) => Callers.EmployeeId(profile)!.Value;
 
-    /// <summary>Sends the request signed in as the caller of <paramref name="profile"/>, or anonymously; an object body goes as JSON.</summary>
-    public async Task<HttpResponseMessage> SendAsync(HttpMethod method, string route, Profile? profile, object? body = null)
+    /// <summary>
+    /// Sends the request signed in as the caller of <paramref name="profile"/>, or anonymously; an object body goes as
+    /// JSON, and <paramref name="ifMatch"/>, if given, goes as the If-Match header exactly as written.
+    /// </summary>
+    public async Task<HttpResponseMessage> SendAsync(HttpMethod method, string route, Profile? profile, object? body = null, string? ifMatch = null)
     {
         using var request = Callers.Request(method, route, profile);
         if (body is not null)
@@ -58,21 +61,27 @@ internal sealed class WorkflowApi : IAsyncDisposable
             request.Content = body as HttpContent ?? JsonContent.Create(body, options: Json);
         }
 
+        if (ifMatch is not null)
+        {
+            request.Headers.TryAddWithoutValidation("If-Match", ifMatch);
+        }
+
         return await client.SendAsync(request, TestContext.Current.CancellationToken);
     }
 
     /// <summary>Sends the request and asserts the status before returning the JSON body.</summary>
-    public async Task<JsonElement> JsonAsync(HttpMethod method, string route, Profile? profile, object? body = null, HttpStatusCode expected = HttpStatusCode.OK)
+    public async Task<JsonElement> JsonAsync(
+        HttpMethod method, string route, Profile? profile, object? body = null, HttpStatusCode expected = HttpStatusCode.OK, string? ifMatch = null)
     {
-        var response = await SendAsync(method, route, profile, body);
+        var response = await SendAsync(method, route, profile, body, ifMatch);
         var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.True(expected == response.StatusCode, $"{method} {route} as {profile?.ToString() ?? "nobody"}: {response.StatusCode}, expected {expected}. {content}");
         return JsonSerializer.Deserialize<JsonElement>(content);
     }
 
-    public async Task<HttpStatusCode> StatusAsync(HttpMethod method, string route, Profile? profile, object? body = null)
+    public async Task<HttpStatusCode> StatusAsync(HttpMethod method, string route, Profile? profile, object? body = null, string? ifMatch = null)
     {
-        using var response = await SendAsync(method, route, profile, body);
+        using var response = await SendAsync(method, route, profile, body, ifMatch);
         return response.StatusCode;
     }
 
