@@ -8,6 +8,7 @@ using Mentor.Api.Identity;
 using Mentor.Api.Meetings;
 using Mentor.Api.MentorRegistry;
 using Mentor.Api.Notifications;
+using Mentor.Api.Relationships;
 using Mentor.Api.Requests;
 using Mentor.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Cors.Infrastructure;
@@ -44,6 +45,7 @@ public static class ApiHost
         services.AddMentorshipRequests(); // COMP-MENTORSHIP-REQUEST
         services.AddAgreementDrafting(); // COMP-AGREEMENT-DRAFTING
         services.AddFormation(); // COMP-FORMATION
+        services.AddRelationshipAdministration(); // COMP-RELATIONSHIP-ADMIN
         services.AddNotificationEvents(); // COMP-MEETINGS-NOTIFICATIONS
         services.AddProblemDetails();
         services.AddExceptionHandler<RedactingExceptionHandler>();
@@ -86,6 +88,7 @@ public static class ApiHost
         app.MapMentorshipRequests(); // COMP-MENTORSHIP-REQUEST
         app.MapAgreementDrafting(); // COMP-AGREEMENT-DRAFTING
         app.MapFormation(); // COMP-FORMATION
+        app.MapRelationshipAdministration(); // COMP-RELATIONSHIP-ADMIN
         app.MapMeetings(); // COMP-MEETINGS-NOTIFICATIONS
         app.MapNotifications();
         if (app.Configuration.GetValue<bool>(OpenApiSwitch))

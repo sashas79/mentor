@@ -1,0 +1,191 @@
+schema_version: 1
+task_state:
+  task: TASK-11-RELATIONSHIP-ADMIN
+  status: done
+  work_baseline: baselines/work/WORK-0001.yaml
+  started: 2026-11-09T11:35:53Z
+  updated: 2026-11-09T12:33:49Z
+  verification:
+    - control: control://verification/build
+      result: PASS
+      command: dotnet build src/Mentor.slnx --no-incremental
+      note: >-
+        Run on execute/orchestrated (04419f1 plus this task's changes) after every mutation run, with each mutated file
+        checked back to its original text: 5 projects with TreatWarningsAsErrors; 0 warnings, 0 errors. No package was added
+        and no entity, configuration or migration changed (TASK-02's mentorship_relationship columns, check constraints,
+        guard trigger and the mentor_app grants on state, status, is_active and version hold everything): dotnet ef
+        migrations has-pending-model-changes --no-build --project Mentor.Infrastructure --startup-project Mentor.Api, run
+        from src/, reported no change since the last migration.
+    - control: control://verification/unit-test
+      result: PASS
+      command: dotnet test src/Mentor.slnx --no-build
+      note: >-
+        Full suite on the clean rebuild: Mentor.Tests.Unit 292/292 (249 after TASK-10, 43 with this task);
+        Mentor.Tests.Integration 399/399 (386 after TASK-10, 13 with this task) against PostgreSQL 17 via Testcontainers,
+        including every TASK-01 to TASK-10 test, the audited edit test under both identity schemes. Eleven mutations each
+        failed at least one test (unit / relationship integration tests failed): values read case-insensitively 3/1; an
+        unchanged State counted as a change 2/1; Needs reassigning ignored 3/4; an edit naming nothing accepted 1/1; a
+        State change resetting IsActive 0/4; IsActive not written 0/4; version claim ignored 0/1; only the first change
+        audited 0/2; prior value recorded as the new one 0/3; the list holding others' relationships 0/1; a legacy source
+        naming another row 0/1. An adversarial review then ran: four read-only reviewers (correctness and concurrency,
+        access, acceptance criteria, contract and test robustness), each finding checked by a skeptical verifier. It
+        confirmed five gaps, all in the tests or the published contract and none in the running code, and each is closed:
+        a legacy value resolved to any value, the first of each enumeration included, is recorded from unknown (unit and
+        integration); the view's participants, provenance, duration and dates are asserted; the ETag of an edit's response
+        and of later reads is asserted; attributes named at their current values write no audit entry; and the OpenAPI
+        schema of the edit now lists the exact values and requires none of the three (AttributeValueSchemas,
+        RelationshipContractTests). Ten further mutations, one for each regression the review described, each failed at
+        least one of the new tests. The verifiers rejected six findings, among them the 409 for an edit that changes
+        nothing, which follows TASK-09's convention. A temporary test that saved the OpenAPI document to the scratchpad,
+        used to see how nullable enumerations are published, was deleted before these runs.
+  acceptance:
+    # Several criteria are shared with other tasks; the notes give this task's share and the test that shows it.
+    - criterion: AC-FR-043-01
+      note: >-
+        An edit names any subset of the three attributes and the others keep their values (RelationshipEditTests.
+        An_edit_changes_only_what_it_names; RelationshipAdministrationTests.
+        Every_state_is_reached_from_every_other_and_each_attribute_changes_alone: State alone seven times, then Status
+        alone and IsActive alone, the others unchanged each time).
+    - criterion: AC-FR-044-01
+      note: >-
+        Talent Management saves In Progress, On hold and Complete (integration); "Unknown" and any other spelling are 400
+        (unit and integration). A legacy row's unresolved values read null, unknown rather than a value, and only an
+        explicit, audited edit resolves one, recorded from unknown
+        (A_legacy_relationships_unresolved_values_stay_unknown_until_an_administrator_resolves_one;
+        RelationshipEditTests.Every_unresolved_legacy_value_is_resolved_by_naming_any_of_its_values).
+    - criterion: AC-FR-045-01
+      note: >-
+        Needs reassigning is set and cleared (Every_state_is_reached_from_every_other_and_each_attribute_changes_alone),
+        every State, Status and IsActive combination is saved
+        (An_explicit_is_active_stands_through_later_changes_and_every_combination_is_saved), and an edit raises no
+        notification and changes no candidate or other record
+        (Talent_management_saves_two_unusual_combinations_in_turn_and_each_change_is_audited).
+    - criterion: AC-FR-046-01
+      note: >-
+        All twelve combinations are saved (integration) and none is refused or derived (RelationshipEditTests.
+        No_combination_is_refused_and_nothing_is_derived). A legacy row's IsActive stays unknown until an administrator
+        sets it (legacy test); mapping the historical Active cell is TASK-13.
+    - criterion: AC-FR-047-01
+      note: >-
+        Complete is changed to In Progress and to On hold by one edit each (integration; unit theory
+        Every_state_is_reached_from_every_other_directly).
+    - criterion: AC-FR-047-02
+      note: >-
+        In Progress is changed to Complete in one edit (integration and unit). An edit needs an existing relationship: a
+        PATCH on a candidate's id, a revision's id or an unknown id is 404, and the candidate stays DRAFTING at Step 3 with
+        no relationship (No_edit_forms_or_activates_an_unformed_candidate).
+    - criterion: AC-FR-048-01
+      note: >-
+        Needs reassigning is set and then cleared while State stays Complete
+        (Every_state_is_reached_from_every_other_and_each_attribute_changes_alone).
+    - criterion: AC-FR-049-01
+      note: >-
+        Complete with IsActive Y is saved (Talent_management_saves_two_unusual_combinations_in_turn_and_each_change_is_audited,
+        and the combination loop).
+    - criterion: AC-FR-049-02
+      note: >-
+        In Progress with IsActive N is saved
+        (An_explicit_is_active_stands_through_later_changes_and_every_combination_is_saved).
+    - criterion: AC-FR-050-01
+      note: >-
+        After IsActive is set to Y, four State and Status edits leave it Y (An_explicit_is_active_stands_...); nothing
+        derives or defaults an attribute (No_combination_is_refused_and_nothing_is_derived); two edits taken at once on
+        one version end with one taken and the other told "Relationship changed", so no explicit choice is overwritten
+        unseen (An_edit_names_its_version_and_concurrent_edits_never_overwrite_each_other_unseen).
+    - criterion: AC-FR-051-01
+      note: >-
+        Each changed attribute gets one AttributeChanged entry on the Relationship record with its prior and new value,
+        the administrator and identity scheme, and the database time, equal to the row's updated_at; attributes named at
+        their current values write none; a legacy value is recorded from unknown (the audited edit test under both
+        schemes, the combination test, the legacy test).
+    - criterion: AC-FR-054-01
+      note: >-
+        Two relationships between the same protégé and mentor have distinct ids, are both listed for each party, and an
+        edit and the history of one leave the other unchanged
+        (Relationships_involving_the_same_people_stay_separately_identifiable). The database share, legacy rows beside
+        digital ones, is TASK-02's RelationshipTests.
+    - criterion: AC-BR-006-01
+      note: >-
+        Only In Progress, On hold and Complete are accepted, each reachable from each other directly; there is no
+        "Unknown" value (400); an unformed candidate cannot be given a State (404) (unit and integration tests above).
+    - criterion: AC-BR-007-01
+      note: >-
+        Only NeedsReassigning and Blank are accepted ("Needs reassigning" and "BLANK" are 400); setting Needs reassigning
+        changes Status alone (An_edit_changes_only_what_it_names, integration) and raises no notification and changes no
+        other record (the audited edit test).
+    - criterion: AC-BR-008-01
+      note: >-
+        OPEN-002 is resolved by FR-071 (N at formation, TASK-10). Y and N are set independently of State and Status
+        (An_explicit_is_active_stands_... and the combination loop); a legacy IsActive stays unknown until set explicitly
+        (legacy test); the historical Active text is TASK-13's.
+    - criterion: AC-E2E-03
+      note: >-
+        Talent_management_saves_two_unusual_combinations_in_turn_and_each_change_is_audited, under Entra and the simulated
+        scheme: Complete, Needs reassigning and Y, then On hold, blank and N, are saved (versions 2 and 3) and retained as
+        six audit entries with prior and new values, the administrator and the times; the notification count, the
+        candidate's version and the relationship count are unchanged.
+    - criterion: AC-DR-005-01
+      note: >-
+        The view carries the provenance (Digital with its candidate, Legacy with its source file and row), both
+        participants with their names, the three attributes, the duration, the dates and the version
+        (The_view_carries_participants_provenance_and_terms_and_each_edit_advances_its_etag, legacy test); the history is
+        the trail of the Relationship record, which begins with the formation entry and continues with each attribute
+        change (the audited edit test). Digital formation is TASK-10, legacy entry TASK-13.
+    - criterion: AC-FR-071-01
+      note: >-
+        A formed relationship reads IsActive N at version 1 with nobody having supplied it (the audited edit test, the view
+        test); the formation that writes it is TASK-10.
+    - criterion: AC-FR-071-02
+      note: >-
+        An edit accepts exactly "Y" or "N": "y", "Yes", "0", "1", "True" and " N" (unit) and "y", "Yes", 1 and true
+        (integration) are 400; the published contract lists exactly Y, N and null (RelationshipContractTests); TASK-02's
+        check constraint refuses anything else in the database.
+    - criterion: AC-FR-071-03
+      note: >-
+        Talent Management changes the default N to Y, and four later edits leave it Y; nothing re-applies the default
+        (An_explicit_is_active_stands_through_later_changes_and_every_combination_is_saved; TASK-10's formation evidence
+        test shows a further formation leaves it as chosen).
+  notes:
+    - >-
+      Module layout follows TASK-06 to TASK-10. Mentor.Core.Relationships.RelationshipEdit is the pure, unit-tested rule:
+      the exact parsing of the three values and the changes an edit makes; it reuses Mentor.Core.Legacy.
+      RelationshipAttribute for the three attribute names. Mentor.Api.Relationships holds the scoped
+      RelationshipAdministration service, RelationshipVersion (the ADR-005 claim), RelationshipViews (view, strict body,
+      refusal), RelationshipEndpoints (AddRelationshipAdministration/MapRelationshipAdministration on ApiHost's module
+      lines) and AttributeValueSchemas (an OpenAPI schema transformer, registered by AddRelationshipAdministration for
+      every document).
+    - >-
+      Routes: GET /api/relationships (relationship.read: the caller's own relationships, as protégé or mentor, oldest
+      first; Talent Management's list of all is TASK-14's register); GET /api/relationships/{relationshipId} (the parties
+      and Talent Management; ETag = the relationship's version); PATCH /api/relationships/{relationshipId}
+      (relationship.update-attributes: Talent Management) with If-Match and body { state?, status?, isActive? }, each
+      exactly InProgress, OnHold or Complete; Blank or NeedsReassigning; Y or N; null or absent means not named, and at
+      least one is named; 200 with the view and the new ETag. Problems: "Version required" (428), "Relationship changed"
+      (409, stale version), "Relationship unchanged" (409, every named attribute already holds its value), "No employee
+      profile yet" (409); 400 validation problems keyed state, status, isActive or attributes; 404 for an id that is not a
+      relationship.
+    - >-
+      Decisions: the body takes strings parsed exactly, because the API's global enum converter reads names
+      case-insensitively and accepts numbers, which would let "y", 0 or 1 through as Y or N (FR-071); the OpenAPI document
+      still publishes the exact values, with the three properties optional. An edit that changes nothing is 409, as in
+      TASK-09. A legacy row's NULL is unknown and never written by an edit; an edit resolves it, audited from null.
+      Attribute entries name no candidate (an attribute change is not a candidate decision), so they appear in the
+      relationship's record history (GET /api/audit-trail/records/Relationship/{id}), not in the candidate evidence view.
+      No notification is raised: ADR-009 lists none for attribute changes.
+    - >-
+      For later tasks: TASK-12 reads goals through the relationship (its id and parties are in this view); TASK-14's
+      register can follow this view's provenance and source semantics; TASK-15's generated client chains edits with the
+      ETag of each PATCH response and offers exactly the published values.
+  changed_paths:
+    - src/Mentor.Core/Relationships/RelationshipEdit.cs
+    - src/Mentor.Api/Relationships/RelationshipViews.cs
+    - src/Mentor.Api/Relationships/RelationshipVersion.cs
+    - src/Mentor.Api/Relationships/RelationshipAdministration.cs
+    - src/Mentor.Api/Relationships/RelationshipEndpoints.cs
+    - src/Mentor.Api/Relationships/AttributeValueSchemas.cs
+    - src/Mentor.Api/Hosting/ApiHost.cs
+    - tests/Mentor.Tests.Unit/Relationships/RelationshipEditTests.cs
+    - tests/Mentor.Tests.Unit/Relationships/RelationshipBodiesTests.cs
+    - tests/Mentor.Tests.Integration/Relationships/RelationshipApi.cs
+    - tests/Mentor.Tests.Integration/Relationships/RelationshipAdministrationTests.cs
+    - tests/Mentor.Tests.Integration/Relationships/RelationshipContractTests.cs
