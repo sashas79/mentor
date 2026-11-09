@@ -31,6 +31,8 @@ public sealed class LegacyReadingTests(PostgresServer server)
     [InlineData("10-1-2026", null)]
     [InlineData("Jan 2026", null)]
     [InlineData("10/1/2026 approx", null)]
+    [InlineData("approx 10/1/2026", null)]
+    [InlineData("110/1/2026", null)]
     public async Task A_date_is_read_only_from_day_month_year(string? cell, string? expected)
     {
         await using var db = await server.CreateDatabaseAsync();

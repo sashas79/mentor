@@ -58,7 +58,10 @@ with the id of the record written:
 | Duration | `6 months`, `12 months` or `12+ months`: that duration category | unknown; the text is kept |
 | Active | `Successfully complete`: State Complete. `put on hold`: State On hold. `No - needs reassigning`: Status Needs reassigning | State, Status and IsActive unresolved |
 
-Letter case and spacing are ignored, line breaks and tabs included, and nothing else.
+Spacing before and after a value is ignored, tabs and line breaks included. In Duration and Active, letter case is
+ignored too, and any run of spacing inside the value counts as one space. Nothing else is: a date is read only when it
+is written `D/M/YYYY` with no spaces inside, and `6months` is not `6 months`. A cell that is not read raises no review
+exception, so the reviewer checks those cells against the tracker.
 
 - **IsActive** is never read from Active.
 - **`Yes` and an empty Active cell** resolve nothing.
@@ -68,7 +71,7 @@ Letter case and spacing are ignored, line breaks and tabs included, and nothing 
 Two kinds of row are held whole as a review exception, instead of being entered as a relationship:
 
 - a row whose Mentor cell is empty (`NO_MENTOR`);
-- a row with a person not resolved to an employee (`UNRESOLVED_PERSON`).
+- a row with a person not resolved to an employee, an empty Protégé cell included (`UNRESOLVED_PERSON`).
 
 Nobody is created for an unresolved person.
 
@@ -88,7 +91,7 @@ Nobody is created for an unresolved person.
 ## Repeats and mistakes
 
 - **A source row is entered once.** Entering it again is refused, and the whole script with it.
-- **A row held for an unresolved person** can be entered as a relationship later, once the person is resolved. The
-  exception stays as evidence.
+- **A row held for an unresolved person** can be entered as a relationship later, once the person it names is
+  resolved. The exception stays as evidence. A row whose Protégé cell is empty names nobody to resolve, so it stays held.
 - **A row held because it names no mentor stays held.** No mentor is ever given to it.
 - **Entered rows are never deleted or rewritten.** Check the script before you run it.

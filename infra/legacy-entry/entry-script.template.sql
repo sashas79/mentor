@@ -20,7 +20,7 @@
 
 SET client_encoding = 'UTF8';
 
-BEGIN;
+BEGIN ISOLATION LEVEL READ COMMITTED;
 
 -- row:begin
 SELECT outcome, record_id FROM mentor.enter_legacy_row(

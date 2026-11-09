@@ -125,6 +125,13 @@ namespace Mentor.Infrastructure.Persistence.Migrations
                         USING ERRCODE = 'insufficient_privilege';
                 END IF;
 
+                -- The per-row lock below orders scripts only if each check reads what committed before it, as at READ COMMITTED
+                -- (ADR-013); in an older snapshot a second script would not see the first one's row.
+                IF current_setting('transaction_isolation') <> 'read committed' THEN
+                    RAISE EXCEPTION 'legacy entry runs at READ COMMITTED, as the entry template begins it'
+                        USING ERRCODE = 'invalid_transaction_state';
+                END IF;
+
                 IF coalesce(enter_legacy_row.source_file, '') ~ '^\s*$' OR enter_legacy_row.source_file ~ '^\s|\s$'
                     OR enter_legacy_row.source_row IS NULL OR enter_legacy_row.source_row < 1 THEN
                     RAISE EXCEPTION 'a legacy row names its source file, without surrounding spaces, and its row number'

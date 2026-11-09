@@ -59,22 +59,36 @@ internal static class LegacyEntryScript
         return script;
     }
 
+    /// <summary>The template exactly as it is kept in infra/legacy-entry/.</summary>
+    public static string Template => File.ReadAllText(Path.Combine(Folder, "entry-script.template.sql"));
+
     /// <summary>
     /// Runs the rendered script as <c>psql -X --set ON_ERROR_STOP=1 --file</c> does: statement by statement on one
     /// connection of its own, stopping at the first refusal. The connection then closes, which rolls back a transaction
-    /// the script left open. So whatever the template itself commits, and only that, persists.
+    /// the script left open. So whatever the template itself commits, and only that, persists. Returns each call's answer
+    /// in order, as psql prints it: the outcome and the id of the record written.
     /// </summary>
-    public static async Task RunAsync(TestDatabase db, Login login, params TrackerRow[] rows)
+    public static async Task<List<(string Outcome, Guid Record)>> RunAsync(TestDatabase db, Login login, params TrackerRow[] rows)
     {
-        var unpooled = new NpgsqlConnectionStringBuilder(db.ConnectionString(login)) { Pooling = false };
-        await using var connection = new NpgsqlConnection(unpooled.ConnectionString);
+        var answers = new List<(string Outcome, Guid Record)>();
+        await using var connection = new NpgsqlConnection(Unpooled(db, login));
         await connection.OpenAsync(TestContext.Current.CancellationToken);
         foreach (var statement in Statements(Render(rows)))
         {
             await using var command = new NpgsqlCommand(statement, connection);
-            await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+            await using var reader = await command.ExecuteReaderAsync(TestContext.Current.CancellationToken);
+            while (await reader.ReadAsync(TestContext.Current.CancellationToken))
+            {
+                answers.Add((reader.GetString(0), reader.GetGuid(1)));
+            }
         }
+
+        return answers;
     }
+
+    /// <summary>A connection string of <paramref name="login"/> whose connection closes for real when disposed, as psql's does when it exits.</summary>
+    public static string Unpooled(TestDatabase db, Login login) =>
+        new NpgsqlConnectionStringBuilder(db.ConnectionString(login)) { Pooling = false }.ConnectionString;
 
     public static Task<int> AuthoriseAsync(TestDatabase db, Login login, Guid administratorObjectId) =>
         db.ExecuteAsync(login, Authorisation(administratorObjectId));
