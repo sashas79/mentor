@@ -1,0 +1,5206 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Mentor.Api | v1",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:5089/"
+    }
+  ],
+  "paths": {
+    "/api/capabilities": {
+      "get": {
+        "tags": [
+          "Mentor.Api"
+        ],
+        "operationId": "GetCapabilities",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Capabilities"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/identity/simulated-roster": {
+      "get": {
+        "tags": [
+          "Mentor.Api"
+        ],
+        "operationId": "GetSimulatedRoster",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SimulatedPerson"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/session": {
+      "get": {
+        "tags": [
+          "Mentor.Api"
+        ],
+        "operationId": "GetSession",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/audit-trail/records/{recordType}": {
+      "get": {
+        "tags": [
+          "Mentor.Api"
+        ],
+        "operationId": "GetAuditEntriesOfRecordType",
+        "parameters": [
+          {
+            "name": "recordType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AuditRecordType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuditEntryView"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/api/audit-trail/records/{recordType}/{recordId}": {
+      "get": {
+        "tags": [
+          "Mentor.Api"
+        ],
+        "operationId": "GetAuditEntriesOfRecord",
+        "parameters": [
+          {
+            "name": "recordType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AuditRecordType"
+            }
+          },
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuditEntryView"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    },
+    "/api/audit-trail/candidates/{candidateId}": {
+      "get": {
+        "tags": [
+          "Mentor.Api"
+        ],
+        "operationId": "GetCandidateEvidence",
+        "parameters": [
+          {
+            "name": "candidateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateEvidenceView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/employees/me": {
+      "get": {
+        "tags": [
+          "Mentor.Api"
+        ],
+        "operationId": "GetOwnEmployeeProfile",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmployeeProfile"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Mentor.Api"
+        ],
+        "operationId": "SaveOwnEmployeeProfile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmployeeProfileEdit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmployeeProfile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/employees/{id}": {
+      "get": {
+        "tags": [
+          "Mentor.Api"
+        ],
+        "operationId": "GetEmployeeProfile",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmployeeProfile"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/mentor-applications": {
+      "post": {
+        "tags": [
+          "MentorRegistry"
+        ],
+        "operationId": "ApplyToMentor",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MentorProfileEdit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MentorProfileView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mentor-applications/pending": {
+      "get": {
+        "tags": [
+          "MentorRegistry"
+        ],
+        "operationId": "ListPendingMentorApplications",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MentorProfileView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mentor-applications/{id}/approve": {
+      "post": {
+        "tags": [
+          "MentorRegistry"
+        ],
+        "operationId": "ApproveMentorApplication",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MentorProfileView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/mentor-applications/{id}/decline": {
+      "post": {
+        "tags": [
+          "MentorRegistry"
+        ],
+        "operationId": "DeclineMentorApplication",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MentorProfileView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/mentor-profiles/me": {
+      "get": {
+        "tags": [
+          "MentorRegistry"
+        ],
+        "operationId": "GetOwnMentorProfile",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MentorProfileView"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "MentorRegistry"
+        ],
+        "operationId": "SaveOwnMentorProfile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MentorProfileEdit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MentorProfileView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mentor-profiles/{id}": {
+      "get": {
+        "tags": [
+          "MentorRegistry"
+        ],
+        "operationId": "GetMentorProfile",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MentorProfileView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/mentors": {
+      "get": {
+        "tags": [
+          "MentorRegistry"
+        ],
+        "operationId": "DiscoverMentors",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MentorProfileView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mentorship-requests": {
+      "post": {
+        "tags": [
+          "MentorshipRequests"
+        ],
+        "operationId": "SubmitMentorshipRequest",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MentorshipRequestSubmission"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MentorshipRequestView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "MentorshipRequests"
+        ],
+        "operationId": "ListOwnMentorshipRequests",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MentorshipRequestView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mentorship-requests/{requestId}": {
+      "get": {
+        "tags": [
+          "MentorshipRequests"
+        ],
+        "operationId": "GetMentorshipRequest",
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MentorshipRequestView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/mentorship-requests/{requestId}/candidates": {
+      "get": {
+        "tags": [
+          "Candidates"
+        ],
+        "operationId": "ListRequestCandidates",
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CandidateView"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Candidates"
+        ],
+        "operationId": "SelectMentor",
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CandidateSelection"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/candidates": {
+      "get": {
+        "tags": [
+          "Candidates"
+        ],
+        "operationId": "ListOwnCandidates",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CandidateView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/candidates/{candidateId}": {
+      "get": {
+        "tags": [
+          "Candidates"
+        ],
+        "operationId": "GetCandidate",
+        "parameters": [
+          {
+            "name": "candidateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/candidates/{candidateId}/accept": {
+      "post": {
+        "tags": [
+          "Candidates"
+        ],
+        "operationId": "AcceptInvitation",
+        "parameters": [
+          {
+            "name": "candidateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/candidates/{candidateId}/decline": {
+      "post": {
+        "tags": [
+          "Candidates"
+        ],
+        "operationId": "DeclineInvitation",
+        "parameters": [
+          {
+            "name": "candidateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/candidates/{candidateId}/willingness": {
+      "post": {
+        "tags": [
+          "Candidates"
+        ],
+        "operationId": "RecordWillingness",
+        "parameters": [
+          {
+            "name": "candidateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/candidates/{candidateId}/withdraw": {
+      "post": {
+        "tags": [
+          "Candidates"
+        ],
+        "operationId": "WithdrawCandidate",
+        "parameters": [
+          {
+            "name": "candidateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/candidates/{candidateId}/draft": {
+      "get": {
+        "tags": [
+          "AgreementDrafts"
+        ],
+        "operationId": "GetAgreementDraft",
+        "parameters": [
+          {
+            "name": "candidateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgreementDraftView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/candidates/{candidateId}/draft/revisions/{revisionId}": {
+      "get": {
+        "tags": [
+          "AgreementDrafts"
+        ],
+        "operationId": "GetAgreementRevision",
+        "parameters": [
+          {
+            "name": "candidateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "revisionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgreementRevisionView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/candidates/{candidateId}/draft/revisions": {
+      "post": {
+        "tags": [
+          "AgreementDrafts"
+        ],
+        "operationId": "CreateAgreementRevision",
+        "parameters": [
+          {
+            "name": "candidateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgreementDraftForm"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgreementDraftView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/candidates/{candidateId}/draft/revisions/{revisionId}/acceptances": {
+      "post": {
+        "tags": [
+          "AgreementDrafts"
+        ],
+        "operationId": "AcceptAgreementRevision",
+        "parameters": [
+          {
+            "name": "candidateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "revisionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptanceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgreementDraftView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/candidates/{candidateId}/draft/annex": {
+      "post": {
+        "tags": [
+          "AgreementDrafts"
+        ],
+        "operationId": "ChangeAdministrativeAnnex",
+        "parameters": [
+          {
+            "name": "candidateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnexChangeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgreementDraftView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/candidates/{candidateId}/formation": {
+      "get": {
+        "tags": [
+          "Formation"
+        ],
+        "operationId": "GetFormation",
+        "parameters": [
+          {
+            "name": "candidateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormationView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/candidates/{candidateId}/draft/revisions/{revisionId}/formation-decisions": {
+      "post": {
+        "tags": [
+          "Formation"
+        ],
+        "operationId": "DecideFormation",
+        "parameters": [
+          {
+            "name": "candidateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "revisionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FormationDecisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormationView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/relationships": {
+      "get": {
+        "tags": [
+          "Relationships"
+        ],
+        "operationId": "ListOwnRelationships",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RelationshipView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/relationships/{relationshipId}": {
+      "get": {
+        "tags": [
+          "Relationships"
+        ],
+        "operationId": "GetRelationship",
+        "parameters": [
+          {
+            "name": "relationshipId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelationshipView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Relationships"
+        ],
+        "operationId": "UpdateRelationshipAttributes",
+        "parameters": [
+          {
+            "name": "relationshipId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelationshipAttributesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelationshipView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/relationships/{relationshipId}/goals": {
+      "get": {
+        "tags": [
+          "Goals"
+        ],
+        "operationId": "ListRelationshipGoals",
+        "parameters": [
+          {
+            "name": "relationshipId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GoalView"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/goals/{goalId}": {
+      "get": {
+        "tags": [
+          "Goals"
+        ],
+        "operationId": "GetGoal",
+        "parameters": [
+          {
+            "name": "goalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoalView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/goals/{goalId}/progress": {
+      "post": {
+        "tags": [
+          "Goals"
+        ],
+        "operationId": "SubmitGoalProgress",
+        "parameters": [
+          {
+            "name": "goalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoalProgressRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoalView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/goals/{goalId}/completion-requests": {
+      "post": {
+        "tags": [
+          "Goals"
+        ],
+        "operationId": "RequestGoalCompletion",
+        "parameters": [
+          {
+            "name": "goalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoalProgressRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoalView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/goals/{goalId}/completion-requests/{requestId}/decision": {
+      "post": {
+        "tags": [
+          "Goals"
+        ],
+        "operationId": "DecideGoalCompletion",
+        "parameters": [
+          {
+            "name": "goalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoalDecisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoalView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/register": {
+      "get": {
+        "tags": [
+          "Register"
+        ],
+        "operationId": "GetRelationshipRegister",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RegisterEntryView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/register/export": {
+      "get": {
+        "tags": [
+          "Register"
+        ],
+        "operationId": "ExportRelationshipRegister",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/csv; charset=utf-8": {
+                "schema": {
+                  "type": "string",
+                  "format": "byte"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/register/goals": {
+      "get": {
+        "tags": [
+          "Register"
+        ],
+        "operationId": "GetRegisterGoalsAndProgress",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RelationshipGoalsView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/candidates/{candidateId}/meetings": {
+      "get": {
+        "tags": [
+          "Meetings"
+        ],
+        "operationId": "ListCandidateMeetings",
+        "parameters": [
+          {
+            "name": "candidateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MeetingView"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Meetings"
+        ],
+        "operationId": "ProposeIntroductoryMeeting",
+        "parameters": [
+          {
+            "name": "candidateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MeetingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeetingView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/relationships/{relationshipId}/meetings": {
+      "get": {
+        "tags": [
+          "Meetings"
+        ],
+        "operationId": "GetMeetingSchedule",
+        "parameters": [
+          {
+            "name": "relationshipId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeetingSchedule"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Meetings"
+        ],
+        "operationId": "PlanRecurringSession",
+        "parameters": [
+          {
+            "name": "relationshipId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MeetingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeetingView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/meetings/{meetingId}": {
+      "get": {
+        "tags": [
+          "Meetings"
+        ],
+        "operationId": "GetMeeting",
+        "parameters": [
+          {
+            "name": "meetingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeetingView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Meetings"
+        ],
+        "operationId": "UpdateMeeting",
+        "parameters": [
+          {
+            "name": "meetingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MeetingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeetingView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/notifications": {
+      "get": {
+        "tags": [
+          "Notifications"
+        ],
+        "operationId": "ListNotifications",
+        "parameters": [
+          {
+            "name": "unread",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationInbox"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notifications/{notificationId}": {
+      "get": {
+        "tags": [
+          "Notifications"
+        ],
+        "operationId": "GetNotification",
+        "parameters": [
+          {
+            "name": "notificationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/notifications/{notificationId}/read": {
+      "post": {
+        "tags": [
+          "Notifications"
+        ],
+        "operationId": "MarkNotificationRead",
+        "parameters": [
+          {
+            "name": "notificationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AcceptanceEvidenceView": {
+        "required": [
+          "id",
+          "revisionId",
+          "revisionNumber",
+          "contentHash",
+          "participantEmployeeId",
+          "acceptedAt",
+          "applicability"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revisionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revisionNumber": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "contentHash": {
+            "type": "string"
+          },
+          "participantEmployeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "acceptedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "applicability": {
+            "$ref": "#/components/schemas/Applicability"
+          }
+        }
+      },
+      "AcceptanceRequest": {
+        "required": [
+          "contentHash"
+        ],
+        "type": "object",
+        "properties": {
+          "contentHash": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "AcceptanceView": {
+        "required": [
+          "id",
+          "revisionId",
+          "revisionNumber",
+          "contentHash",
+          "participantEmployeeId",
+          "participant",
+          "acceptedAt",
+          "applicability"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revisionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revisionNumber": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "contentHash": {
+            "type": "string"
+          },
+          "participantEmployeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "participant": {
+            "$ref": "#/components/schemas/Participant"
+          },
+          "acceptedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "applicability": {
+            "$ref": "#/components/schemas/Applicability"
+          }
+        }
+      },
+      "ActiveFlag": {
+        "enum": [
+          "Y",
+          "N",
+          null
+        ]
+      },
+      "AdministrativeAnnexView": {
+        "required": [
+          "adminReference",
+          "adminRemarks",
+          "changes"
+        ],
+        "type": "object",
+        "properties": {
+          "adminReference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "adminRemarks": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "changes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PermittedChangeView"
+            }
+          },
+          "notice": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "AgreementContent": {
+        "required": [
+          "parties",
+          "policy",
+          "terms",
+          "goals",
+          "barriers",
+          "contingencies",
+          "responsibilities"
+        ],
+        "type": "object",
+        "properties": {
+          "parties": {
+            "$ref": "#/components/schemas/AgreementParties"
+          },
+          "policy": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PolicyClause"
+            }
+          },
+          "terms": {
+            "$ref": "#/components/schemas/AgreementTerms"
+          },
+          "goals": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "barriers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "contingencies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "responsibilities": {
+            "$ref": "#/components/schemas/AgreementResponsibilities"
+          }
+        }
+      },
+      "AgreementDraftForm": {
+        "required": [
+          "terms",
+          "goals",
+          "barriers",
+          "contingencies",
+          "responsibilities"
+        ],
+        "type": "object",
+        "properties": {
+          "terms": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AgreementTermsForm"
+              }
+            ]
+          },
+          "goals": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "barriers": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "contingencies": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "responsibilities": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AgreementResponsibilitiesForm"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "AgreementDraftView": {
+        "required": [
+          "candidateId",
+          "candidateStatus",
+          "step",
+          "protege",
+          "mentor",
+          "currentRevision",
+          "revisions",
+          "acceptances",
+          "annex",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "candidateId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "candidateStatus": {
+            "$ref": "#/components/schemas/CandidateStatus"
+          },
+          "step": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "protege": {
+            "$ref": "#/components/schemas/DraftParticipantView"
+          },
+          "mentor": {
+            "$ref": "#/components/schemas/DraftParticipantView"
+          },
+          "currentRevision": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AgreementRevisionView"
+              }
+            ]
+          },
+          "revisions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RevisionSummaryView"
+            }
+          },
+          "acceptances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AcceptanceView"
+            }
+          },
+          "annex": {
+            "$ref": "#/components/schemas/AdministrativeAnnexView"
+          },
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          }
+        }
+      },
+      "AgreementParties": {
+        "required": [
+          "protege",
+          "mentor"
+        ],
+        "type": "object",
+        "properties": {
+          "protege": {
+            "$ref": "#/components/schemas/AgreementParty"
+          },
+          "mentor": {
+            "$ref": "#/components/schemas/AgreementParty"
+          }
+        }
+      },
+      "AgreementParty": {
+        "required": [
+          "employeeId",
+          "displayName"
+        ],
+        "type": "object",
+        "properties": {
+          "employeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          }
+        }
+      },
+      "AgreementResponsibilities": {
+        "required": [
+          "mentor",
+          "protege"
+        ],
+        "type": "object",
+        "properties": {
+          "mentor": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "protege": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "AgreementResponsibilitiesForm": {
+        "required": [
+          "mentor",
+          "protege"
+        ],
+        "type": "object",
+        "properties": {
+          "mentor": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "protege": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "AgreementRevisionView": {
+        "required": [
+          "id",
+          "candidateId",
+          "revisionNumber",
+          "parentRevisionId",
+          "contentHash",
+          "createdByEmployeeId",
+          "createdAt",
+          "isCurrent",
+          "content",
+          "acceptances"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "candidateId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revisionNumber": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "parentRevisionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "contentHash": {
+            "type": "string"
+          },
+          "createdByEmployeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isCurrent": {
+            "type": "boolean"
+          },
+          "content": {
+            "$ref": "#/components/schemas/AgreementContent"
+          },
+          "acceptances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AcceptanceView"
+            }
+          }
+        }
+      },
+      "AgreementTerms": {
+        "required": [
+          "durationCategory",
+          "startDate",
+          "endDate",
+          "meetingIntervalWeeks",
+          "approximateMinutesPerMeeting",
+          "betweenMeetingContact",
+          "missedMeetingArrangements",
+          "reviewDate"
+        ],
+        "type": "object",
+        "properties": {
+          "durationCategory": {
+            "$ref": "#/components/schemas/DurationCategory"
+          },
+          "startDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "endDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "meetingIntervalWeeks": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "approximateMinutesPerMeeting": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "betweenMeetingContact": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ContactLimit"
+              }
+            ]
+          },
+          "missedMeetingArrangements": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reviewDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          }
+        }
+      },
+      "AgreementTermsForm": {
+        "required": [
+          "durationCategory",
+          "startDate",
+          "endDate",
+          "meetingIntervalWeeks",
+          "approximateMinutesPerMeeting",
+          "betweenMeetingContact",
+          "missedMeetingArrangements",
+          "reviewDate"
+        ],
+        "type": "object",
+        "properties": {
+          "durationCategory": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DurationCategory"
+              }
+            ]
+          },
+          "startDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "endDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "meetingIntervalWeeks": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "approximateMinutesPerMeeting": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "betweenMeetingContact": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ContactLimitForm"
+              }
+            ]
+          },
+          "missedMeetingArrangements": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reviewDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AnnexChangeRequest": {
+        "required": [
+          "basis",
+          "value"
+        ],
+        "type": "object",
+        "properties": {
+          "basis": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PermittedChangeBasis"
+              }
+            ]
+          },
+          "value": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "AnnexField": {
+        "enum": [
+          "AdminReference",
+          "AdminRemarks"
+        ]
+      },
+      "Applicability": {
+        "enum": [
+          "Applicable",
+          "Superseded",
+          "Formed",
+          "Withdrawn"
+        ]
+      },
+      "AuditAction": {
+        "enum": [
+          "MentorApplicationDecided",
+          "InvitationSent",
+          "MentorResponded",
+          "WillingnessRecorded",
+          "CandidateWithdrawn",
+          "RevisionCreated",
+          "AcceptanceRecorded",
+          "AnnexChanged",
+          "FormationDecided",
+          "AttributeChanged",
+          "GoalProgressSubmitted",
+          "GoalCompletionDecided",
+          "LegacyEntry",
+          "RegisterExported"
+        ]
+      },
+      "AuditActorView": {
+        "required": [
+          "employeeId",
+          "displayName",
+          "identityScheme"
+        ],
+        "type": "object",
+        "properties": {
+          "employeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "identityScheme": {
+            "$ref": "#/components/schemas/IdentityScheme"
+          }
+        }
+      },
+      "AuditEntryView": {
+        "required": [
+          "id",
+          "occurredAt",
+          "actor",
+          "action",
+          "recordType",
+          "recordId",
+          "priorValues",
+          "newValues",
+          "candidateId",
+          "revisionId",
+          "contentHash",
+          "outcome",
+          "invalidatedAcceptanceIds",
+          "invalidatedDecisionIds",
+          "provenance",
+          "sourceFile",
+          "sourceRow"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "actor": {
+            "$ref": "#/components/schemas/AuditActorView"
+          },
+          "action": {
+            "$ref": "#/components/schemas/AuditAction"
+          },
+          "recordType": {
+            "$ref": "#/components/schemas/AuditRecordType"
+          },
+          "recordId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "priorValues": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            ]
+          },
+          "newValues": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            ]
+          },
+          "candidateId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "revisionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "contentHash": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "outcome": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "invalidatedAcceptanceIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "invalidatedDecisionIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/AuditProvenance"
+          },
+          "sourceFile": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceRow": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "AuditProvenance": {
+        "enum": [
+          "Application",
+          "LegacySource"
+        ]
+      },
+      "AuditRecordType": {
+        "enum": [
+          "MentorProfile",
+          "MentorshipRequest",
+          "Candidate",
+          "AgreementRevision",
+          "AgreementAcceptance",
+          "PermittedChange",
+          "FormationDecision",
+          "Relationship",
+          "Goal",
+          "GoalProgress",
+          "GoalApproval",
+          "Meeting",
+          "Register",
+          "LegacyReviewException"
+        ]
+      },
+      "CandidateEvidenceView": {
+        "required": [
+          "candidateId",
+          "status",
+          "protegeEmployeeId",
+          "mentorEmployeeId",
+          "currentRevisionId",
+          "revisions",
+          "acceptances",
+          "decisions",
+          "entries"
+        ],
+        "type": "object",
+        "properties": {
+          "candidateId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/CandidateStatus"
+          },
+          "protegeEmployeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "mentorEmployeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "currentRevisionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "revisions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RevisionEvidenceView"
+            }
+          },
+          "acceptances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AcceptanceEvidenceView"
+            }
+          },
+          "decisions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DecisionEvidenceView"
+            }
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditEntryView"
+            }
+          }
+        }
+      },
+      "CandidateSelection": {
+        "required": [
+          "mentorEmployeeId"
+        ],
+        "type": "object",
+        "properties": {
+          "mentorEmployeeId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CandidateStatus": {
+        "enum": [
+          "Invited",
+          "Declined",
+          "Accepted",
+          "Drafting",
+          "Formed",
+          "Withdrawn"
+        ]
+      },
+      "CandidateView": {
+        "required": [
+          "id",
+          "requestId",
+          "protegeEmployeeId",
+          "protegeDisplayName",
+          "mentorEmployeeId",
+          "mentorDisplayName",
+          "status",
+          "mentorResponse",
+          "invitedAt",
+          "mentorRespondedAt",
+          "protegeWillingAt",
+          "mentorWillingAt",
+          "withdrawnByEmployeeId",
+          "withdrawnAt",
+          "currentRevisionId",
+          "version",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "protegeEmployeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "protegeDisplayName": {
+            "type": "string"
+          },
+          "mentorEmployeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "mentorDisplayName": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/CandidateStatus"
+          },
+          "mentorResponse": {
+            "$ref": "#/components/schemas/MentorResponse"
+          },
+          "invitedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "mentorRespondedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "protegeWillingAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "mentorWillingAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "withdrawnByEmployeeId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "withdrawnAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "currentRevisionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Capabilities": {
+        "required": [
+          "identityMode",
+          "notificationDelivery"
+        ],
+        "type": "object",
+        "properties": {
+          "identityMode": {
+            "$ref": "#/components/schemas/IdentityMode"
+          },
+          "notificationDelivery": {
+            "$ref": "#/components/schemas/NotificationDelivery"
+          }
+        }
+      },
+      "CompletionStanding": {
+        "enum": [
+          "Pending",
+          "Approved",
+          "Rejected",
+          null
+        ]
+      },
+      "ContactLimit": {
+        "required": [
+          "interval",
+          "unit"
+        ],
+        "type": "object",
+        "properties": {
+          "interval": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "unit": {
+            "$ref": "#/components/schemas/ContactUnit"
+          }
+        }
+      },
+      "ContactLimitForm": {
+        "required": [
+          "interval",
+          "unit"
+        ],
+        "type": "object",
+        "properties": {
+          "interval": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "unit": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ContactUnit"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "ContactUnit": {
+        "enum": [
+          "Days",
+          "Weeks"
+        ]
+      },
+      "DecisionEvidenceView": {
+        "required": [
+          "id",
+          "revisionId",
+          "revisionNumber",
+          "contentHash",
+          "outcome",
+          "administratorEmployeeId",
+          "decidedAt",
+          "applicability"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revisionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revisionNumber": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "contentHash": {
+            "type": "string"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/FormationOutcome"
+          },
+          "administratorEmployeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "decidedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "applicability": {
+            "$ref": "#/components/schemas/Applicability"
+          }
+        }
+      },
+      "DeclaredRole": {
+        "enum": [
+          "Employee",
+          "TalentManagementAdministrator"
+        ]
+      },
+      "DraftParticipantView": {
+        "required": [
+          "employeeId",
+          "displayName"
+        ],
+        "type": "object",
+        "properties": {
+          "employeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          }
+        }
+      },
+      "DurationCategory": {
+        "enum": [
+          "SixMonths",
+          "TwelveMonths",
+          "TwelvePlusMonths"
+        ]
+      },
+      "EmployeeProfile": {
+        "required": [
+          "id",
+          "entraObjectId",
+          "displayName",
+          "levelTitle",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "entraObjectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "levelTitle": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "EmployeeProfileEdit": {
+        "required": [
+          "displayName",
+          "levelTitle"
+        ],
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "levelTitle": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "FormationDecisionRequest": {
+        "required": [
+          "outcome",
+          "contentHash"
+        ],
+        "type": "object",
+        "properties": {
+          "outcome": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FormationOutcome"
+              }
+            ]
+          },
+          "contentHash": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "FormationDecisionView": {
+        "required": [
+          "id",
+          "revisionId",
+          "revisionNumber",
+          "contentHash",
+          "outcome",
+          "administratorEmployeeId",
+          "decidedAt",
+          "applicability"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revisionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revisionNumber": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "contentHash": {
+            "type": "string"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/FormationOutcome"
+          },
+          "administratorEmployeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "decidedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "applicability": {
+            "$ref": "#/components/schemas/Applicability"
+          }
+        }
+      },
+      "FormationOutcome": {
+        "enum": [
+          "Approved",
+          "Rejected"
+        ]
+      },
+      "FormationView": {
+        "required": [
+          "candidateId",
+          "candidateStatus",
+          "step",
+          "currentRevisionId",
+          "decisions",
+          "relationship",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "candidateId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "candidateStatus": {
+            "$ref": "#/components/schemas/CandidateStatus"
+          },
+          "step": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "currentRevisionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "decisions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FormationDecisionView"
+            }
+          },
+          "relationship": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FormedRelationshipView"
+              }
+            ]
+          },
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          }
+        }
+      },
+      "FormedAgreementView": {
+        "required": [
+          "id",
+          "revisionId",
+          "contentHash",
+          "formedAt",
+          "content",
+          "annex"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revisionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "contentHash": {
+            "type": "string"
+          },
+          "formedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "content": {
+            "$ref": "#/components/schemas/AgreementContent"
+          },
+          "annex": {
+            "$ref": "#/components/schemas/RetainedAnnexView"
+          }
+        }
+      },
+      "FormedGoalView": {
+        "required": [
+          "id",
+          "position",
+          "agreedDescription",
+          "completionStatus"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "position": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "agreedDescription": {
+            "type": "string"
+          },
+          "completionStatus": {
+            "$ref": "#/components/schemas/GoalCompletionStatus"
+          }
+        }
+      },
+      "FormedRelationshipView": {
+        "required": [
+          "id",
+          "provenance",
+          "protegeEmployeeId",
+          "mentorEmployeeId",
+          "state",
+          "status",
+          "isActive",
+          "durationCategory",
+          "startDate",
+          "endDate",
+          "formedAt",
+          "agreement",
+          "goals"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/Provenance"
+          },
+          "protegeEmployeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "mentorEmployeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RelationshipState"
+              }
+            ]
+          },
+          "status": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RelationshipStatus"
+              }
+            ]
+          },
+          "isActive": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ActiveFlag"
+              }
+            ]
+          },
+          "durationCategory": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DurationCategory"
+              }
+            ]
+          },
+          "startDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "endDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "formedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "agreement": {
+            "$ref": "#/components/schemas/FormedAgreementView"
+          },
+          "goals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FormedGoalView"
+            }
+          }
+        }
+      },
+      "FunctionalRole": {
+        "enum": [
+          "Employee",
+          "Applicant",
+          "Mentor",
+          "TalentManagement"
+        ]
+      },
+      "GoalCompletionStatus": {
+        "enum": [
+          "Incomplete",
+          "Complete"
+        ]
+      },
+      "GoalDecision": {
+        "enum": [
+          "Approved",
+          "Rejected"
+        ]
+      },
+      "GoalDecisionRequest": {
+        "required": [
+          "decision"
+        ],
+        "type": "object",
+        "properties": {
+          "decision": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/GoalDecision"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "GoalDecisionView": {
+        "required": [
+          "id",
+          "decision",
+          "mentorEmployeeId",
+          "decidedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/GoalDecision"
+          },
+          "mentorEmployeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "decidedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "GoalProgressRequest": {
+        "required": [
+          "progressUpdate"
+        ],
+        "type": "object",
+        "properties": {
+          "progressUpdate": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "GoalProgressView": {
+        "required": [
+          "id",
+          "protegeEmployeeId",
+          "progressUpdate",
+          "completionRequested",
+          "submittedAt",
+          "completion",
+          "decision"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "protegeEmployeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "progressUpdate": {
+            "type": "string"
+          },
+          "completionRequested": {
+            "type": "boolean"
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completion": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CompletionStanding"
+              }
+            ]
+          },
+          "decision": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/GoalDecisionView"
+              }
+            ]
+          }
+        }
+      },
+      "GoalSummaryView": {
+        "required": [
+          "total",
+          "complete",
+          "incomplete",
+          "awaitingDecision"
+        ],
+        "type": "object",
+        "properties": {
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "complete": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "incomplete": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "awaitingDecision": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "GoalView": {
+        "required": [
+          "id",
+          "relationshipId",
+          "formedAgreementId",
+          "position",
+          "agreedDescription",
+          "completionStatus",
+          "pendingCompletionRequestId",
+          "progress",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "relationshipId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "formedAgreementId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "position": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "agreedDescription": {
+            "type": "string"
+          },
+          "completionStatus": {
+            "$ref": "#/components/schemas/GoalCompletionStatus"
+          },
+          "pendingCompletionRequestId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "progress": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GoalProgressView"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "HttpValidationProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instance": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "IdentityMode": {
+        "enum": [
+          "Entra",
+          "Simulated"
+        ]
+      },
+      "IdentityScheme": {
+        "enum": [
+          "Entra",
+          "Simulated",
+          "Database"
+        ]
+      },
+      "JsonElement": {},
+      "LegacyReviewReason": {
+        "enum": [
+          "UnresolvedPerson",
+          "NoMentor",
+          "UnresolvedValue"
+        ]
+      },
+      "LegacySourceView": {
+        "required": [
+          "file",
+          "row"
+        ],
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "row": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "MeetingKind": {
+        "enum": [
+          "Introductory",
+          "RecurringSession"
+        ]
+      },
+      "MeetingRequest": {
+        "required": [
+          "scheduledAt",
+          "arrangedOutsideApplication"
+        ],
+        "type": "object",
+        "properties": {
+          "scheduledAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "arrangedOutsideApplication": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MeetingSchedule": {
+        "required": [
+          "relationshipId",
+          "agreedFrequencyWeeks",
+          "agreedDurationMinutes",
+          "sessions"
+        ],
+        "type": "object",
+        "properties": {
+          "relationshipId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "agreedFrequencyWeeks": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "agreedDurationMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "sessions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MeetingView"
+            }
+          }
+        }
+      },
+      "MeetingView": {
+        "required": [
+          "id",
+          "kind",
+          "candidateId",
+          "relationshipId",
+          "scheduledAt",
+          "arrangedOutsideApplication",
+          "frequencyWeeks",
+          "durationMinutes",
+          "createdByEmployeeId",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/MeetingKind"
+          },
+          "candidateId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "relationshipId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "scheduledAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "arrangedOutsideApplication": {
+            "type": "boolean"
+          },
+          "frequencyWeeks": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "durationMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "createdByEmployeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MentorApprovalStatus": {
+        "enum": [
+          "Pending",
+          "Approved",
+          "Declined"
+        ]
+      },
+      "MentorProfileEdit": {
+        "required": [
+          "biography",
+          "roleTitle",
+          "industryExperience",
+          "mentoringExperience"
+        ],
+        "type": "object",
+        "properties": {
+          "biography": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "roleTitle": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "industryExperience": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "mentoringExperience": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "MentorProfileView": {
+        "required": [
+          "id",
+          "employeeId",
+          "displayName",
+          "levelTitle",
+          "biography",
+          "roleTitle",
+          "industryExperience",
+          "mentoringExperience",
+          "approvalStatus",
+          "approvalDecidedByEmployeeId",
+          "approvalDecidedAt",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "employeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "levelTitle": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "biography": {
+            "type": "string"
+          },
+          "roleTitle": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "industryExperience": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "mentoringExperience": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "approvalStatus": {
+            "$ref": "#/components/schemas/MentorApprovalStatus"
+          },
+          "approvalDecidedByEmployeeId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "approvalDecidedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MentorResponse": {
+        "enum": [
+          "Pending",
+          "Accepted",
+          "Declined"
+        ]
+      },
+      "MentorshipRequestSubmission": {
+        "required": [
+          "motivation",
+          "developmentGoals",
+          "nontechnicalExpectations"
+        ],
+        "type": "object",
+        "properties": {
+          "motivation": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "developmentGoals": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "nontechnicalExpectations": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "MentorshipRequestView": {
+        "required": [
+          "id",
+          "protegeEmployeeId",
+          "protegeDisplayName",
+          "motivation",
+          "developmentGoals",
+          "nontechnicalExpectations",
+          "disposition",
+          "submittedAt",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "protegeEmployeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "protegeDisplayName": {
+            "type": "string"
+          },
+          "motivation": {
+            "type": "string"
+          },
+          "developmentGoals": {
+            "type": "string"
+          },
+          "nontechnicalExpectations": {
+            "type": "string"
+          },
+          "disposition": {
+            "$ref": "#/components/schemas/RequestDisposition"
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "NotificationDelivery": {
+        "enum": [
+          "None",
+          "Simulated"
+        ]
+      },
+      "NotificationEventType": {
+        "enum": [
+          "MentorApplicationDecided",
+          "InvitationSent",
+          "MentorResponded",
+          "WillingnessRecorded",
+          "CandidateWithdrawn",
+          "RevisionCreated",
+          "AcceptanceRecorded",
+          "FormationDecided",
+          "GoalCompletionRequested",
+          "GoalCompletionDecided"
+        ]
+      },
+      "NotificationInbox": {
+        "required": [
+          "delivery",
+          "events"
+        ],
+        "type": "object",
+        "properties": {
+          "delivery": {
+            "$ref": "#/components/schemas/NotificationDelivery"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificationView"
+            }
+          }
+        }
+      },
+      "NotificationView": {
+        "required": [
+          "id",
+          "eventType",
+          "subjectType",
+          "subjectId",
+          "recipientEmployeeId",
+          "recipientRole",
+          "requiredAction",
+          "delivery",
+          "createdAt",
+          "deliveredAt",
+          "readAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "eventType": {
+            "$ref": "#/components/schemas/NotificationEventType"
+          },
+          "subjectType": {
+            "type": "string"
+          },
+          "subjectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "recipientEmployeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "recipientRole": {
+            "$ref": "#/components/schemas/RecipientRole"
+          },
+          "requiredAction": {
+            "$ref": "#/components/schemas/RequiredAction"
+          },
+          "delivery": {
+            "$ref": "#/components/schemas/NotificationDelivery"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deliveredAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "readAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "Participant": {
+        "enum": [
+          "None",
+          "Protege",
+          "Mentor"
+        ]
+      },
+      "PermittedChangeBasis": {
+        "enum": [
+          "AdministrativeReference",
+          "AdministrativeRemark"
+        ]
+      },
+      "PermittedChangeView": {
+        "required": [
+          "id",
+          "basis",
+          "field",
+          "priorValue",
+          "newValue",
+          "actorEmployeeId",
+          "changedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "basis": {
+            "$ref": "#/components/schemas/PermittedChangeBasis"
+          },
+          "field": {
+            "$ref": "#/components/schemas/AnnexField"
+          },
+          "priorValue": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "newValue": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "actorEmployeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "changedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PolicyClause": {
+        "required": [
+          "clause",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "clause": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "Provenance": {
+        "enum": [
+          "Digital",
+          "Legacy"
+        ]
+      },
+      "RecipientRole": {
+        "enum": [
+          "Protege",
+          "Mentor",
+          "Applicant",
+          "TalentManagement"
+        ]
+      },
+      "RegisterEntryKind": {
+        "enum": [
+          "Relationship",
+          "HeldSourceRow"
+        ]
+      },
+      "RegisterEntryView": {
+        "required": [
+          "kind",
+          "relationshipId",
+          "reviewExceptionId",
+          "provenance",
+          "mentor",
+          "protege",
+          "state",
+          "status",
+          "isActive",
+          "startDate",
+          "endDate",
+          "durationCategory",
+          "source",
+          "reviewException"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/RegisterEntryKind"
+          },
+          "relationshipId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "reviewExceptionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/Provenance"
+          },
+          "mentor": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RegisterPersonView"
+              }
+            ]
+          },
+          "protege": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RegisterPersonView"
+              }
+            ]
+          },
+          "state": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RelationshipState"
+              }
+            ]
+          },
+          "status": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RelationshipStatus"
+              }
+            ]
+          },
+          "isActive": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ActiveFlag"
+              }
+            ]
+          },
+          "startDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "endDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "durationCategory": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DurationCategory"
+              }
+            ]
+          },
+          "source": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RegisterSourceView"
+              }
+            ]
+          },
+          "reviewException": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RegisterReviewView"
+              }
+            ]
+          }
+        }
+      },
+      "RegisterPersonView": {
+        "required": [
+          "employeeId",
+          "displayName",
+          "level"
+        ],
+        "type": "object",
+        "properties": {
+          "employeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "level": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "RegisterReviewView": {
+        "required": [
+          "reason",
+          "unresolvedAttributes"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "$ref": "#/components/schemas/LegacyReviewReason"
+          },
+          "unresolvedAttributes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RelationshipAttribute"
+            }
+          }
+        }
+      },
+      "RegisterSourceView": {
+        "required": [
+          "file",
+          "row",
+          "mentorText",
+          "protegeText",
+          "activeText",
+          "durationText",
+          "startText",
+          "endText"
+        ],
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "row": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "mentorText": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "protegeText": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "activeText": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "durationText": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "startText": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "endText": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "RelationshipAttribute": {
+        "enum": [
+          "State",
+          "Status",
+          "IsActive"
+        ]
+      },
+      "RelationshipAttributesRequest": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "enum": [
+              "InProgress",
+              "OnHold",
+              "Complete",
+              null
+            ],
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "enum": [
+              "Blank",
+              "NeedsReassigning",
+              null
+            ],
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isActive": {
+            "enum": [
+              "Y",
+              "N",
+              null
+            ],
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "RelationshipGoalsView": {
+        "required": [
+          "relationshipId",
+          "provenance",
+          "mentor",
+          "protege",
+          "state",
+          "status",
+          "isActive",
+          "summary",
+          "goals"
+        ],
+        "type": "object",
+        "properties": {
+          "relationshipId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/Provenance"
+          },
+          "mentor": {
+            "$ref": "#/components/schemas/RegisterPersonView"
+          },
+          "protege": {
+            "$ref": "#/components/schemas/RegisterPersonView"
+          },
+          "state": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RelationshipState"
+              }
+            ]
+          },
+          "status": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RelationshipStatus"
+              }
+            ]
+          },
+          "isActive": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ActiveFlag"
+              }
+            ]
+          },
+          "summary": {
+            "$ref": "#/components/schemas/GoalSummaryView"
+          },
+          "goals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GoalView"
+            }
+          }
+        }
+      },
+      "RelationshipParticipantView": {
+        "required": [
+          "employeeId",
+          "displayName"
+        ],
+        "type": "object",
+        "properties": {
+          "employeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          }
+        }
+      },
+      "RelationshipState": {
+        "enum": [
+          "InProgress",
+          "OnHold",
+          "Complete",
+          null
+        ]
+      },
+      "RelationshipStatus": {
+        "enum": [
+          "Blank",
+          "NeedsReassigning",
+          null
+        ]
+      },
+      "RelationshipView": {
+        "required": [
+          "id",
+          "provenance",
+          "candidateId",
+          "protege",
+          "mentor",
+          "state",
+          "status",
+          "isActive",
+          "durationCategory",
+          "startDate",
+          "endDate",
+          "source",
+          "createdAt",
+          "updatedAt",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/Provenance"
+          },
+          "candidateId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "protege": {
+            "$ref": "#/components/schemas/RelationshipParticipantView"
+          },
+          "mentor": {
+            "$ref": "#/components/schemas/RelationshipParticipantView"
+          },
+          "state": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RelationshipState"
+              }
+            ]
+          },
+          "status": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RelationshipStatus"
+              }
+            ]
+          },
+          "isActive": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ActiveFlag"
+              }
+            ]
+          },
+          "durationCategory": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DurationCategory"
+              }
+            ]
+          },
+          "startDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "endDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "source": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LegacySourceView"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          }
+        }
+      },
+      "RequestDisposition": {
+        "enum": [
+          "Open",
+          "Formed",
+          "Withdrawn"
+        ]
+      },
+      "RequiredAction": {
+        "enum": [
+          "None",
+          "RespondToInvitation",
+          "SelectAnotherMentor",
+          "RecordWillingness",
+          "PrepareAgreementDraft",
+          "AcceptCurrentRevision",
+          "ReviseDraft",
+          "ArrangeFirstSession",
+          "DecideGoalCompletion",
+          "SubmitProgress"
+        ]
+      },
+      "RetainedAnnexView": {
+        "required": [
+          "adminReference",
+          "adminRemarks"
+        ],
+        "type": "object",
+        "properties": {
+          "adminReference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "adminRemarks": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notice": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "RevisionEvidenceView": {
+        "required": [
+          "id",
+          "revisionNumber",
+          "parentRevisionId",
+          "contentHash",
+          "createdByEmployeeId",
+          "createdAt",
+          "isCurrent"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revisionNumber": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "parentRevisionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "contentHash": {
+            "type": "string"
+          },
+          "createdByEmployeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isCurrent": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RevisionSummaryView": {
+        "required": [
+          "id",
+          "revisionNumber",
+          "parentRevisionId",
+          "contentHash",
+          "createdByEmployeeId",
+          "createdAt",
+          "isCurrent"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revisionNumber": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "parentRevisionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "contentHash": {
+            "type": "string"
+          },
+          "createdByEmployeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isCurrent": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Session": {
+        "required": [
+          "objectId",
+          "displayName",
+          "identityScheme",
+          "employeeId",
+          "roles",
+          "matrixVersion",
+          "permissions"
+        ],
+        "type": "object",
+        "properties": {
+          "objectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "identityScheme": {
+            "$ref": "#/components/schemas/IdentityScheme"
+          },
+          "employeeId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FunctionalRole"
+            }
+          },
+          "matrixVersion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "SimulatedPerson": {
+        "required": [
+          "objectId",
+          "displayName",
+          "declaredRole"
+        ],
+        "type": "object",
+        "properties": {
+          "objectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "declaredRole": {
+            "$ref": "#/components/schemas/DeclaredRole"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Mentor.Api"
+    },
+    {
+      "name": "MentorRegistry"
+    },
+    {
+      "name": "MentorshipRequests"
+    },
+    {
+      "name": "Candidates"
+    },
+    {
+      "name": "AgreementDrafts"
+    },
+    {
+      "name": "Formation"
+    },
+    {
+      "name": "Relationships"
+    },
+    {
+      "name": "Goals"
+    },
+    {
+      "name": "Register"
+    },
+    {
+      "name": "Meetings"
+    },
+    {
+      "name": "Notifications"
+    }
+  ]
+}

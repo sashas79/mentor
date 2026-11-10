@@ -1,0 +1,7 @@
+node_modules/
+dist/
+# Generated from openapi/mentor-api.json on every dev, build and test run (npm run generate:api).
+src/api/schema.gen.ts
+src/api/enums.gen.ts
+.env.local
+.env.*.local

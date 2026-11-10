@@ -1,0 +1,258 @@
+schema_version: 1
+task_state:
+  task: TASK-15-WEB-FRONTEND
+  status: done
+  work_baseline: baselines/work/WORK-0001.yaml
+  started: '2026-11-10T07:47:47Z'
+  updated: '2026-11-10T08:19:00Z'
+  verification:
+  - control: control://verification/build
+    result: PASS
+    command: cd src/web && npm run build
+    note: Generates the typed client and enum module from openapi/mentor-api.json,
+      type-checks the app and tests/web with tsc (strict, noUncheckedIndexedAccess),
+      then vite build. 0 errors. The main bundle is 301 kB (92 kB gzip); MSAL is a
+      separate 288 kB chunk loaded only in Entra mode. The .NET projects are unchanged
+      by this task.
+  - control: control://verification/unit-test
+    result: PASS
+    command: cd src/web && npm test
+    note: Vitest with Testing Library, 59/59 tests in 10 files under tests/web, on
+      a fake of the API that records every request (bodies, If-Match, identity headers).
+      Mutation check, 12 deliberate regressions, all caught. Additional evidence, not
+      a control. npm run openapi:check passed against the running API (no contract
+      drift). A full-stack smoke run of the generated client against the real API
+      on a throwaway PostgreSQL 17 database, in simulated identity mode, passed every
+      main workflow. A headless Firefox render showed the sign-in screen with the
+      simulated banner and the server's roster.
+  acceptance:
+  - criterion: AC-FR-001-01
+    note: Under Entra the SPA signs in with MSAL (authorisation code + PKCE) and calls
+      the API with the access token as bearer, with no application password. Tested
+      with a stand-in for MSAL. A live tenant sign-in needs the Entra app registration
+      (VITE_ENTRA_*), which is not configured here.
+  - criterion: AC-FR-001-02
+    note: The API rejects unauthenticated requests (smoke run 401). The frontend shows
+      the refusal and no data (identity tests).
+  - criterion: AC-FR-001-03
+    note: In simulated mode a persistent banner on every screen, sign-in included,
+      reads "Simulated identity — prototype only … not a production Microsoft Entra
+      ID sign-in". No simulated run is presented as Entra.
+  - criterion: AC-FR-003-01
+    note: Navigation areas and actions are offered from the permissions the server
+      reports in GET /api/session. Employee, mentor and Talent Management each see
+      their own areas (navigation tests).
+  - criterion: AC-FR-003-02
+    note: A mentor keeps the protégé area (Mentors, requests, pairings, mentorships)
+      beside the mentoring area. The pairings and mentorships lists show both roles.
+  - criterion: AC-FR-005-01
+    note: My profile saves display name and level (PUT /api/employees/me).
+  - criterion: AC-FR-005-02
+    note: The profile is the application's own; no external profile integration is
+      used.
+  - criterion: AC-FR-007-01
+    note: An employee without a mentor profile (404) is offered "Apply to mentor".
+  - criterion: AC-FR-010-01
+    note: The mentor maintains biography, role, industry and mentoring experience (PUT
+      /api/mentor-profiles/me).
+  - criterion: AC-FR-010-02
+    note: Discoverable profiles show those attributes to protégés.
+  - criterion: AC-FR-012-01
+    note: The Mentors screen lists every approved mentor the server returns, each with
+      a summary that opens the full profile.
+  - criterion: AC-FR-014-01
+    note: The request records the motivation; the server attributes it to the signed-in
+      protégé.
+  - criterion: AC-FR-015-01
+    note: The request has its own technical and career development goals field.
+  - criterion: AC-FR-016-01
+    note: Nontechnical expectations are a separate field and are sent separately.
+  - criterion: AC-FR-018-01
+    note: From a mentor's profile the protégé invites the mentor for one of their own
+      requests; the request shows its invited mentors.
+  - criterion: AC-FR-018-02
+    note: Introductory meetings are proposed on the pairing and can be marked "arranged
+      outside the application"; there is no calendar and no notes field.
+  - criterion: AC-FR-019-01
+    note: The named mentor (candidate.respond) gets Accept and Decline, sent with If-Match.
+  - criterion: AC-FR-019-02
+    note: Standing and mentor response are shown as the server reports them; a decline
+      is never shown as acceptance.
+  - criterion: AC-FR-020-01
+    note: Protégé and mentor willingness are separate facts, so one recorded willingness
+      shows the other as "Not recorded".
+  - criterion: AC-FR-020-02
+    note: Each willingness and acceptance is recorded by its own participant's request
+      and shown under that participant.
+  - criterion: AC-FR-022-01
+    note: The review shows the server's complete content, including every policy clause
+      (9 in the real API), parties, terms, meetings and contact, goals, barriers, contingencies
+      and responsibilities.
+  - criterion: AC-FR-022-02
+    note: The full current revision and its content identity are shown before the
+      accept button. Superseded revisions can be read as kept. The annex is labelled
+      "not part of the accepted agreement".
+  - criterion: AC-FR-027-01
+    note: Each acceptance is sent by the participant's own identity (bearer or simulated
+      header); a simulated run is labelled as such.
+  - criterion: AC-FR-027-02
+    note: Acceptance is offered only to each participant for themselves; nothing infers
+      one from the other.
+  - criterion: AC-FR-027-03
+    note: Acceptance sends the current revision's contentHash and the version; acceptances
+      are listed with revision, hash and applicability.
+  - criterion: AC-FR-027-04
+    note: After a replacement, earlier acceptances show "Superseded by a replacement
+      draft", and the form says both must accept anew.
+  - criterion: AC-FR-035-01
+    note: The protégé submits a progress update against a goal; entries are shown dated.
+  - criterion: AC-FR-036-01
+    note: A completion request shows "Completion requested — awaiting the mentor" and
+      a Pending standing, and the goal stays Incomplete.
+  - criterion: AC-FR-037-01
+    note: Only the relationship's mentor is offered Approve or Reject on the pending
+      request; the goal shows Complete only after the server's answer.
+  - criterion: AC-FR-037-02
+    note: A decision shows outcome, mentor and time. There is no reason field and no
+      resubmission flow.
+  - criterion: AC-FR-040-01
+    note: Goals and progress (GET /api/register/goals) and each mentorship's goals
+      show Talent Management goals, status and structured progress.
+  - criterion: AC-FR-047-01
+    note: Complete to In Progress (or On hold) can be chosen and saved; tested.
+  - criterion: AC-FR-047-02
+    note: Any State in the contract can be chosen directly. Edits exist only on formed
+      relationships (no candidate screen offers State).
+  - criterion: AC-FR-048-01
+    note: Status alone is sent ({status}) with State left as it is; tested.
+  - criterion: AC-FR-049-01
+    note: Complete with IsActive=Y is saved in one edit; tested.
+  - criterion: AC-FR-049-02
+    note: IsActive is independent of State; any combination is sent and the server
+      decides. The smoke run also saved Complete/NeedsReassigning/Y.
+  - criterion: AC-FR-055-01
+    note: Both participants see the agreed frequency (every N weeks) and approximate
+      length on the mentorship.
+  - criterion: AC-FR-056-01
+    note: Introductory meetings and planned sessions are listed, planned and changed
+      by the participants.
+  - criterion: AC-FR-057-01
+    note: The inbox shows the event, the recipient's role and the required next action.
+  - criterion: AC-FR-057-02
+    note: Delivery is in-app, labelled "Simulated — shown in the application only"
+      when simulated; events can be marked read.
+  - criterion: AC-FR-057-03
+    note: Only the caller's own inbox is requested; the smoke run showed an unrelated
+      employee receives 0 events.
+  - criterion: AC-FR-060-01
+    note: The register shows each value as stored. An unknown shows "Unknown" beside
+      its source text, a BLANK Status reads Blank, historical rows and held rows are
+      marked with their review exception, and the CSV export is downloaded byte for
+      byte (BOM kept) under the server's file name.
+  - criterion: AC-FR-060-02
+    note: The register and goals view are offered only with register.read. A direct
+      visit by anyone else shows "not available" and requests nothing; the API refuses
+      them too (smoke run 403 and 401).
+  - criterion: AC-NFR-006-01
+    note: Role-appropriate screens cover every workflow, from profile to register,
+      and the server provides every outcome. The smoke run drove the main workflow
+      through the same client, end to end. No usability study was run.
+  - criterion: AC-NFR-010-01
+    note: The prototype runs with no calendar, Data Lake, AI or notification transport,
+      and with the labelled simulated identity when Entra is not configured.
+  notes:
+  - 'Stack: Vite 6.4.6 + React 19.1 + TypeScript 5.9, react-router-dom 7, openapi-fetch
+    0.17 on openapi-typescript 7.13 types, @azure/msal-browser 4.30, Vitest 3.2 with
+    jsdom. Vite 6 was chosen because this machine''s Node is 20.17 and Vite 7 needs
+    20.19 or later. The nvm default Node 22 on this machine is an x86_64 binary that
+    does not run on arm64, so /usr/local/bin/node 20.17 was used.'
+  - 'Contract: openapi/mentor-api.json is a copy of the API''s document (Development,
+    Identity:Mode=Simulated). Every dev, build and test run generates src/api/schema.gen.ts
+    and src/api/enums.gen.ts from it; both are gitignored. npm run openapi:check fails
+    on drift. Enumerations the generator skips because they include null (RelationshipState,
+    RelationshipStatus, ActiveFlag) come from enums.gen.ts, so every value list is
+    the contract''s.'
+  - 'Tests live in tests/web as the scope requires. A small Vite plugin resolves their
+    package imports from src/web, and tsconfig path fallbacks let tsc type-check them.'
+  - 'Gap against ADR-012, outside this scope: ADR-012 says every resource carries
+    the list of actions the caller may take, but the API returns none per resource.
+    The frontend offers actions from Session.permissions and from which participant
+    the record names, without computing workflow state, and shows the server''s refusal
+    as the outcome. Raise against the API (src/Mentor.Api is forbidden here).'
+  - 'Gap: the API has no Talent Management list of all candidates. "Pairings and formation"
+    lists the candidates the audit trail names (GET /api/audit-trail/records/Candidate)
+    and reads each one (N+1 requests). Follow-up: a TM candidate listing endpoint.'
+  - 'ADR-012 says screens are created with Vercel v0. v0 is not available to the adapter,
+    so the screens were written directly as ordinary source; the operator may refine
+    them with v0.'
+  - 'Outside the adapter: the repository root .gitignore gained a "node_modules/" line
+    at 07:54Z during this run. The adapter did not write it, and it is outside this
+    task''s scope. It was left as found and is not listed in changed_paths. src/web/.gitignore
+    already ignores node_modules for the frontend.'
+  - 'Smoke-run resources (an API process on 127.0.0.1:5089, the Vite dev server on
+    5174, Docker container mentor-web-smoke) were stopped and removed. Docker Desktop
+    stays running.'
+  changed_paths:
+  - src/web/.env.example
+  - src/web/.gitignore
+  - src/web/README.md
+  - src/web/index.html
+  - src/web/openapi/mentor-api.json
+  - src/web/package-lock.json
+  - src/web/package.json
+  - src/web/scripts/openapi.mjs
+  - src/web/src/api/client.ts
+  - src/web/src/app/App.tsx
+  - src/web/src/app/Layout.tsx
+  - src/web/src/app/SignIn.tsx
+  - src/web/src/app/SimulatedBanner.tsx
+  - src/web/src/identity/IdentityProvider.tsx
+  - src/web/src/identity/entra.ts
+  - src/web/src/identity/entraSettings.ts
+  - src/web/src/identity/simulated.ts
+  - src/web/src/main.tsx
+  - src/web/src/screens/EmployeeProfile.tsx
+  - src/web/src/screens/Home.tsx
+  - src/web/src/screens/Notifications.tsx
+  - src/web/src/screens/admin/AdminCandidates.tsx
+  - src/web/src/screens/admin/GoalsOverview.tsx
+  - src/web/src/screens/admin/MentorApplications.tsx
+  - src/web/src/screens/admin/Register.tsx
+  - src/web/src/screens/candidates/AgreementContent.tsx
+  - src/web/src/screens/candidates/CandidateDetail.tsx
+  - src/web/src/screens/candidates/Candidates.tsx
+  - src/web/src/screens/candidates/DraftForm.tsx
+  - src/web/src/screens/candidates/DraftScreen.tsx
+  - src/web/src/screens/candidates/FormationScreen.tsx
+  - src/web/src/screens/meetings/Meetings.tsx
+  - src/web/src/screens/mentors/MentorDetail.tsx
+  - src/web/src/screens/mentors/MentorProfile.tsx
+  - src/web/src/screens/mentors/MentorProfileForm.tsx
+  - src/web/src/screens/mentors/Mentors.tsx
+  - src/web/src/screens/relationships/AttributeEditor.tsx
+  - src/web/src/screens/relationships/Goals.tsx
+  - src/web/src/screens/relationships/RelationshipDetail.tsx
+  - src/web/src/screens/relationships/Relationships.tsx
+  - src/web/src/screens/requests/RequestDetail.tsx
+  - src/web/src/screens/requests/Requests.tsx
+  - src/web/src/session/SessionProvider.tsx
+  - src/web/src/styles.css
+  - src/web/src/ui/components.tsx
+  - src/web/src/ui/hooks.ts
+  - src/web/src/ui/labels.ts
+  - src/web/src/vite-env.d.ts
+  - src/web/tsconfig.json
+  - src/web/vite.config.ts
+  - tests/web/administration.test.tsx
+  - tests/web/candidate.test.tsx
+  - tests/web/client.test.ts
+  - tests/web/draft.test.tsx
+  - tests/web/identity.test.tsx
+  - tests/web/navigation.test.tsx
+  - tests/web/notifications.test.tsx
+  - tests/web/profiles.test.tsx
+  - tests/web/register.test.tsx
+  - tests/web/relationship.test.tsx
+  - tests/web/setup.ts
+  - tests/web/support/fakeApi.ts
+  - tests/web/support/world.tsx

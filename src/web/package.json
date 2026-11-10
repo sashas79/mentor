@@ -1,0 +1,44 @@
+{
+  "name": "mentor-web",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Mentorship application frontend (COMP-WEB-FRONTEND, ADR-012): React and TypeScript single-page application on the generated CONTRACT-MENTORSHIP-API client.",
+  "type": "module",
+  "engines": {
+    "node": ">=20.17.0"
+  },
+  "scripts": {
+    "generate:api": "openapi-typescript openapi/mentor-api.json --output src/api/schema.gen.ts && node scripts/openapi.mjs enums",
+    "openapi:fetch": "node scripts/openapi.mjs fetch",
+    "openapi:check": "node scripts/openapi.mjs check",
+    "predev": "npm run generate:api",
+    "dev": "vite",
+    "prebuild": "npm run generate:api",
+    "build": "tsc --noEmit -p tsconfig.json && vite build",
+    "pretest": "npm run generate:api",
+    "test": "vitest run",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@azure/msal-browser": "4.30.0",
+    "openapi-fetch": "0.17.0",
+    "react": "19.1.10",
+    "react-dom": "19.1.10",
+    "react-router-dom": "7.18.5"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.9",
+    "@types/node": "20.19.43",
+    "@types/react": "19.1.17",
+    "@types/react-dom": "19.1.11",
+    "@vitejs/plugin-react": "4.7.0",
+    "jsdom": "26.1.0",
+    "openapi-typescript": "7.13.0",
+    "typescript": "5.9.3",
+    "vite": "6.4.6",
+    "vitest": "3.2.7"
+  }
+}
