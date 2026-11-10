@@ -1,0 +1,113 @@
+schema_version: 1
+task_state:
+  task: TASK-14-REGISTER-REPORTING
+  status: done
+  work_baseline: baselines/work/WORK-0001.yaml
+  started: '2026-11-10T07:13:46Z'
+  updated: '2026-11-10T07:45:50Z'
+  verification:
+  - control: control://verification/build
+    result: PASS
+    command: dotnet build src/Mentor.slnx --no-incremental && (cd src && dotnet ef
+      migrations has-pending-model-changes --no-build --project Mentor.Infrastructure
+      --startup-project Mentor.Api)
+    note: Clean rebuild of all five projects, 0 warnings and 0 errors (warnings are
+      errors). No model changes and no migration; the register reads existing tables
+      only.
+  - control: control://verification/unit-test
+    result: PASS
+    command: dotnet test src/Mentor.slnx --no-build
+    note: 'Unit 368/368 (39 new register tests); integration 484/484 (10 new: register,
+      export, held rows, reconstruction, audit, authorisation in both identity modes,
+      confidentiality and logs, OpenAPI contract). Run against PostgreSQL through Testcontainers
+      after starting the local Docker daemon, which was not running.'
+  acceptance:
+  - criterion: AC-FR-040-01
+    note: GET /api/register/goals gives Talent Management every relationship's goals,
+      with agreed wording, completion status, pending request and each progress entry
+      with its standing and decision (RegisterConfidentialityTests).
+  - criterion: AC-FR-060-01
+    note: 'The register (JSON) and its CSV export show mentor, protégé, levels, State,
+      Status, IsActive, dates, duration, provenance, source reference, source text and
+      the review exception. An unknown is null or an empty cell, never invented. Legacy
+      rows and their unresolved mappings (UnresolvedValue: attributes; held rows: UnresolvedPerson,
+      NoMentor) are distinguishable from digital rows, and a BLANK Status from an unresolved
+      one (RelationshipRegisterTests, RegisterCsvTests).'
+  - criterion: AC-FR-060-02
+    note: 'Anonymous callers get 401. Employee, applicant, mentor and newcomer get 403
+      on all three routes, under Entra and the simulated identity alike, and a refused
+      export writes no audit entry. register.read and register.export are TM-only in
+      the matrix. The UI is TASK-15''s and is built on these routes.'
+  - criterion: AC-FR-061-01
+    note: Each read and export is computed on demand from mentorship_relationship, employee
+      and legacy_review_exception in one read-only snapshot. No register table, sync
+      or import exists, and an administrator's edit shows in the very next read and
+      export.
+  - criterion: AC-FR-062-01
+    note: A legacy row's unknown end date stays null (JSON) or an empty cell (CSV);
+      only the stored date read from an unambiguous D/M/YYYY cell is shown.
+  - criterion: AC-FR-062-02
+    note: '"ongoing" and other non-date text is kept verbatim in source.startText/endText
+      and the "Source date text" column ("Start: 10/1/2026; End: ongoing"), and is never
+      a date.'
+  - criterion: AC-FR-066-01
+    note: The goals view gives each goal's completion status and a per-relationship
+      summary (total, complete, incomplete, awaiting decision). No private discussion
+      content is stored, so none is retrievable.
+  - criterion: AC-E2E-08
+    note: Talent Management reads goals and progress in the goals view. The register,
+      the export, the export's audit entry and the logs (every category at Trace) contain
+      no progress update, goal wording, agreement content or meeting note.
+  - criterion: AC-NFR-002-01
+    note: No register route, export or log carries meeting discussion; the export has
+      no goal, progress or meeting column, and request logs name route templates only.
+  - criterion: AC-NFR-009-01
+    note: The register, the export and the goals view are readable by Talent Management
+      only. Responses carry Cache-Control no-store; each export is audited with its
+      administrator and row counts. TLS in transit and storage protection are deployment
+      concerns (TASK-16).
+  notes:
+  - 'Routes: GET /api/register (register.read), GET /api/register/export (register.export,
+    text/csv; charset=utf-8 with BOM, attachment mentorship-register-<UTC>.csv), GET
+    /api/register/goals (register.read). The permissions already existed in the matrix
+    (TASK-03).'
+  - 'Interpretations: rows are historical first in tracker order (file, row), held
+    rows included, then digital rows by formation time. A held row (UNRESOLVED_PERSON
+    or NO_MENTOR) is listed until its source row is entered as a relationship. A held
+    row shows its source names in the Mentor/Protégé columns. Levels are the employees''
+    current level_title. The Review exception column reads "Unresolved value: Status,
+    IsActive", "Unresolved person" or "No mentor". "Source date text" names each cell
+    ("Start: ...; End: ..."). Business values follow the BRS wording (In Progress, On
+    hold, Complete; Needs reassigning; 6 months, 12 months, 12+ months).'
+  - 'Security: CSV cells that would start a formula (=, +, -, @, tab, CR) are prefixed
+    with an apostrophe in the export only; the JSON keeps source text verbatim. Content-Disposition
+    is added to the CORS exposed headers so that the frontend can read the file name.'
+  - 'Audit: REGISTER_EXPORTED (record type REGISTER, no record id) with format, relationshipRows
+    and heldSourceRows is committed before the file is returned. The read runs in a
+    read-only REPEATABLE READ snapshot and the audit write in its own READ COMMITTED
+    transaction (ADR-013). A Talent Management caller without an employee record gets
+    409 (EmployeeRecordRequired) for an export. Reading the register is not audited
+    (ADR-011 audits exports).'
+  - 'Refactor: the goal view construction moved from GoalsAndProgress into GoalViewReader,
+    which opens no transaction, so that the goals view reads all goals inside its own
+    snapshot. GoalsAndProgress behaviour is unchanged (its tests pass).'
+  - 'Mutation check: 10 deliberate regressions, 9 built and all 9 were caught (held-row
+    filter, review derivation, export audit, two permission swaps, Blank written, no-store,
+    held source names, goal summary). One mutant did not compile (unreachable code is
+    an error); its case is covered by a unit test. All mutated files restored and
+    rebuilt clean.'
+  changed_paths:
+  - src/Mentor.Api/Register/RegisterViews.cs
+  - src/Mentor.Api/Register/RegisterEntries.cs
+  - src/Mentor.Api/Register/RegisterCsv.cs
+  - src/Mentor.Api/Register/RelationshipRegister.cs
+  - src/Mentor.Api/Register/RegisterEndpoints.cs
+  - src/Mentor.Api/Goals/GoalViewReader.cs
+  - src/Mentor.Api/Goals/GoalsAndProgress.cs
+  - src/Mentor.Api/Hosting/ApiHost.cs
+  - tests/Mentor.Tests.Unit/Register/RegisterCsvTests.cs
+  - tests/Mentor.Tests.Unit/Register/RegisterEntriesTests.cs
+  - tests/Mentor.Tests.Integration/Register/RegisterApi.cs
+  - tests/Mentor.Tests.Integration/Register/RelationshipRegisterTests.cs
+  - tests/Mentor.Tests.Integration/Register/RegisterConfidentialityTests.cs
+  - tests/Mentor.Tests.Integration/Register/RegisterContractTests.cs

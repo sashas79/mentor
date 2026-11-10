@@ -169,7 +169,7 @@ public sealed class GoalsAndProgress(MentorDbContext db, CallerResolver callers,
             if (completionRequested)
             {
                 var entries = await db.GoalProgress.AsNoTracking().Where(entry => entry.GoalId == goalId).ToListAsync(cancellationToken);
-                var decisions = await DecisionsOfAsync(db.GoalProgress.Where(entry => entry.GoalId == goalId), cancellationToken);
+                var decisions = await GoalViewReader.DecisionsOfAsync(db, db.GoalProgress.Where(entry => entry.GoalId == goalId), cancellationToken);
                 switch (GoalCompletion.CheckRequest(locked, entries, decisions))
                 {
                     case CompletionRequestBlock.GoalComplete:
@@ -246,44 +246,8 @@ public sealed class GoalsAndProgress(MentorDbContext db, CallerResolver callers,
     {
         await using var snapshot = await db.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead, cancellationToken);
         await db.Database.ExecuteSqlRawAsync(ReadOnlyTransaction, cancellationToken);
-        var selected = db.DevelopmentGoals.Where(which);
-        var goals = await selected.AsNoTracking()
-            .OrderBy(goal => goal.Position).ThenBy(goal => goal.Id)
-            .ToListAsync(cancellationToken);
-        var entriesOfGoals = db.GoalProgress.Where(entry => selected.Any(goal => goal.Id == entry.GoalId));
-        var entries = await entriesOfGoals.AsNoTracking()
-            .OrderBy(entry => entry.SubmittedAt).ThenBy(entry => entry.Id)
-            .ToListAsync(cancellationToken);
-        var decisions = await DecisionsOfAsync(entriesOfGoals, cancellationToken);
+        var views = await GoalViewReader.ReadAsync(db, which, cancellationToken);
         await snapshot.CommitAsync(cancellationToken);
-
-        var decisionOf = decisions.ToDictionary(decision => decision.ProgressId);
-        return [.. goals.Select(goal => ViewOf(goal, [.. entries.Where(entry => entry.GoalId == goal.Id)], decisionOf))];
+        return views;
     }
-
-    private Task<List<GoalApproval>> DecisionsOfAsync(IQueryable<GoalProgress> entries, CancellationToken cancellationToken) =>
-        db.GoalApprovals.AsNoTracking()
-            .Where(decision => entries.Any(entry => entry.Id == decision.ProgressId))
-            .ToListAsync(cancellationToken);
-
-    private static GoalView ViewOf(DevelopmentGoal goal, IReadOnlyList<GoalProgress> entries, IReadOnlyDictionary<Guid, GoalApproval> decisions) => new(
-        goal.Id,
-        goal.RelationshipId,
-        goal.FormedAgreementId,
-        goal.Position,
-        goal.AgreedDescription,
-        goal.CompletionStatus,
-        GoalCompletion.PendingRequestOf(goal, entries, decisions.Values)?.Id,
-        [.. entries.Select(entry => ProgressOf(entry, decisions.GetValueOrDefault(entry.Id)))],
-        goal.CreatedAt,
-        goal.UpdatedAt);
-
-    private static GoalProgressView ProgressOf(GoalProgress entry, GoalApproval? decision) => new(
-        entry.Id,
-        entry.ProtegeEmployeeId,
-        entry.ProgressUpdate,
-        entry.CompletionRequested,
-        entry.SubmittedAt,
-        GoalCompletion.StandingOf(entry, decision),
-        decision is null ? null : new GoalDecisionView(decision.Id, decision.Decision, decision.MentorEmployeeId, decision.DecidedAt));
 }

@@ -9,6 +9,7 @@ using Mentor.Api.Identity;
 using Mentor.Api.Meetings;
 using Mentor.Api.MentorRegistry;
 using Mentor.Api.Notifications;
+using Mentor.Api.Register;
 using Mentor.Api.Relationships;
 using Mentor.Api.Requests;
 using Mentor.Infrastructure.Persistence;
@@ -48,6 +49,7 @@ public static class ApiHost
         services.AddFormation(); // COMP-FORMATION
         services.AddRelationshipAdministration(); // COMP-RELATIONSHIP-ADMIN
         services.AddGoalsAndProgress(); // COMP-GOALS-PROGRESS
+        services.AddRelationshipRegister(); // COMP-REGISTER-REPORTING
         services.AddNotificationEvents(); // COMP-MEETINGS-NOTIFICATIONS
         services.AddProblemDetails();
         services.AddExceptionHandler<RedactingExceptionHandler>();
@@ -60,8 +62,8 @@ public static class ApiHost
                 .WithOrigins(configuration.GetSection(CorsOriginsSection).Get<string[]>() ?? [])
                 .AllowAnyHeader()
                 .AllowAnyMethod()
-                // The client reads the ETag it returns in If-Match (ADR-005).
-                .WithExposedHeaders(HeaderNames.ETag, HeaderNames.Location)));
+                // The client reads the ETag it returns in If-Match (ADR-005), and the name a register export is offered under.
+                .WithExposedHeaders(HeaderNames.ETag, HeaderNames.Location, HeaderNames.ContentDisposition)));
         services.AddHealthChecks().AddDbContextCheck<MentorDbContext>("database", tags: [HealthEndpoints.ReadyTag]);
         services.AddOpenApi();
         return builder;
@@ -92,6 +94,7 @@ public static class ApiHost
         app.MapFormation(); // COMP-FORMATION
         app.MapRelationshipAdministration(); // COMP-RELATIONSHIP-ADMIN
         app.MapGoalsAndProgress(); // COMP-GOALS-PROGRESS
+        app.MapRelationshipRegister(); // COMP-REGISTER-REPORTING
         app.MapMeetings(); // COMP-MEETINGS-NOTIFICATIONS
         app.MapNotifications();
         if (app.Configuration.GetValue<bool>(OpenApiSwitch))
